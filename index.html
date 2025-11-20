@@ -6,245 +6,505 @@
     <title>Меню Кофейни</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* --- СТИЛИ --- */
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #1f2937; padding-bottom: 100px; }
-        
-        header { background-color: #ffffff; padding: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        /* --- СТИЛИ (ОСТАЛИСЬ ПРЕЖНИМИ) --- */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #1f2937; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
+        header { background-color: #ffffff; padding: 15px; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h1 { margin: 0; font-size: 18px; font-weight: 800; color: #111; text-align: center; }
-        
         .category-section { margin-bottom: 20px; }
         .category-title { padding: 15px 15px 5px 15px; font-size: 20px; font-weight: 800; color: #374151; }
-        
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
-        
-        .card { 
-            background: white; 
-            border-radius: 16px; 
-            padding: 10px; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between; 
-            transition: transform 0.1s;
-        }
+        .card { background: white; border-radius: 16px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.1s; }
         .card:active { transform: scale(0.98); }
-        
-        .card-img-container {
-            width: 100%;
-            height: 100px;
-            background: #f9fafb;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 8px;
-            overflow: hidden;
-        }
+        .card-img-container { width: 100%; height: 100px; background: #f9fafb; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; overflow: hidden; }
         .card img { width: 60%; height: 60%; object-fit: contain; }
-        
         .card h3 { margin: 0 0 5px 0; font-size: 14px; font-weight: 600; line-height: 1.3; }
         .card .desc { font-size: 11px; color: #6b7280; margin-bottom: 8px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        
         .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
         .price { font-weight: 700; font-size: 15px; color: #111; }
+        .add-btn { background-color: #FFD54F; color: #3e2723; border: none; border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 12px; cursor: pointer; }
         
-        .add-btn { 
-            background-color: #FFD54F; /* Цвет бренда (желтоватый) */
-            color: #3e2723;
-            border: none; 
-            border-radius: 8px; 
-            padding: 6px 12px; 
-            font-weight: 600; 
-            font-size: 12px;
-            cursor: pointer; 
-        }
-
-        /* Плавающая кнопка корзины */
-        .main-btn { 
-            position: fixed; 
-            bottom: 15px; 
-            left: 15px; 
-            right: 15px; 
-            background: #2ecc71; /* Зеленый для кнопки заказа */
-            color: white; 
-            padding: 16px; 
-            border-radius: 14px; 
-            text-align: center; 
-            font-size: 16px; 
-            font-weight: 700; 
-            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
-            display: none; 
-            z-index: 1000;
-            transition: all 0.2s;
-        }
-        .main-btn:active { transform: scale(0.98); }
+        /* МОДАЛКА */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: flex-end; justify-content: center; }
+        .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-title { font-size: 20px; font-weight: bold; }
+        .close-icon { font-size: 24px; cursor: pointer; color: #888; }
+        .option-group { margin-bottom: 20px; }
+        .option-label { font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px; color: #444; }
+        .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .radio-label { flex: 1; text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 14px; transition: 0.2s; min-width: 80px; }
+        .radio-input { display: none; }
+        .radio-input:checked + .radio-label { background-color: #FFD54F; border-color: #FFD54F; color: #3e2723; font-weight: bold; }
+        select, input[type="text"], input[type="number"] { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; -webkit-appearance: none; background: #fff; }
+        .checkbox-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid #eee; }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #FFD54F; }
+        input:checked + .slider:before { transform: translateX(24px); }
+        .modal-footer { margin-top: 20px; display: flex; gap: 10px; }
+        .modal-add-btn { background: #2ecc71; color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .main-btn { position: fixed; bottom: 15px; left: 15px; right: 15px; background: #2ecc71; color: white; padding: 16px; border-radius: 14px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); display: none; z-index: 900; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 id="header-title">Меню Кофейни</h1>
+    <h1 id="header-title">CoffeeMoll Меню</h1>
 </header>
 
-<div id="app">
-    </div>
+<div id="app"></div>
+<div class="main-btn" id="order-btn" onclick="sendOrder()">Оформить заказ</div>
 
-<div class="main-btn" id="order-btn" onclick="sendOrder()">
-    Оформить заказ
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+    <div class="modal-content" id="modal-content"></div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand(); 
 
-    // --- 1. БАЗА ДАННЫХ (ИЗ ВАШЕГО ФАЙЛА) ---
-    const rawData = [
+    // --- НАСТРОЙКИ ЦЕН (РЕДАКТИРОВАТЬ ЗДЕСЬ) ---
+    const PRICES = {
         // Кофе
-        {id: 1, cat: "Кофе", name: "Эспрессо", price: 700, desc: "Насыщенный и крепкий кофе с тонкой пенкой"},
-        {id: 2, cat: "Кофе", name: "Американо (0.2)", price: 700, desc: "Мягкий кофе, приготовленный путем разбавления эспрессо горячей водой"},
-        {id: 3, cat: "Кофе", name: "Американо (0.3)", price: 850, desc: "Мягкий кофе в стандартном объеме"},
-        {id: 4, cat: "Кофе", name: "Флэт уайт", price: 950, desc: "Двойной эспрессо и бархатистое молоко"},
-        {id: 5, cat: "Кофе", name: "Капучино (0.3)", price: 1000, desc: "Эспрессо, молоко и воздушная пенка"},
-        {id: 6, cat: "Кофе", name: "Капучино (0.4)", price: 1200, desc: "Большая порция капучино"},
-        {id: 7, cat: "Кофе", name: "Латте (0.3)", price: 950, desc: "Много молока и легкая пенка"},
-        {id: 8, cat: "Кофе", name: "Латте (0.4)", price: 1100, desc: "Большая порция латте"},
-        {id: 9, cat: "Кофе", name: "Раф (0.3)", price: 1400, desc: "Сливочный кофе со сливками"},
-        {id: 10, cat: "Кофе", name: "Раф (0.4)", price: 1800, desc: "Большой раф"},
-        {id: 11, cat: "Кофе", name: "Мокко (0.3)", price: 1000, desc: "Шоколадный кофейный напиток"},
-        {id: 12, cat: "Кофе", name: "Мокко (0.4)", price: 1300, desc: "Большой мокко"},
-        {id: 13, cat: "Кофе", name: "Горячий шоколад (0.3)", price: 850, desc: "Густой напиток из шоколада и молока"},
-        {id: 14, cat: "Кофе", name: "Горячий шоколад (0.4)", price: 1200, desc: "Большой горячий шоколад"},
-        {id: 15, cat: "Добавки", name: "Дополнительное эспрессо", price: 300, desc: "Порция эспрессо для усиления вкуса"},
-
-        // Кофе Безлактозное
-        {id: 16, cat: "Безлактозный кофе", name: "Флэт уайт (Б/Л)", price: 950, desc: "На безлактозном молоке"},
-        {id: 17, cat: "Безлактозный кофе", name: "Капучино 0.3 (Б/Л)", price: 1000, desc: "На безлактозном молоке"},
-        {id: 18, cat: "Безлактозный кофе", name: "Капучино 0.4 (Б/Л)", price: 1200, desc: "На безлактозном молоке"},
-        {id: 19, cat: "Безлактозный кофе", name: "Латте 0.3 (Б/Л)", price: 950, desc: "На безлактозном молоке"},
-        {id: 20, cat: "Безлактозный кофе", name: "Латте 0.4 (Б/Л)", price: 1100, desc: "На безлактозном молоке"},
-        {id: 21, cat: "Безлактозный кофе", name: "Мокко 0.3 (Б/Л)", price: 1000, desc: "На безлактозном молоке"},
-        {id: 22, cat: "Безлактозный кофе", name: "Мокко 0.4 (Б/Л)", price: 1300, desc: "На безлактозном молоке"},
+        milk_lactose_free: 0, 
+        milk_alternative: 400,
+        extra_shot: 300,
+        syrup: 0,
         
-        // Альтернативное молоко
-        {id: 25, cat: "Альтернативное молоко", name: "Флэт уайт (Альт.)", price: 950, desc: "Кокос / Миндаль / Банан"},
-        {id: 26, cat: "Альтернативное молоко", name: "Капучино 0.3 (Альт.)", price: 1300, desc: "Кокос / Миндаль / Банан"},
-        {id: 27, cat: "Альтернативное молоко", name: "Капучино 0.4 (Альт.)", price: 1500, desc: "Кокос / Миндаль / Банан"},
-        {id: 28, cat: "Альтернативное молоко", name: "Латте 0.3 (Альт.)", price: 1350, desc: "Кокос / Миндаль / Банан"},
-        {id: 29, cat: "Альтернативное молоко", name: "Латте 0.4 (Альт.)", price: 1500, desc: "Кокос / Миндаль / Банан"},
-        
-        // Завтраки
-        {id: 34, cat: "Завтраки", name: "Английский завтрак", price: 1500, desc: "Глазунья, колбаски, тост, салат"},
-        {id: 35, cat: "Завтраки", name: "Скрэмбл с рукколой", price: 1400, desc: "С томатами черри и бальзамическим соусом"},
-        {id: 36, cat: "Завтраки", name: "Сырники", price: 2000, desc: "Ванильные сырники со сметаной и ягодой"},
-        {id: 37, cat: "Завтраки", name: "Блинчики", price: 1200, desc: "С медом и сметаной"},
-        {id: 38, cat: "Завтраки", name: "Деревенский завтрак", price: 2000, desc: "Яичница, колбаска, картофель, овощи"},
-        
-        // Круассаны
-        {id: 39, cat: "Круассаны", name: "Круассан с курицей", price: 1000, desc: "С чесночным соусом и овощами"},
-        {id: 40, cat: "Круассаны", name: "Круассан с говядиной", price: 1100, desc: "С творожным сыром и томатом"},
-        {id: 41, cat: "Круассаны", name: "Круассан с сёмгой", price: 1300, desc: "С творожным сыром и огурцом"},
+        // Добавки к Эспрессо/Американо
+        coffee_add_milk: 50,
+        coffee_add_cream: 50,
 
-        // Салаты
-        {id: 42, cat: "Салаты", name: "Цезарь", price: 1700, desc: "Курица, черри, сухарики, соус"},
-        {id: 43, cat: "Салаты", name: "Греческий", price: 1600, desc: "Свежие овощи, фетакса"},
-        {id: 44, cat: "Салаты", name: "Теплый с баклажанами", price: 1500, desc: "Хрустящие баклажаны, творожный сыр"},
-        {id: 45, cat: "Салаты", name: "Салат с цыплёнком", price: 1200, desc: "Копченый цыпленок, авторский соус"},
+        // Добавки к Чаю
+        tea_add_milk: 50,
+        tea_add_cream: 50,
+        tea_add_honey: 100
+    };
 
-        // Чай
-        {id: 46, cat: "Чай", name: "Черный чай", price: 250, desc: ""},
-        {id: 47, cat: "Чай", name: "Зеленый чай", price: 250, desc: ""},
-        {id: 48, cat: "Чай", name: "Ташкентский (0.4)", price: 700, desc: "С пряными нотками"},
-        {id: 49, cat: "Чай", name: "Ташкентский (Чайник)", price: 1200, desc: "Чайник"},
-        {id: 50, cat: "Чай", name: "Облепиховый (0.4)", price: 800, desc: "Витаминный с ярким вкусом"},
-        {id: 51, cat: "Чай", name: "Облепиховый (Чайник)", price: 1300, desc: "Чайник"},
-        {id: 52, cat: "Добавки", name: "Сливки, лимон, молоко", price: 50, desc: "Добавка к чаю"},
-
-        // Лимонады
-        {id: 53, cat: "Лимонады", name: "Киви-лайм", price: 450, desc: ""},
-        {id: 54, cat: "Лимонады", name: "Ананас-апельсин", price: 450, desc: ""},
-        {id: 55, cat: "Лимонады", name: "Клюквенный морс", price: 450, desc: ""},
-
-        // Молочные коктейли
-        {id: 56, cat: "Коктейли", name: "Классический", price: 850, desc: ""},
-        {id: 57, cat: "Коктейли", name: "Шоколадный", price: 900, desc: ""},
-        {id: 58, cat: "Коктейли", name: "Клубничный", price: 900, desc: ""},
-        {id: 59, cat: "Коктейли", name: "Банановый", price: 1000, desc: ""},
-        {id: 60, cat: "Коктейли", name: "Фраппучино", price: 1800, desc: ""},
-
-        // Хот-доги
-        {id: 61, cat: "Хот-доги", name: "Классика", price: 1100, desc: "Говяжья сосиска, кетчуп, горчица"},
-        {id: 62, cat: "Хот-доги", name: "Сырный", price: 1600, desc: "Сыр чеддер, сырный соус, чипсы"},
-        {id: 63, cat: "Хот-доги", name: "Барбекю", price: 1300, desc: "Соус барбекю, жареный лук"},
-        {id: 64, cat: "Хот-доги", name: "Датский", price: 1300, desc: "Маринованный огурец, жареный лук"},
-        {id: 65, cat: "Хот-доги", name: "Бангкок", price: 1500, desc: "Кисло-сладкий соус, халапеньо"},
-        {id: 66, cat: "Хот-доги", name: "Френч-дог", price: 1200, desc: "Французская булочка"},
-        {id: 67, cat: "Хот-доги", name: "Ковбой", price: 1600, desc: "Барбекю, чеддер, халапеньо"},
-        {id: 68, cat: "Хот-доги", name: "Айсберг", price: 1600, desc: "Овощи, чесночный соус"},
-        {id: 69, cat: "Хот-доги", name: "Острый", price: 1500, desc: "Сальса, халапеньо"},
-        {id: 70, cat: "Добавки", name: "Жареный лук/Халапеньо/Сыр", price: 150, desc: "Добавка к хот-догу"},
-
-        // Пицца
-        {id: 71, cat: "Пицца", name: "Сальса", price: 3000, desc: "Острая с говядиной и табаско"},
-        {id: 72, cat: "Пицца", name: "Барбекю", price: 2450, desc: "Курица, барбекю, соленые огурцы"},
-        {id: 73, cat: "Пицца", name: "Жульен с цыпленком", price: 2600, desc: "Грибы, сливки, цыпленок"},
-        {id: 74, cat: "Пицца", name: "Греческая", price: 2300, desc: "Овощи, маслины, фета"},
-        {id: 75, cat: "Пицца", name: "Римская с курицей", price: 2300, desc: "Курица и грибы"},
-        {id: 76, cat: "Пицца", name: "Римская с говядиной", price: 2700, desc: "Говядина копченая"},
-        {id: 77, cat: "Пицца", name: "Пепперони", price: 2100, desc: "Острые колбаски"},
-        {id: 78, cat: "Пицца", name: "Маргарита", price: 1700, desc: "Томаты и сыр"},
-        {id: 79, cat: "Пицца", name: "Филадельфия", price: 3200, desc: "Семга и творожный сыр"},
-        {id: 80, cat: "Пицца", name: "Охотничья", price: 2300, desc: "Колбаски, грибы, черри"},
-
-        // Закуски
-        {id: 81, cat: "Закуски", name: "Сырные палочки (5 шт)", price: 1400, desc: ""},
-        {id: 82, cat: "Закуски", name: "Наггетсы (8 шт)", price: 1100, desc: ""},
-        {id: 83, cat: "Закуски", name: "Наггетсы (20 шт)", price: 2000, desc: ""},
-        {id: 84, cat: "Закуски", name: "Картофельные дольки", price: 800, desc: ""},
-        {id: 85, cat: "Закуски", name: "Картофель фри", price: 600, desc: ""},
-        {id: 86, cat: "Закуски", name: "Стрипсы (5 шт)", price: 1200, desc: ""},
-        {id: 87, cat: "Добавки", name: "Соус", price: 150, desc: "Кетчуп, сырный или чесночный"},
-
-        // Сезонное меню
-        {id: 88, cat: "Сезонное", name: "Копченный латте", price: 1500, desc: "С паприкой и кленовым сиропом"},
-        {id: 89, cat: "Сезонное", name: "Цитрусовый чай", price: 1000, desc: "Апельсин, грейпфрут, мед"},
-        {id: 90, cat: "Сезонное", name: "Чай масала", price: 1850, desc: "Специи, молоко, мед"},
-        {id: 91, cat: "Сезонное", name: "Чай манго-чили", price: 1350, desc: "Пряный"},
-        {id: 92, cat: "Сезонное", name: "Клюквенный чай", price: 1000, desc: ""},
-        {id: 93, cat: "Сезонное", name: "Чай малина-лайм", price: 1100, desc: ""},
-        {id: 94, cat: "Сезонное", name: "Глинтвейн (Б/А)", price: 1000, desc: "На гранатовом соке"},
-        {id: 95, cat: "Сезонное", name: "Имбирный чай", price: 1000, desc: ""},
-        {id: 96, cat: "Сезонное", name: "Какао с маршмеллоу", price: 1000, desc: ""},
-        {id: 97, cat: "Сезонное", name: "Капучино Сникерс", price: 1500, desc: "Арахис, карамель"},
-        {id: 104, cat: "Сезонное", name: "Ice Латте Рафаэлло", price: 1400, desc: "Кокос, шоколад"},
-        {id: 105, cat: "Сезонное", name: "Ice Чай", price: 900, desc: "Зеленый с цитрусом"},
-        {id: 106, cat: "Сезонное", name: "Вишневый бамбл", price: 900, desc: ""},
-        {id: 107, cat: "Сезонное", name: "Малиновый мохито", price: 800, desc: ""},
-        {id: 108, cat: "Сезонное", name: "Black Moll", price: 1000, desc: "Маракуйя и вишня"},
-        {id: 109, cat: "Сезонное", name: "Киви-мята", price: 1000, desc: ""},
-        
-        // Смузи
-        {id: 110, cat: "Смузи", name: "Киви смузи", price: 1200, desc: ""},
-        {id: 111, cat: "Смузи", name: "Апельсин смузи", price: 1100, desc: ""},
-        {id: 112, cat: "Смузи", name: "Апельсин-яблоко", price: 1000, desc: ""},
-        {id: 113, cat: "Смузи", name: "Киви-апельсин-банан", price: 1400, desc: ""},
-        {id: 114, cat: "Смузи", name: "Киви-банан-груша", price: 1300, desc: ""},
-        {id: 115, cat: "Смузи", name: "Ягодное смузи", price: 1800, desc: ""},
-
-        // Холодные напитки
-        {id: 98, cat: "Холодные напитки", name: "Ice Латте", price: 1100, desc: ""},
-        {id: 99, cat: "Холодные напитки", name: "Ice Капучино", price: 1200, desc: ""},
-        {id: 100, cat: "Холодные напитки", name: "Апельсиновый бамбл", price: 900, desc: ""},
-        {id: 101, cat: "Холодные напитки", name: "Летний Boom", price: 900, desc: ""},
-        {id: 102, cat: "Холодные напитки", name: "Мохито", price: 800, desc: ""},
-        {id: 103, cat: "Холодные напитки", name: "Манговый закат", price: 1000, desc: ""}
+    const SYRUPS = [
+        "Нет", "Карамель", "Соленая карамель", "Кокос", "Лесной орех", "Шоколад", "Ваниль", 
+        "Ирис", "Попкорн", "Макадамия", "Крем брюле", "Шоколадное печенье", "Лемонграсс", 
+        "Фисташка", "Банан", "Амаретто", "Миндаль", "Мед", "Гранат", "Ирландский крем", 
+        "Лаванда", "Брауни", "Клубника"
     ];
 
-    // Функция подбора картинки по категории (Иконки)
+    // --- 1. БАЗА ДАННЫХ ---
+    const menuData = [
+        // === КОФЕ ===
+        // allowCoffeeExtras: true дает выбор "Доп. молоко/сливки"
+        {
+            id: "espresso", type: "complex", cat: "Кофе", name: "Эспрессо", desc: "Насыщенный и крепкий",
+            hasMilk: false, allowCoffeeExtras: true, hasVolumes: false, basePrice: 700, volumes: []
+        },
+        {
+            id: "americano", type: "complex", cat: "Кофе", name: "Американо", desc: "Мягкий черный кофе",
+            hasMilk: false, allowCoffeeExtras: true, hasVolumes: true, 
+            volumes: [{n: "0.2 л", p: 700}, {n: "0.3 л", p: 850}]
+        },
+        // Остальной кофе (hasMilk: true включает выбор основного молока: коровье/кокос/etc)
+        {
+            id: "flatwhite", type: "complex", cat: "Кофе", name: "Флэт уайт", desc: "Двойной эспрессо и молоко",
+            hasMilk: true, hasVolumes: false, basePrice: 950, volumes: []
+        },
+        {
+            id: "cappuccino", type: "complex", cat: "Кофе", name: "Капучино", desc: "Классика с пенкой",
+            hasMilk: true, hasVolumes: true,
+            volumes: [{n: "0.3 л", p: 1000}, {n: "0.4 л", p: 1200}]
+        },
+        {
+            id: "latte", type: "complex", cat: "Кофе", name: "Латте", desc: "Много молока",
+            hasMilk: true, hasVolumes: true,
+            volumes: [{n: "0.3 л", p: 950}, {n: "0.4 л", p: 1100}]
+        },
+        {
+            id: "raf", type: "complex", cat: "Кофе", name: "Раф", desc: "На сливках",
+            hasMilk: false, hasVolumes: true,
+            volumes: [{n: "0.3 л", p: 1400}, {n: "0.4 л", p: 1800}]
+        },
+        {
+            id: "mocha", type: "complex", cat: "Кофе", name: "Мокко", desc: "С шоколадом",
+            hasMilk: true, hasVolumes: true,
+            volumes: [{n: "0.3 л", p: 1000}, {n: "0.4 л", p: 1300}]
+        },
+        {
+            id: "hotchoc", type: "complex", cat: "Кофе", name: "Горячий шоколад", desc: "Густой и сладкий",
+            hasMilk: true, hasVolumes: true,
+            volumes: [{n: "0.3 л", p: 850}, {n: "0.4 л", p: 1200}]
+        },
+
+        // === ЧАЙ ===
+        // allowTeaExtras: true включает выбор "Молоко/Сливки/Мед"
+        // fixedVolume: "300 мл" убирает выбор чайника
+        {
+            id: "black_tea", type: "complex", cat: "Чай", name: "Черный чай", desc: "",
+            hasVolumes: false, fixedVolume: "300 мл", basePrice: 250, allowTeaExtras: true
+        },
+        {
+            id: "green_tea", type: "complex", cat: "Чай", name: "Зеленый чай", desc: "",
+            hasVolumes: false, fixedVolume: "300 мл", basePrice: 250, allowTeaExtras: true
+        },
+        // Остальные чаи: Объединил стаканы и чайники в один товар
+        {
+            id: "tashkent", type: "complex", cat: "Чай", name: "Ташкентский", desc: "С пряными нотками",
+            hasVolumes: true, allowTeaExtras: true,
+            volumes: [{n: "Стакан 400 мл", p: 700}, {n: "Чайник 1 л", p: 1200}]
+        },
+        {
+            id: "oblepiha", type: "complex", cat: "Чай", name: "Облепиховый", desc: "Витаминный",
+            hasVolumes: true, allowTeaExtras: true,
+            volumes: [{n: "Стакан 400 мл", p: 800}, {n: "Чайник 1 л", p: 1300}]
+        },
+        {
+            id: "citrus_tea", type: "complex", cat: "Чай", name: "Цитрусовый чай", desc: "Сезонное",
+            hasVolumes: true, allowTeaExtras: true,
+            volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}] // Цена чайника примерная, поправьте если нужно
+        },
+        {
+            id: "masala", type: "complex", cat: "Чай", name: "Чай Масала", desc: "Пряный",
+            hasVolumes: true, allowTeaExtras: true,
+            volumes: [{n: "Стакан 400 мл", p: 1850}, {n: "Чайник 1 л", p: 2800}] 
+        },
+        {
+            id: "mango_chili", type: "complex", cat: "Чай", name: "Чай Манго-Чили", desc: "Острый",
+            hasVolumes: true, allowTeaExtras: true,
+            volumes: [{n: "Стакан 400 мл", p: 1350}, {n: "Чайник 1 л", p: 2000}]
+        },
+        {
+            id: "cranberry", type: "complex", cat: "Чай", name: "Клюквенный чай", desc: "С кислинкой",
+            hasVolumes: true, allowTeaExtras: true,
+            volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}]
+        },
+        {
+            id: "rasp_lime", type: "complex", cat: "Чай", name: "Чай Малина-Лайм", desc: "Освежающий",
+            hasVolumes: true, allowTeaExtras: true,
+            volumes: [{n: "Стакан 400 мл", p: 1100}, {n: "Чайник 1 л", p: 1700}]
+        },
+        {
+            id: "ginger_tea", type: "complex", cat: "Чай", name: "Имбирный чай", desc: "Согревающий",
+            hasVolumes: true, allowTeaExtras: true,
+            volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}]
+        },
+
+        // === ПРОСТОЕ МЕНЮ ===
+        {id: 34, type: "simple", cat: "Завтраки", name: "Английский завтрак", price: 1500, desc: "Глазунья, колбаски, тост"},
+        {id: 35, type: "simple", cat: "Завтраки", name: "Скрэмбл с рукколой", price: 1400, desc: ""},
+        {id: 36, type: "simple", cat: "Завтраки", name: "Сырники", price: 2000, desc: "Со сметаной и ягодой"},
+        {id: 37, type: "simple", cat: "Завтраки", name: "Блинчики", price: 1200, desc: "С медом и сметаной"},
+        {id: 38, type: "simple", cat: "Завтраки", name: "Деревенский завтрак", price: 2000, desc: ""},
+        
+        {id: 39, type: "simple", cat: "Круассаны", name: "Круассан с курицей", price: 1000, desc: ""},
+        {id: 40, type: "simple", cat: "Круассаны", name: "Круассан с говядиной", price: 1100, desc: ""},
+        {id: 41, type: "simple", cat: "Круассаны", name: "Круассан с сёмгой", price: 1300, desc: ""},
+
+        {id: 42, type: "simple", cat: "Салаты", name: "Цезарь", price: 1700, desc: ""},
+        {id: 43, type: "simple", cat: "Салаты", name: "Греческий", price: 1600, desc: ""},
+        {id: 44, type: "simple", cat: "Салаты", name: "Теплый с баклажанами", price: 1500, desc: ""},
+        {id: 45, type: "simple", cat: "Салаты", name: "Салат с цыплёнком", price: 1200, desc: ""},
+
+        {id: 53, type: "simple", cat: "Лимонады", name: "Киви-лайм", price: 450, desc: ""},
+        {id: 54, type: "simple", cat: "Лимонады", name: "Ананас-апельсин", price: 450, desc: ""},
+        {id: 55, type: "simple", cat: "Лимонады", name: "Клюквенный морс", price: 450, desc: ""},
+
+        {id: 56, type: "simple", cat: "Коктейли", name: "Классический", price: 850, desc: ""},
+        {id: 57, type: "simple", cat: "Коктейли", name: "Шоколадный", price: 900, desc: ""},
+        {id: 58, type: "simple", cat: "Коктейли", name: "Клубничный", price: 900, desc: ""},
+        {id: 59, type: "simple", cat: "Коктейли", name: "Банановый", price: 1000, desc: ""},
+        {id: 60, type: "simple", cat: "Коктейли", name: "Фраппучино", price: 1800, desc: ""},
+
+        {id: 61, type: "simple", cat: "Хот-доги", name: "Классика", price: 1100, desc: ""},
+        {id: 62, type: "simple", cat: "Хот-доги", name: "Сырный", price: 1600, desc: ""},
+        {id: 63, type: "simple", cat: "Хот-доги", name: "Барбекю", price: 1300, desc: ""},
+        {id: 64, type: "simple", cat: "Хот-доги", name: "Датский", price: 1300, desc: ""},
+        {id: 65, type: "simple", cat: "Хот-доги", name: "Бангкок", price: 1500, desc: ""},
+        {id: 66, type: "simple", cat: "Хот-доги", name: "Френч-дог", price: 1200, desc: ""},
+        {id: 67, type: "simple", cat: "Хот-доги", name: "Ковбой", price: 1600, desc: ""},
+        {id: 68, type: "simple", cat: "Хот-доги", name: "Айсберг", price: 1600, desc: ""},
+        {id: 69, type: "simple", cat: "Хот-доги", name: "Острый", price: 1500, desc: ""},
+
+        {id: 71, type: "simple", cat: "Пицца", name: "Сальса", price: 3000, desc: ""},
+        {id: 72, type: "simple", cat: "Пицца", name: "Барбекю", price: 2450, desc: ""},
+        {id: 73, type: "simple", cat: "Пицца", name: "Жульен с цыпленком", price: 2600, desc: ""},
+        {id: 74, type: "simple", cat: "Пицца", name: "Греческая", price: 2300, desc: ""},
+        {id: 75, type: "simple", cat: "Пицца", name: "Римская с курицей", price: 2300, desc: ""},
+        {id: 76, type: "simple", cat: "Пицца", name: "Римская с говядиной", price: 2700, desc: ""},
+        {id: 77, type: "simple", cat: "Пицца", name: "Пепперони", price: 2100, desc: ""},
+        {id: 78, type: "simple", cat: "Пицца", name: "Маргарита", price: 1700, desc: ""},
+        {id: 79, type: "simple", cat: "Пицца", name: "Филадельфия", price: 3200, desc: ""},
+        {id: 80, type: "simple", cat: "Пицца", name: "Охотничья", price: 2300, desc: ""},
+
+        {id: 81, type: "simple", cat: "Закуски", name: "Сырные палочки (5 шт)", price: 1400, desc: ""},
+        {id: 82, type: "simple", cat: "Закуски", name: "Наггетсы (8 шт)", price: 1100, desc: ""},
+        {id: 83, type: "simple", cat: "Закуски", name: "Наггетсы (20 шт)", price: 2000, desc: ""},
+        {id: 84, type: "simple", cat: "Закуски", name: "Картофельные дольки", price: 800, desc: ""},
+        {id: 85, type: "simple", cat: "Закуски", name: "Картофель фри", price: 600, desc: ""},
+        {id: 86, type: "simple", cat: "Закуски", name: "Стрипсы (5 шт)", price: 1200, desc: ""},
+
+        {id: 88, type: "simple", cat: "Сезонное", name: "Копченный латте", price: 1500, desc: ""},
+        {id: 94, type: "simple", cat: "Сезонное", name: "Глинтвейн (Б/А)", price: 1000, desc: ""},
+        {id: 96, type: "simple", cat: "Сезонное", name: "Какао с маршмеллоу", price: 1000, desc: ""},
+        {id: 97, type: "simple", cat: "Сезонное", name: "Капучино Сникерс", price: 1500, desc: ""},
+        
+        {id: 100, type: "simple", cat: "Холодные напитки", name: "Апельсиновый бамбл", price: 900, desc: ""},
+        {id: 101, type: "simple", cat: "Холодные напитки", name: "Летний Boom", price: 900, desc: ""},
+        {id: 102, type: "simple", cat: "Холодные напитки", name: "Мохито", price: 800, desc: ""},
+        {id: 98, type: "simple", cat: "Холодные напитки", name: "Ice Латте", price: 1100, desc: ""},
+        {id: 99, type: "simple", cat: "Холодные напитки", name: "Ice Капучино", price: 1200, desc: ""}
+    ];
+
+    let cart = [];
+    let currentModalProduct = null;
+
+    function renderMenu() {
+        const app = document.getElementById('app');
+        const categories = [...new Set(menuData.map(p => p.cat))];
+        
+        categories.forEach(cat => {
+            const section = document.createElement('div');
+            section.className = 'category-section';
+            section.innerHTML = `<div class="category-title">${cat}</div>`;
+            const grid = document.createElement('div');
+            grid.className = 'grid';
+            
+            menuData.filter(p => p.cat === cat).forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                let displayPrice = p.type === "complex" 
+                    ? (p.hasVolumes ? `от ${p.volumes[0].p}` : p.basePrice) 
+                    : p.price;
+                card.innerHTML = `
+                    <div class="card-img-container"><img src="${getImageByCategory(p.cat)}" alt="${p.name}"></div>
+                    <h3>${p.name}</h3>
+                    ${p.desc ? `<div class="desc">${p.desc}</div>` : ''}
+                    <div class="price-row">
+                        <div class="price">${displayPrice} ₸</div>
+                        <button class="add-btn" onclick="handleItemClick('${p.id}')">ВЫБРАТЬ</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            section.appendChild(grid);
+            app.appendChild(section);
+        });
+    }
+
+    function handleItemClick(id) {
+        const product = menuData.find(p => String(p.id) === String(id));
+        if (product.type === "complex") openComplexModal(product);
+        else {
+            cart.push({ name: product.name, price: product.price, options: [] });
+            updateMainButton();
+            tg.HapticFeedback.notificationOccurred('success');
+        }
+    }
+
+    function openComplexModal(product) {
+        currentModalProduct = product;
+        const content = document.getElementById('modal-content');
+        content.innerHTML = '';
+
+        const header = document.createElement('div');
+        header.className = 'modal-header';
+        header.innerHTML = `<div class="modal-title">${product.name}</div><div class="close-icon" onclick="closeModal(event)">✕</div>`;
+        content.appendChild(header);
+
+        // 1. Объем
+        if (product.hasVolumes && product.volumes.length > 0) {
+            const volGroup = document.createElement('div');
+            volGroup.className = 'option-group';
+            volGroup.innerHTML = `<label class="option-label">Объем</label><div class="radio-group" id="vol-group"></div>`;
+            content.appendChild(volGroup);
+            product.volumes.forEach((v, idx) => {
+                volGroup.querySelector('#vol-group').innerHTML += `
+                    <input type="radio" name="volume" id="vol-${idx}" class="radio-input" value="${idx}" ${idx===0 ? 'checked' : ''} onchange="recalcPrice()">
+                    <label for="vol-${idx}" class="radio-label">${v.n}<br>${v.p} ₸</label>
+                `;
+            });
+        } else if (product.fixedVolume) {
+            // Фиксированный объем (для черного/зеленого чая)
+            const info = document.createElement('div');
+            info.className = 'option-group';
+            info.innerHTML = `<label class="option-label">Объем: ${product.fixedVolume}</label>`;
+            content.appendChild(info);
+        }
+
+        // 2. Основное Молоко (для капучино, латте и т.д.)
+        if (product.hasMilk) {
+            const milkGroup = document.createElement('div');
+            milkGroup.className = 'option-group';
+            milkGroup.innerHTML = `
+                <label class="option-label">Основное Молоко</label>
+                <div class="radio-group">
+                    <input type="radio" name="milk" id="m1" class="radio-input" value="std" checked onchange="recalcPrice()">
+                    <label for="m1" class="radio-label">Обычное</label>
+                    <input type="radio" name="milk" id="m2" class="radio-input" value="lactose_free" onchange="recalcPrice()">
+                    <label for="m2" class="radio-label">Безлакт.<br>${PRICES.milk_lactose_free > 0 ? '+'+PRICES.milk_lactose_free : ''}</label>
+                    <input type="radio" name="milk" id="m3" class="radio-input" value="alt" onchange="recalcPrice()">
+                    <label for="m3" class="radio-label">Альтерн.<br>+${PRICES.milk_alternative}</label>
+                </div>
+            `;
+            content.appendChild(milkGroup);
+        }
+
+        // 3. Добавки для КОФЕ (Доп молоко/сливки для американо/эспрессо)
+        if (product.allowCoffeeExtras) {
+            const extrasGroup = document.createElement('div');
+            extrasGroup.className = 'option-group';
+            extrasGroup.innerHTML = `<label class="option-label">Добавить в кофе</label>`;
+            extrasGroup.innerHTML += `
+                <div class="checkbox-row"><span>Доп. молоко (+${PRICES.coffee_add_milk} ₸)</span><label class="toggle-switch"><input type="checkbox" id="coffee-milk" onchange="recalcPrice()"><span class="slider"></span></label></div>
+                <div class="checkbox-row"><span>Доп. сливки (+${PRICES.coffee_add_cream} ₸)</span><label class="toggle-switch"><input type="checkbox" id="coffee-cream" onchange="recalcPrice()"><span class="slider"></span></label></div>
+            `;
+            content.appendChild(extrasGroup);
+        }
+
+        // 4. Добавки для ЧАЯ (Молоко/Сливки/Мед)
+        if (product.allowTeaExtras) {
+            const teaExtrasGroup = document.createElement('div');
+            teaExtrasGroup.className = 'option-group';
+            teaExtrasGroup.innerHTML = `<label class="option-label">Добавить в чай</label>`;
+            teaExtrasGroup.innerHTML += `
+                <div class="checkbox-row"><span>Молоко (+${PRICES.tea_add_milk} ₸)</span><label class="toggle-switch"><input type="checkbox" id="tea-milk" onchange="recalcPrice()"><span class="slider"></span></label></div>
+                <div class="checkbox-row"><span>Сливки (+${PRICES.tea_add_cream} ₸)</span><label class="toggle-switch"><input type="checkbox" id="tea-cream" onchange="recalcPrice()"><span class="slider"></span></label></div>
+                <div class="checkbox-row"><span>Мед (+${PRICES.tea_add_honey} ₸)</span><label class="toggle-switch"><input type="checkbox" id="tea-honey" onchange="recalcPrice()"><span class="slider"></span></label></div>
+            `;
+            content.appendChild(teaExtrasGroup);
+        }
+
+        // 5. Сахар (для всех complex)
+        const sugarGroup = document.createElement('div');
+        sugarGroup.className = 'option-group';
+        sugarGroup.innerHTML = `<label class="option-label">Количество сахара (ложек)</label><input type="number" id="sugar-input" placeholder="0 (Оставить пустым для 'Без сахара')" min="0">`;
+        content.appendChild(sugarGroup);
+
+        // 6. Сиропы (для кофе и чая)
+        const syrupGroup = document.createElement('div');
+        syrupGroup.className = 'option-group';
+        let syrupOptions = SYRUPS.map(s => `<option value="${s}">${s}</option>`).join('');
+        syrupGroup.innerHTML = `<label class="option-label">Сироп (+${PRICES.syrup} ₸)</label><select id="syrup-select" onchange="recalcPrice()">${syrupOptions}</select>`;
+        content.appendChild(syrupGroup);
+
+        // 7. Доп Шот (Только для кофе)
+        if (product.cat === 'Кофе') {
+            const shotGroup = document.createElement('div');
+            shotGroup.className = 'checkbox-row';
+            shotGroup.innerHTML = `<span>Дополнительный шот (+${PRICES.extra_shot} ₸)</span><label class="toggle-switch"><input type="checkbox" id="extra-shot" onchange="recalcPrice()"><span class="slider"></span></label>`;
+            content.appendChild(shotGroup);
+        }
+
+        const footer = document.createElement('div');
+        footer.className = 'modal-footer';
+        footer.innerHTML = `<button class="modal-add-btn" id="modal-btn" onclick="addComplexToCart()">Добавить</button>`;
+        content.appendChild(footer);
+
+        document.getElementById('modal').style.display = 'flex';
+        recalcPrice();
+    }
+
+    function recalcPrice() {
+        let price = 0;
+        // Базовая цена
+        if (currentModalProduct.hasVolumes) {
+            const volIdx = document.querySelector('input[name="volume"]:checked')?.value;
+            if (volIdx !== undefined) price += currentModalProduct.volumes[volIdx].p;
+        } else {
+            price += currentModalProduct.basePrice;
+        }
+        // Основное молоко
+        if (currentModalProduct.hasMilk) {
+            const milkType = document.querySelector('input[name="milk"]:checked')?.value;
+            if (milkType === 'lactose_free') price += PRICES.milk_lactose_free;
+            if (milkType === 'alt') price += PRICES.milk_alternative;
+        }
+        // Добавки Кофе
+        if (currentModalProduct.allowCoffeeExtras) {
+            if (document.getElementById('coffee-milk').checked) price += PRICES.coffee_add_milk;
+            if (document.getElementById('coffee-cream').checked) price += PRICES.coffee_add_cream;
+        }
+        // Добавки Чай
+        if (currentModalProduct.allowTeaExtras) {
+            if (document.getElementById('tea-milk').checked) price += PRICES.tea_add_milk;
+            if (document.getElementById('tea-cream').checked) price += PRICES.tea_add_cream;
+            if (document.getElementById('tea-honey').checked) price += PRICES.tea_add_honey;
+        }
+        // Сироп
+        if (document.getElementById('syrup-select').value !== "Нет") price += PRICES.syrup;
+        // Доп шот
+        if (document.getElementById('extra-shot') && document.getElementById('extra-shot').checked) price += PRICES.extra_shot;
+
+        document.getElementById('modal-btn').innerText = `Добавить за ${price} ₸`;
+        document.getElementById('modal-btn').dataset.price = price;
+    }
+
+    function addComplexToCart() {
+        const price = parseInt(document.getElementById('modal-btn').dataset.price);
+        const options = [];
+
+        if (currentModalProduct.hasVolumes) {
+            const volIdx = document.querySelector('input[name="volume"]:checked').value;
+            options.push(`Объем: ${currentModalProduct.volumes[volIdx].n}`);
+        } else if (currentModalProduct.fixedVolume) {
+            options.push(`Объем: ${currentModalProduct.fixedVolume}`);
+        }
+
+        if (currentModalProduct.hasMilk) {
+            const milkType = document.querySelector('input[name="milk"]:checked').value;
+            if (milkType === 'lactose_free') options.push("Молоко: Безлактозное");
+            if (milkType === 'alt') options.push("Молоко: Альтернативное");
+        }
+
+        // Добавки Кофе
+        if (currentModalProduct.allowCoffeeExtras) {
+            if (document.getElementById('coffee-milk').checked) options.push("Добавлено: Молоко");
+            if (document.getElementById('coffee-cream').checked) options.push("Добавлено: Сливки");
+        }
+        // Добавки Чай
+        if (currentModalProduct.allowTeaExtras) {
+            if (document.getElementById('tea-milk').checked) options.push("Добавлено: Молоко");
+            if (document.getElementById('tea-cream').checked) options.push("Добавлено: Сливки");
+            if (document.getElementById('tea-honey').checked) options.push("Добавлено: Мед");
+        }
+
+        const sugarVal = document.getElementById('sugar-input').value;
+        options.push(sugarVal ? `Сахар: ${sugarVal}` : "Без сахара");
+
+        const syrup = document.getElementById('syrup-select').value;
+        if (syrup !== "Нет") options.push(`Сироп: ${syrup}`);
+
+        if (document.getElementById('extra-shot') && document.getElementById('extra-shot').checked) options.push("Доп. шот эспрессо");
+
+        cart.push({ name: currentModalProduct.name, price: price, options: options });
+        closeModal();
+        updateMainButton();
+        tg.HapticFeedback.notificationOccurred('success');
+    }
+
+    function closeModal(e) {
+        if (!e || e.target.id === 'modal' || e.target.className === 'close-icon') document.getElementById('modal').style.display = 'none';
+    }
+
+    function updateMainButton() {
+        const btn = document.getElementById('order-btn');
+        if (cart.length > 0) {
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            btn.style.display = 'block';
+            btn.innerText = `Оформить заказ: ${total} ₸`;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    function sendOrder() {
+        if (cart.length === 0) return;
+        const total = cart.reduce((sum, item) => sum + item.price, 0);
+        tg.sendData(JSON.stringify({ cart: cart, total: total }));
+    }
+
     function getImageByCategory(cat) {
         const map = {
             "Кофе": "https://cdn-icons-png.flaticon.com/512/751/751621.png",
-            "Безлактозный кофе": "https://cdn-icons-png.flaticon.com/512/751/751621.png",
-            "Альтернативное молоко": "https://cdn-icons-png.flaticon.com/512/751/751621.png",
             "Завтраки": "https://cdn-icons-png.flaticon.com/512/2771/2771406.png",
             "Круассаны": "https://cdn-icons-png.flaticon.com/512/3014/3014528.png",
             "Салаты": "https://cdn-icons-png.flaticon.com/512/2062/2062296.png",
@@ -256,97 +516,10 @@
             "Закуски": "https://cdn-icons-png.flaticon.com/512/5787/5787016.png",
             "Сезонное": "https://cdn-icons-png.flaticon.com/512/4421/4421089.png",
             "Смузи": "https://cdn-icons-png.flaticon.com/512/1147/1147588.png",
-            "Холодные напитки": "https://cdn-icons-png.flaticon.com/512/956/956850.png",
-            "Добавки": "https://cdn-icons-png.flaticon.com/512/1046/1046784.png"
+            "Холодные напитки": "https://cdn-icons-png.flaticon.com/512/956/956850.png"
         };
         return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png";
     }
-
-    let cart = [];
-
-    function renderMenu() {
-        const app = document.getElementById('app');
-        // Получаем уникальные категории
-        const categories = [...new Set(rawData.map(p => p.cat))];
-        
-        categories.forEach(cat => {
-            // Заголовок категории
-            const section = document.createElement('div');
-            section.className = 'category-section';
-            section.innerHTML = `<div class="category-title">${cat}</div>`;
-            
-            // Сетка товаров
-            const grid = document.createElement('div');
-            grid.className = 'grid';
-            
-            // Фильтруем товары этой категории
-            rawData.filter(p => p.cat === cat).forEach(p => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                
-                // Если у товара есть описание, показываем, если нет - скрываем
-                const descHtml = p.desc ? `<div class="desc">${p.desc}</div>` : '';
-                
-                card.innerHTML = `
-                    <div class="card-img-container">
-                        <img src="${getImageByCategory(p.cat)}" alt="${p.name}">
-                    </div>
-                    <h3>${p.name}</h3>
-                    ${descHtml}
-                    <div class="price-row">
-                        <div class="price">${p.price} ₸</div>
-                        <button class="add-btn" onclick="addToCart(${p.id})">ДОБАВИТЬ</button>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-            
-            section.appendChild(grid);
-            app.appendChild(section);
-        });
-    }
-
-    function addToCart(id) {
-        const product = rawData.find(p => p.id === id);
-        cart.push(product);
-        
-        updateMainButton();
-        tg.HapticFeedback.notificationOccurred('success');
-    }
-
-    function updateMainButton() {
-        const btn = document.getElementById('order-btn');
-        if (cart.length > 0) {
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
-            btn.style.display = 'block';
-            btn.innerText = `Оформить: ${total} ₸`;
-        } else {
-            btn.style.display = 'none';
-        }
-    }
-
-    function sendOrder() {
-        if (cart.length === 0) return;
-        
-        // Группируем одинаковые товары
-        const groupedCart = [];
-        cart.forEach(item => {
-            const existing = groupedCart.find(i => i.id === item.id);
-            if (existing) {
-                existing.quantity += 1;
-            } else {
-                groupedCart.push({...item, quantity: 1});
-            }
-        });
-
-        const total = cart.reduce((sum, item) => sum + item.price, 0);
-        const data = {
-            cart: groupedCart,
-            total: total
-        };
-        tg.sendData(JSON.stringify(data));
-    }
-
     renderMenu();
 </script>
 </body>
