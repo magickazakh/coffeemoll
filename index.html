@@ -2,16 +2,23 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Меню Кофейни</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script>
+        window.onerror = function(msg, url, line) {
+            alert("Ошибка: " + msg + "\nСтрока: " + line);
+            return false;
+        };
+    </script>
+
     <style>
         /* --- СТИЛИ --- */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #1f2937; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
         header { background-color: #ffffff; padding: 15px; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h1 { margin: 0; font-size: 18px; font-weight: 800; color: #111; text-align: center; }
         
-        /* Сетка товаров */
         .category-section { margin-bottom: 20px; }
         .category-title { padding: 15px 15px 5px 15px; font-size: 20px; font-weight: 800; color: #374151; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
@@ -25,30 +32,24 @@
         .price { font-weight: 700; font-size: 15px; color: #111; }
         .add-btn { background-color: #FFD54F; color: #3e2723; border: none; border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 12px; cursor: pointer; }
 
-        /* МОДАЛКИ (Общие стили) */
+        /* МОДАЛКИ */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: flex-end; justify-content: center; }
         .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .modal-title { font-size: 20px; font-weight: bold; }
         .close-icon { font-size: 24px; cursor: pointer; color: #888; }
 
-        /* Элементы форм */
         .option-group { margin-bottom: 20px; }
         .option-label { font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px; color: #444; }
-        
-        /* Радио и Табы */
         .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
-        .radio-label { flex: 1; text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 14px; transition: 0.2s; min-width: 80px; display: flex; align-items: center; justify-content: center; flex-direction: column;}
+        .radio-label { flex: 1; text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 14px; transition: 0.2s; min-width: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center;}
         .radio-input { display: none; }
         .radio-input:checked + .radio-label { background-color: #FFD54F; border-color: #FFD54F; color: #3e2723; font-weight: bold; }
-
-        /* Ввод текста */
+        
         select, input[type="text"], input[type="number"], input[type="tel"], textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; -webkit-appearance: none; background: #fff; margin-bottom: 10px; font-family: inherit; }
         textarea { resize: none; height: 80px; }
 
-        /* Чекбоксы (Toggle) */
         .checkbox-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid #eee; }
         .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
@@ -57,12 +58,10 @@
         input:checked + .slider { background-color: #FFD54F; }
         input:checked + .slider:before { transform: translateX(24px); }
 
-        /* Кнопки действий */
         .modal-footer { margin-top: 20px; display: flex; gap: 10px; }
         .modal-add-btn { background: #2ecc71; color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .main-btn { position: fixed; bottom: 15px; left: 15px; right: 15px; background: #2ecc71; color: white; padding: 16px; border-radius: 14px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); display: none; z-index: 900; }
-
-        /* Секция Итого в чекауте */
+        
         .checkout-total { font-size: 18px; font-weight: bold; margin-top: 10px; text-align: right; border-top: 1px solid #eee; padding-top: 10px; }
         .delivery-info { font-size: 13px; color: #2ecc71; margin-top: 5px; text-align: right; }
     </style>
@@ -110,7 +109,7 @@
         <div id="address-block" style="display: none;">
             <div class="option-group">
                 <label class="option-label">Адрес доставки</label>
-                <textarea id="delivery-address" placeholder="Улица, дом, квартира, подъезд..."></textarea>
+                <textarea id="delivery-address" placeholder="Улица, дом, квартира..."></textarea>
             </div>
         </div>
 
@@ -130,13 +129,12 @@
 
         <div id="payment-phone-block" style="display: none;">
             <div class="option-group">
-                <label class="option-label">Номер для выставления счета</label>
-                <input type="tel" id="payment-phone" placeholder="Введите номер привязанный к карте">
+                <label class="option-label">Номер для счета (Kaspi/Halyk)</label>
+                <input type="tel" id="payment-phone" placeholder="Номер привязанный к карте">
             </div>
         </div>
 
         <div class="checkout-total" id="checkout-total-sum">Итого: 0 ₸</div>
-        
         <button class="modal-add-btn" onclick="submitOrder()">Отправить заказ</button>
     </div>
 </div>
@@ -145,19 +143,17 @@
     const tg = window.Telegram.WebApp;
     tg.expand(); 
 
-    // --- ЦЕНЫ И КОНСТАНТЫ ---
     const DELIVERY_COST = 600;
-    
     const PRICES = {
         milk_lactose_free: 0, 
         milk_alternative: 400,
         extra_shot: 300,
-        syrup: 0,
-        coffee_add_milk: 50,
-        coffee_add_cream: 50,
-        tea_add_milk: 50,
-        tea_add_cream: 50,
-        tea_add_honey: 100
+        syrup: 150,
+        coffee_add_milk: 100,
+        coffee_add_cream: 200,
+        tea_add_milk: 100,
+        tea_add_cream: 200,
+        tea_add_honey: 300
     };
 
     const SYRUPS = [
@@ -167,123 +163,48 @@
         "Лаванда", "Брауни", "Клубника"
     ];
 
-    // --- БАЗА ДАННЫХ ---
+    // Убрал комментарии внутри объектов, чтобы не ломать парсер
     const menuData = [
-        {
-            id: "espresso", type: "complex", cat: "Кофе", name: "Эспрессо", desc: "Насыщенный и крепкий",
-            hasMilk: false, allowCoffeeExtras: true, hasVolumes: false, basePrice: 700, volumes: []
-        },
-        {
-            id: "americano", type: "complex", cat: "Кофе", name: "Американо", desc: "Мягкий черный кофе",
-            hasMilk: false, allowCoffeeExtras: true, hasVolumes: true, 
-            volumes: [{n: "0.2 л", p: 700}, {n: "0.3 л", p: 850}]
-        },
-        {
-            id: "flatwhite", type: "complex", cat: "Кофе", name: "Флэт уайт", desc: "Двойной эспрессо и молоко",
-            hasMilk: true, hasVolumes: false, basePrice: 950, volumes: []
-        },
-        {
-            id: "cappuccino", type: "complex", cat: "Кофе", name: "Капучино", desc: "Классика с пенкой",
-            hasMilk: true, hasVolumes: true,
-            volumes: [{n: "0.3 л", p: 1000}, {n: "0.4 л", p: 1200}]
-        },
-        {
-            id: "latte", type: "complex", cat: "Кофе", name: "Латте", desc: "Много молока",
-            hasMilk: true, hasVolumes: true,
-            volumes: [{n: "0.3 л", p: 950}, {n: "0.4 л", p: 1100}]
-        },
-        {
-            id: "raf", type: "complex", cat: "Кофе", name: "Раф", desc: "На сливках",
-            hasMilk: false, hasVolumes: true,
-            volumes: [{n: "0.3 л", p: 1400}, {n: "0.4 л", p: 1800}]
-        },
-        {
-            id: "mocha", type: "complex", cat: "Кофе", name: "Мокко", desc: "С шоколадом",
-            hasMilk: true, hasVolumes: true,
-            volumes: [{n: "0.3 л", p: 1000}, {n: "0.4 л", p: 1300}]
-        },
-        {
-            id: "hotchoc", type: "complex", cat: "Кофе", name: "Горячий шоколад", desc: "Густой и сладкий",
-            hasMilk: true, hasVolumes: true,
-            volumes: [{n: "0.3 л", p: 850}, {n: "0.4 л", p: 1200}]
-        },
+        { id: "espresso", type: "complex", cat: "Кофе", name: "Эспрессо", desc: "Насыщенный и крепкий", hasMilk: false, allowCoffeeExtras: true, hasVolumes: false, basePrice: 700, volumes: [] },
+        { id: "americano", type: "complex", cat: "Кофе", name: "Американо", desc: "Мягкий черный кофе", hasMilk: false, allowCoffeeExtras: true, hasVolumes: true, volumes: [{n: "0.2 л", p: 700}, {n: "0.3 л", p: 850}] },
+        { id: "flatwhite", type: "complex", cat: "Кофе", name: "Флэт уайт", desc: "Двойной эспрессо и молоко", hasMilk: true, hasVolumes: false, basePrice: 950, volumes: [] },
+        { id: "cappuccino", type: "complex", cat: "Кофе", name: "Капучино", desc: "Классика с пенкой", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 1000}, {n: "0.4 л", p: 1200}] },
+        { id: "latte", type: "complex", cat: "Кофе", name: "Латте", desc: "Много молока", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 950}, {n: "0.4 л", p: 1100}] },
+        { id: "raf", type: "complex", cat: "Кофе", name: "Раф", desc: "На сливках", hasMilk: false, hasVolumes: true, volumes: [{n: "0.3 л", p: 1400}, {n: "0.4 л", p: 1800}] },
+        { id: "mocha", type: "complex", cat: "Кофе", name: "Мокко", desc: "С шоколадом", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 1000}, {n: "0.4 л", p: 1300}] },
+        { id: "hotchoc", type: "complex", cat: "Кофе", name: "Горячий шоколад", desc: "Густой и сладкий", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 850}, {n: "0.4 л", p: 1200}] },
+        
+        { id: "black_tea", type: "complex", cat: "Чай", name: "Черный чай", desc: "", hasVolumes: false, fixedVolume: "300 мл", basePrice: 250, allowTeaExtras: true },
+        { id: "green_tea", type: "complex", cat: "Чай", name: "Зеленый чай", desc: "", hasVolumes: false, fixedVolume: "300 мл", basePrice: 250, allowTeaExtras: true },
+        { id: "tashkent", type: "complex", cat: "Чай", name: "Ташкентский", desc: "С пряными нотками", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 700}, {n: "Чайник 1 л", p: 1200}] },
+        { id: "oblepiha", type: "complex", cat: "Чай", name: "Облепиховый", desc: "Витаминный", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 800}, {n: "Чайник 1 л", p: 1300}] },
+        { id: "citrus_tea", type: "complex", cat: "Чай", name: "Цитрусовый чай", desc: "Сезонное", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}] },
+        { id: "masala", type: "complex", cat: "Чай", name: "Чай Масала", desc: "Пряный", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1850}, {n: "Чайник 1 л", p: 2800}] },
+        { id: "mango_chili", type: "complex", cat: "Чай", name: "Чай Манго-Чили", desc: "Острый", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1350}, {n: "Чайник 1 л", p: 2000}] },
+        { id: "cranberry", type: "complex", cat: "Чай", name: "Клюквенный чай", desc: "С кислинкой", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}] },
+        { id: "rasp_lime", type: "complex", cat: "Чай", name: "Чай Малина-Лайм", desc: "Освежающий", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1100}, {n: "Чайник 1 л", p: 1700}] },
+        { id: "ginger_tea", type: "complex", cat: "Чай", name: "Имбирный чай", desc: "Согревающий", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}] },
 
-        // ЧАЙ
-        {
-            id: "black_tea", type: "complex", cat: "Чай", name: "Черный чай", desc: "",
-            hasVolumes: false, fixedVolume: "300 мл", basePrice: 250, allowTeaExtras: true
-        },
-        {
-            id: "green_tea", type: "complex", cat: "Чай", name: "Зеленый чай", desc: "",
-            hasVolumes: false, fixedVolume: "300 мл", basePrice: 250, allowTeaExtras: true
-        },
-        {
-            id: "tashkent", type: "complex", cat: "Чай", name: "Ташкентский", desc: "С пряными нотками",
-            hasVolumes: true, allowTeaExtras: true,
-            volumes: [{n: "Стакан 400 мл", p: 700}, {n: "Чайник 1 л", p: 1200}]
-        },
-        {
-            id: "oblepiha", type: "complex", cat: "Чай", name: "Облепиховый", desc: "Витаминный",
-            hasVolumes: true, allowTeaExtras: true,
-            volumes: [{n: "Стакан 400 мл", p: 800}, {n: "Чайник 1 л", p: 1300}]
-        },
-        {
-            id: "citrus_tea", type: "complex", cat: "Чай", name: "Цитрусовый чай", desc: "Сезонное",
-            hasVolumes: true, allowTeaExtras: true,
-            volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}] 
-        },
-        {
-            id: "masala", type: "complex", cat: "Чай", name: "Чай Масала", desc: "Пряный",
-            hasVolumes: true, allowTeaExtras: true,
-            volumes: [{n: "Стакан 400 мл", p: 1850}, {n: "Чайник 1 л", p: 2800}] 
-        },
-        {
-            id: "mango_chili", type: "complex", cat: "Чай", name: "Чай Манго-Чили", desc: "Острый",
-            hasVolumes: true, allowTeaExtras: true,
-            volumes: [{n: "Стакан 400 мл", p: 1350}, {n: "Чайник 1 л", p: 2000}]
-        },
-        {
-            id: "cranberry", type: "complex", cat: "Чай", name: "Клюквенный чай", desc: "С кислинкой",
-            hasVolumes: true, allowTeaExtras: true,
-            volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}]
-        },
-        {
-            id: "rasp_lime", type: "complex", cat: "Чай", name: "Чай Малина-Лайм", desc: "Освежающий",
-            hasVolumes: true, allowTeaExtras: true,
-            volumes: [{n: "Стакан 400 мл", p: 1100}, {n: "Чайник 1 л", p: 1700}]
-        },
-        {
-            id: "ginger_tea", type: "complex", cat: "Чай", name: "Имбирный чай", desc: "Согревающий",
-            hasVolumes: true, allowTeaExtras: true,
-            volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}]
-        },
-
-        // ПРОСТЫЕ ТОВАРЫ
         {id: 34, type: "simple", cat: "Завтраки", name: "Английский завтрак", price: 1500, desc: "Глазунья, колбаски, тост"},
         {id: 35, type: "simple", cat: "Завтраки", name: "Скрэмбл с рукколой", price: 1400, desc: ""},
         {id: 36, type: "simple", cat: "Завтраки", name: "Сырники", price: 2000, desc: "Со сметаной и ягодой"},
         {id: 37, type: "simple", cat: "Завтраки", name: "Блинчики", price: 1200, desc: "С медом и сметаной"},
         {id: 38, type: "simple", cat: "Завтраки", name: "Деревенский завтрак", price: 2000, desc: ""},
-        
         {id: 39, type: "simple", cat: "Круассаны", name: "Круассан с курицей", price: 1000, desc: ""},
         {id: 40, type: "simple", cat: "Круассаны", name: "Круассан с говядиной", price: 1100, desc: ""},
         {id: 41, type: "simple", cat: "Круассаны", name: "Круассан с сёмгой", price: 1300, desc: ""},
-
         {id: 42, type: "simple", cat: "Салаты", name: "Цезарь", price: 1700, desc: ""},
         {id: 43, type: "simple", cat: "Салаты", name: "Греческий", price: 1600, desc: ""},
         {id: 44, type: "simple", cat: "Салаты", name: "Теплый с баклажанами", price: 1500, desc: ""},
         {id: 45, type: "simple", cat: "Салаты", name: "Салат с цыплёнком", price: 1200, desc: ""},
-
         {id: 53, type: "simple", cat: "Лимонады", name: "Киви-лайм", price: 450, desc: ""},
         {id: 54, type: "simple", cat: "Лимонады", name: "Ананас-апельсин", price: 450, desc: ""},
         {id: 55, type: "simple", cat: "Лимонады", name: "Клюквенный морс", price: 450, desc: ""},
-
         {id: 56, type: "simple", cat: "Коктейли", name: "Классический", price: 850, desc: ""},
         {id: 57, type: "simple", cat: "Коктейли", name: "Шоколадный", price: 900, desc: ""},
         {id: 58, type: "simple", cat: "Коктейли", name: "Клубничный", price: 900, desc: ""},
         {id: 59, type: "simple", cat: "Коктейли", name: "Банановый", price: 1000, desc: ""},
         {id: 60, type: "simple", cat: "Коктейли", name: "Фраппучино", price: 1800, desc: ""},
-
         {id: 61, type: "simple", cat: "Хот-доги", name: "Классика", price: 1100, desc: ""},
         {id: 62, type: "simple", cat: "Хот-доги", name: "Сырный", price: 1600, desc: ""},
         {id: 63, type: "simple", cat: "Хот-доги", name: "Барбекю", price: 1300, desc: ""},
@@ -293,7 +214,6 @@
         {id: 67, type: "simple", cat: "Хот-доги", name: "Ковбой", price: 1600, desc: ""},
         {id: 68, type: "simple", cat: "Хот-доги", name: "Айсберг", price: 1600, desc: ""},
         {id: 69, type: "simple", cat: "Хот-доги", name: "Острый", price: 1500, desc: ""},
-
         {id: 71, type: "simple", cat: "Пицца", name: "Сальса", price: 3000, desc: ""},
         {id: 72, type: "simple", cat: "Пицца", name: "Барбекю", price: 2450, desc: ""},
         {id: 73, type: "simple", cat: "Пицца", name: "Жульен с цыпленком", price: 2600, desc: ""},
@@ -304,19 +224,16 @@
         {id: 78, type: "simple", cat: "Пицца", name: "Маргарита", price: 1700, desc: ""},
         {id: 79, type: "simple", cat: "Пицца", name: "Филадельфия", price: 3200, desc: ""},
         {id: 80, type: "simple", cat: "Пицца", name: "Охотничья", price: 2300, desc: ""},
-
         {id: 81, type: "simple", cat: "Закуски", name: "Сырные палочки (5 шт)", price: 1400, desc: ""},
         {id: 82, type: "simple", cat: "Закуски", name: "Наггетсы (8 шт)", price: 1100, desc: ""},
         {id: 83, type: "simple", cat: "Закуски", name: "Наггетсы (20 шт)", price: 2000, desc: ""},
         {id: 84, type: "simple", cat: "Закуски", name: "Картофельные дольки", price: 800, desc: ""},
         {id: 85, type: "simple", cat: "Закуски", name: "Картофель фри", price: 600, desc: ""},
         {id: 86, type: "simple", cat: "Закуски", name: "Стрипсы (5 шт)", price: 1200, desc: ""},
-
         {id: 88, type: "simple", cat: "Сезонное", name: "Копченный латте", price: 1500, desc: ""},
         {id: 94, type: "simple", cat: "Сезонное", name: "Глинтвейн (Б/А)", price: 1000, desc: ""},
         {id: 96, type: "simple", cat: "Сезонное", name: "Какао с маршмеллоу", price: 1000, desc: ""},
         {id: 97, type: "simple", cat: "Сезонное", name: "Капучино Сникерс", price: 1500, desc: ""},
-        
         {id: 100, type: "simple", cat: "Холодные напитки", name: "Апельсиновый бамбл", price: 900, desc: ""},
         {id: 101, type: "simple", cat: "Холодные напитки", name: "Летний Boom", price: 900, desc: ""},
         {id: 102, type: "simple", cat: "Холодные напитки", name: "Мохито", price: 800, desc: ""},
@@ -327,9 +244,12 @@
     let cart = [];
     let currentModalProduct = null;
 
-    // --- 1. ОТРИСОВКА МЕНЮ ---
     function renderMenu() {
         const app = document.getElementById('app');
+        if (!app) {
+            alert("Error: #app not found");
+            return;
+        }
         const categories = [...new Set(menuData.map(p => p.cat))];
         
         categories.forEach(cat => {
@@ -371,7 +291,6 @@
         }
     }
 
-    // --- 2. МОДАЛЬНОЕ ОКНО ПРОДУКТА ---
     function openComplexModal(product) {
         currentModalProduct = product;
         const content = document.getElementById('product-modal-content');
@@ -382,7 +301,7 @@
         header.innerHTML = `<div class="modal-title">${product.name}</div><div class="close-icon" onclick="closeProductModal(event)">✕</div>`;
         content.appendChild(header);
 
-        // Объемы
+        // Volumes
         if (product.hasVolumes && product.volumes.length > 0) {
             const volGroup = document.createElement('div');
             volGroup.className = 'option-group';
@@ -401,7 +320,7 @@
             content.appendChild(info);
         }
 
-        // Молоко
+        // Milk
         if (product.hasMilk) {
             const milkGroup = document.createElement('div');
             milkGroup.className = 'option-group';
@@ -419,7 +338,7 @@
             content.appendChild(milkGroup);
         }
 
-        // Добавки Кофе
+        // Coffee Extras
         if (product.allowCoffeeExtras) {
             const extrasGroup = document.createElement('div');
             extrasGroup.className = 'option-group';
@@ -431,7 +350,7 @@
             content.appendChild(extrasGroup);
         }
 
-        // Добавки Чай
+        // Tea Extras
         if (product.allowTeaExtras) {
             const teaExtrasGroup = document.createElement('div');
             teaExtrasGroup.className = 'option-group';
@@ -444,20 +363,20 @@
             content.appendChild(teaExtrasGroup);
         }
 
-        // Сахар
+        // Sugar
         const sugarGroup = document.createElement('div');
         sugarGroup.className = 'option-group';
         sugarGroup.innerHTML = `<label class="option-label">Количество сахара (ложек)</label><input type="number" id="sugar-input" placeholder="0 (Оставить пустым для 'Без сахара')" min="0">`;
         content.appendChild(sugarGroup);
 
-        // Сиропы
+        // Syrups
         const syrupGroup = document.createElement('div');
         syrupGroup.className = 'option-group';
         let syrupOptions = SYRUPS.map(s => `<option value="${s}">${s}</option>`).join('');
         syrupGroup.innerHTML = `<label class="option-label">Сироп (+${PRICES.syrup} ₸)</label><select id="syrup-select" onchange="recalcPrice()">${syrupOptions}</select>`;
         content.appendChild(syrupGroup);
 
-        // Доп Шот
+        // Extra Shot
         if (product.cat === 'Кофе') {
             const shotGroup = document.createElement('div');
             shotGroup.className = 'checkbox-row';
@@ -550,8 +469,6 @@
         }
     }
 
-    // --- 3. ЛОГИКА ОФОРМЛЕНИЯ ЗАКАЗА (CHECKOUT) ---
-    
     function updateCartButton() {
         const btn = document.getElementById('cart-btn');
         if (cart.length > 0) {
@@ -565,7 +482,6 @@
 
     function openCheckout() {
         if (cart.length === 0) return;
-        // Заполняем имя и телефон из данных телеграм, если есть
         if (tg.initDataUnsafe?.user) {
             if (!document.getElementById('client-name').value) {
                  document.getElementById('client-name').value = tg.initDataUnsafe.user.first_name;
@@ -604,7 +520,6 @@
     }
 
     function submitOrder() {
-        // 1. Валидация
         const name = document.getElementById('client-name').value.trim();
         const phone = document.getElementById('client-phone').value.trim();
         const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
@@ -614,16 +529,9 @@
 
         if (!name) return alert("Пожалуйста, введите ваше имя");
         if (!phone) return alert("Пожалуйста, введите ваш номер телефона");
-        
-        if (deliveryType === 'delivery' && !address) {
-            return alert("Пожалуйста, укажите адрес доставки");
-        }
-        
-        if ((paymentType === 'Kaspi' || paymentType === 'Halyk') && !paymentPhone) {
-            return alert(`Для оплаты через ${paymentType}, пожалуйста, укажите номер телефона, привязанный к карте.`);
-        }
+        if (deliveryType === 'delivery' && !address) return alert("Пожалуйста, укажите адрес доставки");
+        if ((paymentType === 'Kaspi' || paymentType === 'Halyk') && !paymentPhone) return alert(`Укажите номер телефона для счета ${paymentType}.`);
 
-        // 2. Сбор данных
         const total = calculateCheckoutTotal();
         
         const orderData = {
@@ -639,7 +547,6 @@
             }
         };
 
-        // 3. Отправка
         tg.sendData(JSON.stringify(orderData));
     }
 
@@ -662,7 +569,12 @@
         return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png";
     }
     
-    renderMenu();
+    // Безопасная инициализация
+    try {
+        renderMenu();
+    } catch (e) {
+        alert("Ошибка при запуске: " + e);
+    }
 </script>
 </body>
 </html>
