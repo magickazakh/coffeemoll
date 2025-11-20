@@ -67,7 +67,9 @@ async def web_app_data_handler(message: types.Message):
 
         # 2. Определяем тип заказа (Иконка)
         is_delivery = (info.get('deliveryType') == 'Доставка')
-        order_icon = "🚗" if is_delivery else "🏃"
+        
+        # ИСПРАВЛЕНИЕ ЗДЕСЬ: Привели название переменной к единому виду
+        order_type_icon = "🚗" if is_delivery else "🏃"
         
         # 3. Формируем шапку чека
         text = f"{order_type_icon} <b>НОВЫЙ ЗАКАЗ</b>\n"
@@ -90,7 +92,7 @@ async def web_app_data_handler(message: types.Message):
             pay_phone = info.get('paymentPhone', 'Не указан')
             text += f"📱 <b>Счет на номер:</b> <code>{pay_phone}</code>\n"
 
-        # 6. Комментарий (НОВОЕ)
+        # 6. Комментарий
         comment = info.get('comment')
         if comment:
             text += f"💬 <b>Комментарий:</b> <i>{comment}</i>\n"
@@ -102,7 +104,7 @@ async def web_app_data_handler(message: types.Message):
         for i, item in enumerate(cart, 1):
             # Опции (сиропы, молоко и т.д.)
             options = item.get('options', [])
-            # Фильтруем пустые опции и "Без сахара" (чтобы не засорять чек)
+            # Фильтруем пустые опции и "Без сахара"
             valid_options = [opt for opt in options if opt and opt != "Без сахара"]
             
             options_str = ""
@@ -110,7 +112,6 @@ async def web_app_data_handler(message: types.Message):
                 options_str = f"\n   └ <i>{', '.join(valid_options)}</i>"
             
             item_name = item.get('name', 'Товар')
-            # item_price = item.get('price', 0) # Цену за позицию можно не писать, чтобы чек был компактнее
             
             text += f"{i}. <b>{item_name}</b> {options_str}\n"
         
@@ -132,7 +133,8 @@ async def web_app_data_handler(message: types.Message):
 
     except Exception as e:
         logging.error(f"Error processing order: {e}")
-        await message.answer("Произошла ошибка. Пожалуйста, попробуйте еще раз.")
+        # Отправляем клиенту сообщение, что что-то пошло не так, но мягко
+        await message.answer("Ваш заказ получен, но произошла ошибка при формировании чека. Менеджер свяжется с вами.")
 
 async def main():
     # Запускаем веб-сервер (для Render) и поллинг (для Telegram)
