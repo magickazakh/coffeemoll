@@ -7,9 +7,16 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     
-    <script>window.onerror = function(msg, url, line) { return false; };</script>
+    <script>
+        // ВКЛЮЧАЕМ ОТОБРАЖЕНИЕ ОШИБОК ДЛЯ ДИАГНОСТИКИ
+        window.onerror = function(msg, url, line) {
+            alert("Ошибка JS: " + msg + "\nСтрока: " + line);
+            return false;
+        };
+    </script>
+
     <style>
-        /* --- СТИЛИ ОСТАЮТСЯ ТЕМИ ЖЕ --- */
+        /* СТИЛИ ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #1f2937; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
         .header-container { background: white; position: sticky; top: 0; z-index: 40; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         header { padding: 15px 15px 10px 15px; display: flex; justify-content: space-between; align-items: center;}
@@ -29,8 +36,9 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         .card { background: white; border-radius: 16px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.1s; position: relative; }
         .card:active { transform: scale(0.98); }
-        .card-img-container { width: 100%; height: 100px; background: #f9fafb; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; overflow: hidden; position: relative;}
-        .card img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s; opacity: 0; }
+        .card-img-container { width: 100%; height: 100px; background: #f9fafb; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; overflow: hidden; position: relative; background-image: linear-gradient(to right, #f0f0f0 0%, #f8f8f8 20%, #f0f0f0 40%, #f0f0f0 100%); background-size: 800px 104px; animation: shimmer 1s linear infinite forwards;}
+        @keyframes shimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
+        .card img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s ease-in; }
         .card img.loaded { opacity: 1; }
         .card.unavailable { opacity: 0.6; background-color: #f9fafb; pointer-events: none; }
         .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
@@ -40,6 +48,11 @@
         .price { font-weight: 700; font-size: 15px; color: #111; }
         .add-btn { background-color: #FFD54F; color: #3e2723; border: none; border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 12px; cursor: pointer; }
         .add-btn:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
+        
+        .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction: column; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #FFD54F; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: flex-end; justify-content: center; }
         .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -77,11 +90,6 @@
         .delivery-warning { font-size: 13px; color: #d97706; background: #fef3c7; padding: 8px; border-radius: 8px; margin-top: 5px; display: none; }
         .contact-note { font-size: 12px; color: #6b7280; margin-top: 15px; display: flex; gap: 5px; align-items: flex-start; }
         
-        /* Спиннер загрузки */
-        .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction: column; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #FFD54F; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px;}
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
         .upsell-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1100; align-items: center; justify-content: center; }
         .upsell-content { background: white; width: 85%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; animation: popIn 0.3s; }
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -110,10 +118,10 @@
 </div>
 
 <div id="app"></div>
-
 <div class="main-btn" id="cart-btn" onclick="openCheckout()">К корзине</div>
 
 <div class="modal-overlay" id="product-modal" onclick="closeProductModal(event)"><div class="modal-content" id="product-modal-content"></div></div>
+
 <div class="modal-overlay" id="checkout-modal"><div class="modal-content" id="checkout-content">
     <div class="modal-header"><div class="modal-title">Ваш заказ</div><div class="close-icon" onclick="closeCheckout()">✕</div></div>
     <div id="cart-list-container"></div>
@@ -156,23 +164,13 @@
     const tg = window.Telegram.WebApp;
     tg.expand(); 
 
-    // === ВАЖНО: ВСТАВЬТЕ ВАШУ ССЫЛКУ НИЖЕ ВНУТРИ КАВЫЧЕК ===
-    // Оставьте префикс "https://corsproxy.io/?", он нужен чтобы не зависало!
+    // === ССЫЛКА НА CSV С CORS PROXY ===
+    const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv"; 
+    // !!! ЗАМЕНИТЕ ССЫЛКУ ВЫШЕ НА ВАШУ СОБСТВЕННУЮ ИЗ ШАГА 2 !!!
     
-    const RAW_SHEET_URL = "ВСТАВЬТЕ_СЮДА_ВАШУ_ССЫЛКУ_С_OUTPUT_CSV";
-    
-    // Собираем финальную ссылку через прокси
     const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL);
 
-    // -------------------------------------------------------------
-
-    const PRICES = { 
-        milk_lactose_free: 0, milk_alternative: 400, extra_shot: 300, 
-        syrup: 0, 
-        coffee_add_milk: 50, coffee_add_cream: 50, 
-        tea_add_milk: 50, tea_add_cream: 50, tea_add_honey: 100, tea_add_lemon: 50,
-        hotdog_add_cheese: 150, hotdog_add_jalapeno: 150, hotdog_add_onion: 150 
-    };
+    const PRICES = { milk_lactose_free: 0, milk_alternative: 400, extra_shot: 300, syrup: 0, coffee_add_milk: 50, coffee_add_cream: 50, tea_add_milk: 50, tea_add_cream: 50, tea_add_honey: 100, tea_add_lemon: 50, hotdog_add_cheese: 150, hotdog_add_jalapeno: 150, hotdog_add_onion: 150 };
     const SYRUPS = ["Нет", "Карамель", "Соленая карамель", "Кокос", "Лесной орех", "Шоколад", "Ваниль", "Ирис", "Попкорн", "Макадамия", "Крем брюле", "Шоколадное печенье", "Лемонграсс", "Фисташка", "Банан", "Амаретто", "Миндаль", "Мед", "Гранат", "Ирландский крем", "Лаванда", "Брауни", "Клубника"];
 
     let menuData = [];
@@ -180,14 +178,12 @@
     let currentModalProduct = null;
     let upsellShown = false;
 
-    // --- НОВАЯ ФУНКЦИЯ ЗАГРУЗКИ (С ПРОКСИ И БЕЗ ТАЙМЕРА) ---
     function initMenu() {
         const loadingScreen = document.getElementById('loading-screen');
         
-        // Проверка: вставил ли пользователь ссылку
-        if (RAW_SHEET_URL.includes("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv")) {
-            alert("ОШИБКА: Вы забыли вставить ссылку на вашу Google Таблицу в код index.html!");
-            loadingScreen.style.display = 'none';
+        if (RAW_SHEET_URL.includes("XXXXXXXXX")) {
+            alert("Внимание! Вы не вставили ссылку на вашу Google Таблицу в код. Меню не может быть загружено.");
+            loadingScreen.innerHTML = "Ошибка настройки (нет ссылки)";
             return;
         }
 
@@ -196,36 +192,33 @@
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
-                console.log("CSV Loaded:", results); // Для отладки в консоли
-                
                 if (!results.data || results.data.length === 0) {
                     alert("Ошибка: Таблица пустая или ссылка неверная.");
                     loadingScreen.style.display = 'none';
                     return;
                 }
-
+                
+                // Парсим данные
                 menuData = results.data.map(item => {
-                    if (!item.id) return null; // Пропускаем пустые строки
-
-                    // Приводим available к булеву (true/false), игнорируя регистр
+                    if (!item.id) return null;
+                    
                     let isAvailable = (String(item.available).trim().toLowerCase() === 'true');
-
-                    // Картинки: если ссылка, то оставляем, если файл - считаем что он локальный
                     let imgUrl = item.image ? item.image.trim() : "";
-                    if (imgUrl && !imgUrl.startsWith('http')) {
-                        // Если вы грузите картинки в корень GitHub, путь просто имя файла
-                        imgUrl = imgUrl; 
-                    }
+                    
+                    // Очистка данных от пробелов
+                    let cat = item.category ? item.category.trim() : "Прочее";
+                    let pType = item.type ? item.type.trim() : "simple";
+                    let pid = item.id.trim();
 
                     let product = {
-                        id: item.id,
-                        cat: item.category,
+                        id: pid,
+                        cat: cat,
                         name: item.name,
                         desc: item.description,
                         fullDesc: item.description, 
                         img: imgUrl,
                         available: isAvailable,
-                        type: item.type || 'simple',
+                        type: pType,
                         price: item.price ? parseInt(item.price) : 0,
                         basePrice: item.price ? parseInt(item.price) : 0,
                         hasVolumes: false, hasMilk: false,
@@ -233,36 +226,36 @@
                         volumes: []
                     };
 
-                    // ЛОГИКА МОДИФИКАТОРОВ
-                    if (item.category === 'Кофе') {
+                    // Логика сложных товаров (используем includes для надежности)
+                    if (cat === 'Кофе') {
                         product.allowCoffeeExtras = true;
-                        if (['cappuccino', 'latte', 'mocha', 'hotchoc'].includes(item.id)) {
+                        if (['cappuccino', 'latte', 'mocha', 'hotchoc'].includes(pid)) {
                             product.hasMilk = true; product.hasVolumes = true;
                             let base = parseInt(item.price);
                             product.volumes = [{n: "0.3 л", p: base}, {n: "0.4 л", p: base + 200}];
-                        } else if (item.id === 'americano') {
+                        } else if (pid === 'americano') {
                             product.hasVolumes = true;
                             let base = parseInt(item.price);
                             product.volumes = [{n: "0.2 л", p: base}, {n: "0.3 л", p: base + 150}];
-                        } else if (item.id === 'raf') {
+                        } else if (pid === 'raf') {
                             product.hasVolumes = true;
                             let base = parseInt(item.price);
                             product.volumes = [{n: "0.3 л", p: base}, {n: "0.4 л", p: base + 400}];
-                        } else if (item.id === 'flatwhite') product.hasMilk = true;
+                        } else if (pid === 'flatwhite') product.hasMilk = true;
                     }
 
-                    if (item.category === 'Чай') {
+                    if (cat === 'Чай') {
                         product.allowTeaExtras = true;
-                        if (!['black_tea', 'green_tea'].includes(item.id)) {
+                        if (!['black_tea', 'green_tea'].includes(pid)) {
                             product.hasVolumes = true;
                             let base = parseInt(item.price);
                             product.volumes = [{n: "Стакан 400 мл", p: base}, {n: "Чайник 1 л", p: base + 500}];
                         } else product.fixedVolume = "300 мл";
                     }
 
-                    if (item.category === 'Хот-доги') product.allowHotDogExtras = true;
+                    if (cat === 'Хот-доги') product.allowHotDogExtras = true;
                     
-                    if (item.id === '85') { // Наггетсы
+                    if (pid === '85') { // Наггетсы
                         product.hasVolumes = true;
                         product.volumes = [{n: "8 шт", p: 1100}, {n: "20 шт", p: 2000}];
                     }
@@ -270,20 +263,18 @@
                     return product;
                 }).filter(item => item !== null);
 
-                // Убираем спиннер только когда все готово
                 document.getElementById('loading-screen').style.display = 'none';
                 renderMenu();
             },
             error: function(err) {
-                // ЕСЛИ ОШИБКА - ПОКАЗЫВАЕМ ЕЁ
-                console.error("PapaParse Error:", err);
-                alert("Не удалось загрузить меню из Google Таблиц.\n\nДетали: " + err.message + "\n\nПроверьте ссылку в коде index.html");
+                console.error("CSV Error:", err);
+                alert("Не удалось загрузить меню. Проверьте интернет или ссылку.");
                 loadingScreen.style.display = 'none';
             }
         });
     }
 
-    // --- ОСТАЛЬНЫЕ ФУНКЦИИ (БЕЗ ИЗМЕНЕНИЙ) ---
+    // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
     function getLocalHour() { const now = new Date(); return now.getHours(); }
     function checkWorkingHours() {
         const hour = getLocalHour();
@@ -366,7 +357,10 @@
                 const badgeHtml = isOutOfStock ? `<div class="unavailable-badge">Закончилось</div>` : '';
                 
                 card.innerHTML = `
-                    <div class="card-img-container"><img src="${itemImage}" alt="${p.name}" loading="lazy" onload="this.classList.add('loaded')">${badgeHtml}</div>
+                    <div class="card-img-container">
+                        <img src="${itemImage}" alt="${p.name}" loading="lazy" onload="this.classList.add('loaded')">
+                        ${badgeHtml}
+                    </div>
                     <h3>${p.name}</h3>
                     ${p.desc ? `<div class="desc">${p.desc}</div>` : ''}
                     <div class="price-row"><div class="price">${displayPrice} ₸</div><button class="add-btn" ${isDisabled ? 'disabled' : ''} onclick="handleItemClick('${p.id}')">${btnText}</button></div>`;
@@ -380,16 +374,16 @@
     function handleItemClick(id) {
         if (!checkWorkingHours()) { alert("Кофейня закрыта"); return; }
         const product = menuData.find(p => String(p.id) === String(id));
+        
+        // Безопасная проверка на существование продукта
+        if (!product) {
+            alert("Ошибка: Товар не найден в базе данных.");
+            return;
+        }
+
         if (product.cat === 'Пицца' && !isPizzaAvailable()) { alert("Пицца доступна с 11:00!"); return; }
         if (!product.available) return;
         openComplexModal(product);
-    }
-
-    function addToCartSimple(product) {
-        cart.push({ name: product.name, price: product.price, options: [], cat: product.cat });
-        updateCartButton();
-        tg.HapticFeedback.notificationOccurred('success');
-        if (!upsellShown && (product.cat === 'Кофе' || product.cat === 'Чай')) checkUpsell();
     }
 
     function checkUpsell() {
@@ -397,8 +391,12 @@
     }
     function closeUpsell() { document.getElementById('upsell-modal').style.display = 'none'; }
     function acceptUpsell() {
-        const croissant = menuData.find(p => p.id == 39);
-        if(croissant) addToCartSimple(croissant);
+        const croissant = menuData.find(p => p.id == 39); // Убедитесь, что ID совпадает с таблицей!
+        if(croissant) {
+             cart.push({ name: croissant.name, price: croissant.price, options: [], cat: croissant.cat });
+             updateCartButton();
+             tg.HapticFeedback.notificationOccurred('success');
+        }
         closeUpsell();
     }
 
@@ -670,14 +668,11 @@
         return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png";
     }
 
+    // ЗАПУСК
     try {
-        initMenu(); // ЗАГРУЗКА С ГУГЛ ТАБЛИЦ
+        initMenu(); 
         setInterval(renderMenu, 60000);
     } catch (e) { alert(e); }
 </script>
 </body>
 </html>
-</body>
-</html>
-
-
