@@ -169,12 +169,23 @@
     const tg = window.Telegram.WebApp;
     tg.expand(); 
 
-    const PRICES = { milk_lactose_free: 0, milk_alternative: 400, extra_shot: 300, syrup: 150, coffee_add_milk: 100, coffee_add_cream: 200, tea_add_milk: 100, tea_add_cream: 200, tea_add_honey: 300 };
+    // ОБНОВЛЕННЫЕ ЦЕНЫ НА ДОБАВКИ
+    const PRICES = { 
+        milk_lactose_free: 0, milk_alternative: 400, extra_shot: 300, 
+        syrup: 0, // Сироп бесплатно
+        coffee_add_milk: 50, // 50
+        coffee_add_cream: 50, // 50
+        tea_add_milk: 50, // 50
+        tea_add_cream: 50, // 50
+        tea_add_honey: 100, // 100
+        tea_add_lemon: 50, // Новый: Лимон
+        hotdog_add_cheese: 150, hotdog_add_jalapeno: 150, hotdog_add_onion: 150 
+    };
+    
     const SYRUPS = ["Нет", "Карамель", "Соленая карамель", "Кокос", "Лесной орех", "Шоколад", "Ваниль", "Ирис", "Попкорн", "Макадамия", "Крем брюле", "Шоколадное печенье", "Лемонграсс", "Фисташка", "Банан", "Амаретто", "Миндаль", "Мед", "Гранат", "Ирландский крем", "Лаванда", "Брауни", "Клубника"];
 
-    // available: true = В НАЛИЧИИ (Да в таблице), available: false = ЗАКОНЧИЛОСЬ (Нет в таблице)
     const menuData = [
-        // КОФЕ (В наличии "Да" - значит available: true)
+        // КОФЕ
         { id: "espresso", type: "complex", cat: "Кофе", name: "Эспрессо", desc: "Насыщенный кофе с тонкой пенкой", fullDesc: "Насыщенный и крепкий кофе с тонкой пенкой, приготовленный под высоким давлением", hasMilk: false, allowCoffeeExtras: true, hasVolumes: false, basePrice: 700, volumes: [], available: true },
         { id: "americano", type: "complex", cat: "Кофе", name: "Американо", desc: "Мягкий кофе в маленькой порции", fullDesc: "Мягкий кофе, приготовленный путем разбавления эспрессо горячей водой", hasMilk: false, allowCoffeeExtras: true, hasVolumes: true, volumes: [{n: "0.2 л", p: 700}, {n: "0.3 л", p: 850}], available: true },
         { id: "flatwhite", type: "complex", cat: "Кофе", name: "Флэт уайт", desc: "Кофе с бархатистым молоком", fullDesc: "Нежный кофейный напиток с двойной порцией эспрессо и бархатистым молоком, без густой пенки", hasMilk: true, hasVolumes: false, basePrice: 950, volumes: [], available: true },
@@ -184,12 +195,11 @@
         { id: "mocha", type: "complex", cat: "Кофе", name: "Мокко", desc: "Шоколадный кофе", fullDesc: "Шоколадный кофейный напиток с эспрессо, молоком, шоколадом и легкой пенкой", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 1000}, {n: "0.4 л", p: 1300}], available: true },
         { id: "hotchoc", type: "complex", cat: "Кофе", name: "Горячий шоколад", desc: "Густой горячий шоколад", fullDesc: "Насыщенный и густой напиток из шоколада и молока", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 850}, {n: "0.4 л", p: 1200}], available: true },
         
-        // ЧАЙ (В наличии "Да", кроме некоторых сезонных)
+        // ЧАЙ
         { id: "black_tea", type: "complex", cat: "Чай", name: "Черный чай", desc: "", fullDesc: "", hasVolumes: false, fixedVolume: "300 мл", basePrice: 250, allowTeaExtras: true, available: true },
         { id: "green_tea", type: "complex", cat: "Чай", name: "Зеленый чай", desc: "", fullDesc: "", hasVolumes: false, fixedVolume: "300 мл", basePrice: 250, allowTeaExtras: true, available: true },
         { id: "tashkent", type: "complex", cat: "Чай", name: "Ташкентский", desc: "Черный чай с пряностями", fullDesc: "Ароматный черный чай с пряными нотками, приготовленный по традиционному рецепту", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 700}, {n: "Чайник 1 л", p: 1200}], available: true },
         { id: "oblepiha", type: "complex", cat: "Чай", name: "Облепиховый", desc: "Облепиховый чай", fullDesc: "Насыщенный и витаминный чай с ярким вкусом облепихи", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 800}, {n: "Чайник 1 л", p: 1300}], available: true },
-        // Сезонные чаи из таблицы - В наличии "Да"
         { id: "citrus_tea", type: "complex", cat: "Чай", name: "Цитрусовый чай", desc: "Апельсиново-грейпфрутовый", fullDesc: "Апельсиново-грейпфрутовый чай с мёдом и специями", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}], available: true },
         { id: "masala", type: "complex", cat: "Чай", name: "Чай Масала", desc: "Сливочный крепкий чай", fullDesc: "Сливочный крепкий чай с корицей и мёдом", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1850}, {n: "Чайник 1 л", p: 2800}], available: true },
         { id: "mango_chili", type: "complex", cat: "Чай", name: "Чай Манго-Чили", desc: "Пряный чай с манго и чили", fullDesc: "Пряный чай с манго, чили и апельсином", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1350}, {n: "Чайник 1 л", p: 2000}], available: true },
@@ -197,7 +207,7 @@
         { id: "rasp_lime", type: "complex", cat: "Чай", name: "Чай Малина-Лайм", desc: "Освежающий чай с малиной", fullDesc: "Освежающий чай с малиной, лаймом, малиновым сиропом и сахаром", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1100}, {n: "Чайник 1 л", p: 1700}], available: true },
         { id: "ginger_tea", type: "complex", cat: "Чай", name: "Имбирный чай", desc: "Чай с имбирем и медом", fullDesc: "Ароматный чай с имбирем, медом, лимоном, апельсином", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}], available: true },
 
-        // ЕДА - В наличии "Да"
+        // ЕДА
         {id: 34, type: "simple", cat: "Завтраки", name: "Английский завтрак", price: 1500, desc: "Глазунья с колбасками, тостом и овощным салатом", available: true},
         {id: 35, type: "simple", cat: "Завтраки", name: "Скрэмбл с рукколой", price: 1400, desc: "Скрэмбл с рукколой, томатами и бальзамической заправкой", available: true},
         {id: 36, type: "simple", cat: "Завтраки", name: "Сырники", price: 2000, desc: "Ванильные сырники с ягодой и сметаной", available: true},
@@ -213,7 +223,7 @@
         {id: 44, type: "simple", cat: "Салаты", name: "Теплый салат с баклажанами", price: 1500, desc: "Теплые хрустящие баклажаны с томатами", available: true},
         {id: 45, type: "simple", cat: "Салаты", name: "Салат с цыплёнком", price: 1200, desc: "Лёгкий салат с копчёной курицей и йогуртовой заправкой", available: true},
         
-        // НАПИТКИ - В наличии "Да"
+        // НАПИТКИ
         {id: 53, type: "simple", cat: "Лимонады", name: "Киви-лайм лимонад", price: 450, desc: "", available: true},
         {id: 54, type: "simple", cat: "Лимонады", name: "Ананас-апельсин лимонад", price: 450, desc: "", available: true},
         {id: 55, type: "simple", cat: "Лимонады", name: "Клюквенный морс", price: 450, desc: "", available: true},
@@ -223,16 +233,16 @@
         {id: 59, type: "simple", cat: "Коктейли", name: "Банановый", price: 1000, desc: "", available: true},
         {id: 60, type: "simple", cat: "Коктейли", name: "Фраппучино", price: 1800, desc: "", available: true},
         
-        // ФАСТФУД - В наличии "Да"
-        {id: 61, type: "simple", cat: "Хот-доги", name: "Классика", price: 1100, desc: "Говяжья сосиска с кетчупом и горчицей", available: true},
-        {id: 62, type: "simple", cat: "Хот-доги", name: "Сырный", price: 1600, desc: "Сосиска с сыром чеддер и сырным соусом", available: true},
-        {id: 63, type: "simple", cat: "Хот-доги", name: "Барбекю", price: 1300, desc: "Сосиска с соусом барбекю и жареным луком", available: true},
-        {id: 64, type: "simple", cat: "Хот-доги", name: "Датский", price: 1300, desc: "Сосиска с кетчупом, горчицей, огурцом и луком", available: true},
-        {id: 65, type: "simple", cat: "Хот-доги", name: "Бангкок", price: 1500, desc: "Сосиска с кисло-сладким соусом и овощами", available: true},
-        {id: 66, type: "simple", cat: "Хот-доги", name: "Френч-дог", price: 1200, desc: "Сосиска в французской булочке с кетчупом и горчицей", available: true},
-        {id: 67, type: "simple", cat: "Хот-доги", name: "Ковбой", price: 1600, desc: "Сосиска с барбекю, сыром, помидором и халапеньо", available: true},
-        {id: 68, type: "simple", cat: "Хот-доги", name: "Айсберг", price: 1600, desc: "Сосиска с овощами и чесночным соусом", available: true},
-        {id: 69, type: "simple", cat: "Хот-доги", name: "Острый", price: 1500, desc: "Острый хот-дог с сальсой, халапеньо и луком", available: true},
+        // ХОТ-ДОГИ
+        {id: 61, type: "simple", cat: "Хот-доги", name: "Классика", price: 1100, desc: "Говяжья сосиска с кетчупом и горчицей", allowHotDogExtras: true, available: true},
+        {id: 62, type: "simple", cat: "Хот-доги", name: "Сырный", price: 1600, desc: "Сосиска с сыром чеддер и сырным соусом", allowHotDogExtras: true, available: true},
+        {id: 63, type: "simple", cat: "Хот-доги", name: "Барбекю", price: 1300, desc: "Сосиска с соусом барбекю и жареным луком", allowHotDogExtras: true, available: true},
+        {id: 64, type: "simple", cat: "Хот-доги", name: "Датский", price: 1300, desc: "Сосиска с кетчупом, горчицей, огурцом и луком", allowHotDogExtras: true, available: true},
+        {id: 65, type: "simple", cat: "Хот-доги", name: "Бангкок", price: 1500, desc: "Сосиска с кисло-сладким соусом и овощами", allowHotDogExtras: true, available: true},
+        {id: 66, type: "simple", cat: "Хот-доги", name: "Френч-дог", price: 1200, desc: "Сосиска в французской булочке с кетчупом и горчицей", allowHotDogExtras: true, available: true},
+        {id: 67, type: "simple", cat: "Хот-доги", name: "Ковбой", price: 1600, desc: "Сосиска с барбекю, сыром, помидором и халапеньо", allowHotDogExtras: true, available: true},
+        {id: 68, type: "simple", cat: "Хот-доги", name: "Айсберг", price: 1600, desc: "Сосиска с овощами и чесночным соусом", allowHotDogExtras: true, available: true},
+        {id: 69, type: "simple", cat: "Хот-доги", name: "Острый", price: 1500, desc: "Острый хот-дог с сальсой, халапеньо и луком", allowHotDogExtras: true, available: true},
         
         {id: 71, type: "simple", cat: "Пицца", name: "Сальса", price: 3000, desc: "Острая пицца с говядиной и колбасками", available: true},
         {id: 72, type: "simple", cat: "Пицца", name: "Барбекю", price: 2450, desc: "Пицца с курицей, луком и соусом барбекю", available: true},
@@ -252,7 +262,6 @@
         {id: 85, type: "simple", cat: "Закуски", name: "Картофель фри", price: 600, desc: "Золотистый картофель фри", available: true},
         {id: 86, type: "simple", cat: "Закуски", name: "Стрипсы (5 шт)", price: 1200, desc: "Куриные стрипсы в хрустящей панировке", available: true},
         
-        // СЕЗОННОЕ И ХОЛОДНЫЕ - В наличии "Да"
         {id: 88, type: "simple", cat: "Сезонное", name: "Копченный латте", price: 1500, desc: "Латте с копчёной паприкой и кленовым сиропом", available: true},
         {id: 94, type: "simple", cat: "Сезонное", name: "Глинтвейн (Б/А)", price: 1000, desc: "Теплый глинтвейн с пряностями и апельсином", available: true},
         {id: 96, type: "simple", cat: "Сезонное", name: "Какао", price: 1000, desc: "Нежное какао с маршмеллоу", available: true},
@@ -264,7 +273,7 @@
         {id: 98, type: "simple", cat: "Холодные напитки", name: "Ice Латте", price: 1100, desc: "Холодный латте со льдом", available: true},
         {id: 99, type: "simple", cat: "Холодные напитки", name: "Ice Капучино", price: 1200, desc: "Холодный капучинно со льдом", available: true},
         
-        // СТОП-ЛИСТ (В наличии "Нет")
+        // СТОП-ЛИСТ
         {id: 104, type: "simple", cat: "Сезонное", name: "Ice Латте Рафаэлло", price: 1400, desc: "Кокосово-шоколадный латте со сливками", available: false},
         {id: 105, type: "simple", cat: "Сезонное", name: "Ice Чай", price: 900, desc: "Холодный зелёный чай с цитрусами и мёдом", available: false},
         {id: 106, type: "simple", cat: "Сезонное", name: "Вишневый бамбл", price: 900, desc: "Кофейно-вишневый бамбл с шоколадом", available: false},
@@ -375,8 +384,8 @@
         if (product.cat === 'Пицца' && !isPizzaAvailable()) { alert("Пицца доступна с 11:00!"); return; }
         if (product.available === false) return;
 
-        if (product.type === "complex") openComplexModal(product);
-        else addToCartSimple(product);
+        // Теперь ВСЕГДА открываем модалку
+        openComplexModal(product);
     }
 
     function addToCartSimple(product) {
@@ -416,7 +425,10 @@
         const content = document.getElementById('product-modal-content');
         
         let html = '';
-        html += `<div class="modal-header"><div class="modal-title-block"><div class="modal-title">${product.name}</div><div class="modal-desc">${product.fullDesc || product.desc}</div></div><div class="close-icon" onclick="closeProductModal(true)">✕</div></div>`;
+        // Используем fullDesc, если есть, иначе desc
+        const description = product.fullDesc || product.desc || "";
+        
+        html += `<div class="modal-header"><div class="modal-title-block"><div class="modal-title">${product.name}</div><div class="modal-desc">${description}</div></div><div class="close-icon" onclick="closeProductModal(true)">✕</div></div>`;
         
         if (product.hasVolumes) {
             html += `<div class="option-group"><label class="option-label">Объем</label><div class="radio-group">`;
@@ -438,19 +450,35 @@
 
         if(product.allowCoffeeExtras) {
             html += `<div class="option-group"><label class="option-label">Добавки</label>
-            <div class="checkbox-row"><span>Доп. молоко (+100)</span><label class="toggle-switch"><input type="checkbox" id="cm" onchange="recalcPrice()"><span class="slider"></span></label></div>
-            <div class="checkbox-row"><span>Доп. сливки (+200)</span><label class="toggle-switch"><input type="checkbox" id="cc" onchange="recalcPrice()"><span class="slider"></span></label></div></div>`;
+            <div class="checkbox-row"><span>Доп. молоко (+50)</span><label class="toggle-switch"><input type="checkbox" id="cm" onchange="recalcPrice()"><span class="slider"></span></label></div>
+            <div class="checkbox-row"><span>Доп. сливки (+50)</span><label class="toggle-switch"><input type="checkbox" id="cc" onchange="recalcPrice()"><span class="slider"></span></label></div></div>`;
         }
         if(product.allowTeaExtras) {
              html += `<div class="option-group"><label class="option-label">Добавки</label>
-            <div class="checkbox-row"><span>Молоко (+100)</span><label class="toggle-switch"><input type="checkbox" id="tm" onchange="recalcPrice()"><span class="slider"></span></label></div>
-            <div class="checkbox-row"><span>Сливки (+200)</span><label class="toggle-switch"><input type="checkbox" id="tc" onchange="recalcPrice()"><span class="slider"></span></label></div>
-            <div class="checkbox-row"><span>Мед (+300)</span><label class="toggle-switch"><input type="checkbox" id="th" onchange="recalcPrice()"><span class="slider"></span></label></div></div>`;
+            <div class="checkbox-row"><span>Молоко (+50)</span><label class="toggle-switch"><input type="checkbox" id="tm" onchange="recalcPrice()"><span class="slider"></span></label></div>
+            <div class="checkbox-row"><span>Сливки (+50)</span><label class="toggle-switch"><input type="checkbox" id="tc" onchange="recalcPrice()"><span class="slider"></span></label></div>
+            <div class="checkbox-row"><span>Мед (+100)</span><label class="toggle-switch"><input type="checkbox" id="th" onchange="recalcPrice()"><span class="slider"></span></label></div>
+            <div class="checkbox-row"><span>Доп. лимон (+50)</span><label class="toggle-switch"><input type="checkbox" id="tl" onchange="recalcPrice()"><span class="slider"></span></label></div></div>`;
+        }
+        
+        // МОДИФИКАТОРЫ ДЛЯ ХОТ-ДОГОВ
+        if(product.allowHotDogExtras) {
+             html += `<div class="option-group"><label class="option-label">Добавки</label>
+            <div class="checkbox-row"><span>Сыр (+150)</span><label class="toggle-switch"><input type="checkbox" id="hd-cheese" onchange="recalcPrice()"><span class="slider"></span></label></div>
+            <div class="checkbox-row"><span>Халапеньо (+150)</span><label class="toggle-switch"><input type="checkbox" id="hd-jalapeno" onchange="recalcPrice()"><span class="slider"></span></label></div>
+            <div class="checkbox-row"><span>Жареный лук (+150)</span><label class="toggle-switch"><input type="checkbox" id="hd-onion" onchange="recalcPrice()"><span class="slider"></span></label></div></div>`;
         }
 
-        html += `<div class="option-group"><label class="option-label">Сахар</label><input type="number" id="sug" placeholder="0" min="0"></div>`;
-        let sOpts = SYRUPS.map(s=>`<option value="${s}">${s}</option>`).join('');
-        html += `<div class="option-group"><label class="option-label">Сироп (+150)</label><select id="syr" onchange="recalcPrice()">${sOpts}</select></div>`;
+        // Сахар (для кофе и чая)
+        if (product.cat === 'Кофе' || product.cat === 'Чай') {
+            html += `<div class="option-group"><label class="option-label">Сахар</label><input type="number" id="sug" placeholder="0" min="0"></div>`;
+        }
+        
+        // Сироп (ТОЛЬКО ДЛЯ КОФЕ)
+        if (product.cat === 'Кофе') {
+            let sOpts = SYRUPS.map(s=>`<option value="${s}">${s}</option>`).join('');
+            html += `<div class="option-group"><label class="option-label">Сироп (Бесплатно)</label><select id="syr" onchange="recalcPrice()">${sOpts}</select></div>`;
+        }
         
         if(product.cat === 'Кофе') {
              html += `<div class="checkbox-row"><span>Доп. шот (+300)</span><label class="toggle-switch"><input type="checkbox" id="esh" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
@@ -476,14 +504,22 @@
             if(el && el.value === 'alt') p += 400;
         }
         
-        if(document.getElementById('cm') && document.getElementById('cm').checked) p += 100;
-        if(document.getElementById('cc') && document.getElementById('cc').checked) p += 200;
-        if(document.getElementById('tm') && document.getElementById('tm').checked) p += 100;
-        if(document.getElementById('tc') && document.getElementById('tc').checked) p += 200;
-        if(document.getElementById('th') && document.getElementById('th').checked) p += 300;
+        if(document.getElementById('cm') && document.getElementById('cm').checked) p += PRICES.coffee_add_milk;
+        if(document.getElementById('cc') && document.getElementById('cc').checked) p += PRICES.coffee_add_cream;
+        if(document.getElementById('tm') && document.getElementById('tm').checked) p += PRICES.tea_add_milk;
+        if(document.getElementById('tc') && document.getElementById('tc').checked) p += PRICES.tea_add_cream;
+        if(document.getElementById('th') && document.getElementById('th').checked) p += PRICES.tea_add_honey;
+        if(document.getElementById('tl') && document.getElementById('tl').checked) p += PRICES.tea_add_lemon;
         
-        if(document.getElementById('syr') && document.getElementById('syr').value !== "Нет") p += 150;
-        if(document.getElementById('esh') && document.getElementById('esh').checked) p += 300;
+        // Хот-доги
+        if(document.getElementById('hd-cheese') && document.getElementById('hd-cheese').checked) p += PRICES.hotdog_add_cheese;
+        if(document.getElementById('hd-jalapeno') && document.getElementById('hd-jalapeno').checked) p += PRICES.hotdog_add_jalapeno;
+        if(document.getElementById('hd-onion') && document.getElementById('hd-onion').checked) p += PRICES.hotdog_add_onion;
+        
+        // Сироп (если есть и не "Нет" -> +0, но оставим логику)
+        if(document.getElementById('syr') && document.getElementById('syr').value !== "Нет") p += PRICES.syrup;
+        
+        if(document.getElementById('esh') && document.getElementById('esh').checked) p += PRICES.extra_shot;
 
         const btn = document.getElementById('modal-btn');
         if(btn) {
@@ -515,12 +551,22 @@
         if(document.getElementById('tm') && document.getElementById('tm').checked) opts.push("Доп: Молоко");
         if(document.getElementById('tc') && document.getElementById('tc').checked) opts.push("Доп: Сливки");
         if(document.getElementById('th') && document.getElementById('th').checked) opts.push("Доп: Мед");
+        if(document.getElementById('tl') && document.getElementById('tl').checked) opts.push("Доп: Лимон");
 
-        const s = document.getElementById('sug').value;
-        opts.push(s ? `Сахар: ${s}` : "Без сахара");
+        // Хот-доги
+        if(document.getElementById('hd-cheese') && document.getElementById('hd-cheese').checked) opts.push("Доп: Сыр");
+        if(document.getElementById('hd-jalapeno') && document.getElementById('hd-jalapeno').checked) opts.push("Доп: Халапеньо");
+        if(document.getElementById('hd-onion') && document.getElementById('hd-onion').checked) opts.push("Доп: Жареный лук");
 
-        const syr = document.getElementById('syr').value;
-        if(syr !== "Нет") opts.push(`Сироп: ${syr}`);
+        if(document.getElementById('sug')) {
+            const s = document.getElementById('sug').value;
+            opts.push(s ? `Сахар: ${s}` : "Без сахара");
+        }
+
+        if(document.getElementById('syr')) {
+            const syr = document.getElementById('syr').value;
+            if(syr !== "Нет") opts.push(`Сироп: ${syr}`);
+        }
 
         if(document.getElementById('esh') && document.getElementById('esh').checked) opts.push("Доп. шот");
 
