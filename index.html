@@ -31,8 +31,9 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         .card { background: white; border-radius: 16px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.1s; position: relative; }
         .card:active { transform: scale(0.98); }
+        /* Изменил fit на cover, чтобы фото еды заполняло блок красиво */
         .card-img-container { width: 100%; height: 100px; background: #f9fafb; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; overflow: hidden; position: relative;}
-        .card img { width: 60%; height: 60%; object-fit: contain; }
+        .card img { width: 100%; height: 100%; object-fit: cover; } 
         
         .card.unavailable { opacity: 0.6; background-color: #f9fafb; pointer-events: none; }
         .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
@@ -101,7 +102,7 @@
 
 <div class="header-container">
     <header>
-        <h1 id="header-title">CoffeeMoll Меню</h1>
+        <h1 id="header-title">Кофемолка Меню</h1>
         <div id="work-status" class="status-badge">Checking...</div>
     </header>
 
@@ -137,7 +138,7 @@
                 <input type="radio" name="deliveryType" id="d-pickup" class="radio-input" value="pickup" checked onchange="toggleDelivery()"><label for="d-pickup" class="radio-label">🚶 Самовывоз</label>
                 <input type="radio" name="deliveryType" id="d-delivery" class="radio-input" value="delivery" onchange="toggleDelivery()"><label for="d-delivery" class="radio-label">🚗 Доставка</label>
             </div>
-            <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸</b> (рассчитывается курьером отдельно и не включена в итог).</div>
+            <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸</b> (рассчитывается менеджером и не включена в итог).</div>
         </div>
         <div id="address-block" style="display: none;"><div class="option-group"><label class="option-label">Адрес доставки</label><textarea id="delivery-address" placeholder="Улица, дом, квартира, подъезд..."></textarea></div></div>
         <div class="option-group">
@@ -150,7 +151,7 @@
         </div>
         <div id="payment-phone-block" style="display: none;"><div class="option-group"><label class="option-label">Номер для счета (Kaspi/Halyk)</label><input type="tel" id="payment-phone" placeholder="Номер привязанный к карте"></div></div>
         <div class="option-group"><label class="option-label">Комментарий к заказу</label><textarea id="order-comment" placeholder="Побольше салфеток, убрать лук и т.д."></textarea></div>
-        <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Согласен, что со мной свяжутся для уточнения деталей.</span></div>
+        <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Согласен, что менеджер свяжется со мной для уточнения деталей.</span></div>
         <button class="modal-add-btn" onclick="submitOrder()">Подтвердить заказ</button>
     </div>
 </div>
@@ -169,7 +170,7 @@
     const tg = window.Telegram.WebApp;
     tg.expand(); 
 
-    // ОБНОВЛЕННЫЕ ЦЕНЫ НА ДОБАВКИ
+    // ЦЕНЫ
     const PRICES = { 
         milk_lactose_free: 0, milk_alternative: 400, extra_shot: 300, 
         syrup: 0, 
@@ -203,21 +204,21 @@
         { id: "rasp_lime", type: "complex", cat: "Чай", name: "Чай Малина-Лайм", desc: "Освежающий чай с малиной", fullDesc: "Освежающий чай с малиной, лаймом, малиновым сиропом и сахаром", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1100}, {n: "Чайник 1 л", p: 1700}], available: true },
         { id: "ginger_tea", type: "complex", cat: "Чай", name: "Имбирный чай", desc: "Чай с имбирем и медом", fullDesc: "Ароматный чай с имбирем, медом, лимоном, апельсином", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}], available: true },
 
-        // ЕДА
-        {id: 34, type: "simple", cat: "Завтраки", name: "Английский завтрак", price: 1500, desc: "Глазунья с колбасками, тостом и овощным салатом", available: true},
-        {id: 35, type: "simple", cat: "Завтраки", name: "Скрэмбл с рукколой", price: 1400, desc: "Скрэмбл с рукколой, томатами и бальзамической заправкой", available: true},
-        {id: 36, type: "simple", cat: "Завтраки", name: "Сырники", price: 2000, desc: "Ванильные сырники с ягодой и сметаной", available: true},
-        {id: 37, type: "simple", cat: "Завтраки", name: "Блинчики", price: 1200, desc: "Свежие блинчики с мёдом и сметаной", available: true},
-        {id: 38, type: "simple", cat: "Завтраки", name: "Деревенский завтрак", price: 2000, desc: "Плотный завтрак с мясной нарезкой и картофелем", available: true},
+        // ЕДА (Добавлен img: "")
+        {id: 34, type: "simple", cat: "Завтраки", name: "Английский завтрак", price: 1500, desc: "Глазунья с колбасками, тостом и овощным салатом", available: true, img: "https://i.ibb.co.com/fYF7vv4m/image.png"},
+        {id: 35, type: "simple", cat: "Завтраки", name: "Скрэмбл с рукколой", price: 1400, desc: "Скрэмбл с рукколой, томатами и бальзамической заправкой", available: true, img: "https://i.ibb.co.com/ZzyXX4Xp/image.png"},
+        {id: 36, type: "simple", cat: "Завтраки", name: "Сырники", price: 2000, desc: "Ванильные сырники с ягодой и сметаной", available: true, img: "https://i.ibb.co.com/DHjwG517/image.png"},
+        {id: 37, type: "simple", cat: "Завтраки", name: "Блинчики", price: 1200, desc: "Свежие блинчики с мёдом и сметаной", available: true, img: "https://i.ibb.co.com/nNCCt1Ft/image.png"},
+        {id: 38, type: "simple", cat: "Завтраки", name: "Деревенский завтрак", price: 2000, desc: "Плотный завтрак с мясной нарезкой и картофелем", available: true, img: "https://i.ibb.co.com/mCJ0Bdfw/image.png"},
         
-        {id: 39, type: "simple", cat: "Круассаны", name: "Круассан с курицей", price: 1000, desc: "Нежный круассан с курицей, листом салата, свежим огурцом", available: true},
-        {id: 40, type: "simple", cat: "Круассаны", name: "Круассан с говядиной", price: 1100, desc: "Ароматный круассан с говядиной и творожным сыром", available: true},
-        {id: 41, type: "simple", cat: "Круассаны", name: "Круассан с сёмгой", price: 1300, desc: "Нежный круассан с ломтиками сёмги и творожным сыром", available: true},
+        {id: 39, type: "simple", cat: "Круассаны", name: "Круассан с курицей", price: 1000, desc: "Нежный круассан с курицей, листом салата, свежим огурцом", available: true, img: "https://i.ibb.co.com/DHKNkMvB/image.png"},
+        {id: 40, type: "simple", cat: "Круассаны", name: "Круассан с говядиной", price: 1100, desc: "Ароматный круассан с говядиной и творожным сыром", available: true, img: "https://i.ibb.co.com/ymqq28h1/image.png"},
+        {id: 41, type: "simple", cat: "Круассаны", name: "Круассан с сёмгой", price: 1300, desc: "Нежный круассан с ломтиками сёмги и творожным сыром", available: true, img: "https://i.ibb.co.com/1JMtW2jS/image.png"},
         
-        {id: 42, type: "simple", cat: "Салаты", name: "Цезарь", price: 1700, desc: "Курица, томаты, сухарики и соус цезарь", available: true},
-        {id: 43, type: "simple", cat: "Салаты", name: "Греческий", price: 1600, desc: "Свежие овощи, фетакса и оливково-лимонная заправка", available: true},
-        {id: 44, type: "simple", cat: "Салаты", name: "Теплый салат с баклажанами", price: 1500, desc: "Теплые хрустящие баклажаны с томатами", available: true},
-        {id: 45, type: "simple", cat: "Салаты", name: "Салат с цыплёнком", price: 1200, desc: "Лёгкий салат с копчёной курицей и йогуртовой заправкой", available: true},
+        {id: 42, type: "simple", cat: "Салаты", name: "Цезарь", price: 1700, desc: "Курица, томаты, сухарики и соус цезарь", available: true, img: "https://i.ibb.co.com/39HbCnfp/image.png"},
+        {id: 43, type: "simple", cat: "Салаты", name: "Греческий", price: 1600, desc: "Свежие овощи, фетакса и оливково-лимонная заправка", available: true, img: "https://i.ibb.co.com/LD7sswh7/image.png"},
+        {id: 44, type: "simple", cat: "Салаты", name: "Теплый салат с баклажанами", price: 1500, desc: "Теплые хрустящие баклажаны с томатами", available: true, img: "https://i.ibb.co.com/fKNXDFk/image.png"},
+        {id: 45, type: "simple", cat: "Салаты", name: "Салат с цыплёнком", price: 1200, desc: "Лёгкий салат с копчёной курицей и йогуртовой заправкой", available: true, img: "https://i.ibb.co.com/DDZzxSp1/image.png"},
         
         // НАПИТКИ
         {id: 53, type: "simple", cat: "Лимонады", name: "Киви-лайм лимонад", price: 450, desc: "", available: true},
@@ -230,33 +231,35 @@
         {id: 60, type: "simple", cat: "Коктейли", name: "Фраппучино", price: 1800, desc: "", available: true},
         
         // ХОТ-ДОГИ
-        {id: 61, type: "simple", cat: "Хот-доги", name: "Классика", price: 1100, desc: "Говяжья сосиска с кетчупом и горчицей", allowHotDogExtras: true, available: true},
-        {id: 62, type: "simple", cat: "Хот-доги", name: "Сырный", price: 1600, desc: "Сосиска с сыром чеддер и сырным соусом", allowHotDogExtras: true, available: true},
-        {id: 63, type: "simple", cat: "Хот-доги", name: "Барбекю", price: 1300, desc: "Сосиска с соусом барбекю и жареным луком", allowHotDogExtras: true, available: true},
-        {id: 64, type: "simple", cat: "Хот-доги", name: "Датский", price: 1300, desc: "Сосиска с кетчупом, горчицей, огурцом и луком", allowHotDogExtras: true, available: true},
-        {id: 65, type: "simple", cat: "Хот-доги", name: "Бангкок", price: 1500, desc: "Сосиска с кисло-сладким соусом и овощами", allowHotDogExtras: true, available: true},
-        {id: 66, type: "simple", cat: "Хот-доги", name: "Френч-дог", price: 1200, desc: "Сосиска в французской булочке с кетчупом и горчицей", allowHotDogExtras: true, available: true},
-        {id: 67, type: "simple", cat: "Хот-доги", name: "Ковбой", price: 1600, desc: "Сосиска с барбекю, сыром, помидором и халапеньо", allowHotDogExtras: true, available: true},
-        {id: 68, type: "simple", cat: "Хот-доги", name: "Айсберг", price: 1600, desc: "Сосиска с овощами и чесночным соусом", allowHotDogExtras: true, available: true},
-        {id: 69, type: "simple", cat: "Хот-доги", name: "Острый", price: 1500, desc: "Острый хот-дог с сальсой, халапеньо и луком", allowHotDogExtras: true, available: true},
+        {id: 61, type: "simple", cat: "Хот-доги", name: "Классика", price: 1100, desc: "Говяжья сосиска с кетчупом и горчицей", allowHotDogExtras: true, available: true, img: "https://i.ibb.co.com/RkC4dvD9/image.png"},
+        {id: 62, type: "simple", cat: "Хот-доги", name: "Сырный", price: 1600, desc: "Сосиска с сыром чеддер и сырным соусом", allowHotDogExtras: true, available: true, img: "https://i.ibb.co.com/bDCSWSV/image.png"},
+        {id: 63, type: "simple", cat: "Хот-доги", name: "Барбекю", price: 1300, desc: "Сосиска с соусом барбекю и жареным луком", allowHotDogExtras: true, available: true, img: "https://i.ibb.co.com/dJBPMqTg/image.png"},
+        {id: 64, type: "simple", cat: "Хот-доги", name: "Датский", price: 1300, desc: "Сосиска с кетчупом, горчицей, огурцом и луком", allowHotDogExtras: true, available: true, img: "https://i.ibb.co.com/v6BVJjXm/image.png"},
+        {id: 65, type: "simple", cat: "Хот-доги", name: "Бангкок", price: 1500, desc: "Сосиска с кисло-сладким соусом и овощами", allowHotDogExtras: true, available: true, img: "https://i.ibb.co.com/XkD8Mnrm/image.png"},
+        {id: 66, type: "simple", cat: "Хот-доги", name: "Френч-дог", price: 1200, desc: "Сосиска в французской булочке с кетчупом и горчицей", allowHotDogExtras: true, available: true, img: "https://i.ibb.co.com/v6YxqMFK/fotor-ai-art-effects-20250415142251.png"},
+        {id: 67, type: "simple", cat: "Хот-доги", name: "Ковбой", price: 1600, desc: "Сосиска с барбекю, сыром, помидором и халапеньо", allowHotDogExtras: true, available: true, img: "https://i.ibb.co.com/Mx9HZBSn/image.png"},
+        {id: 68, type: "simple", cat: "Хот-доги", name: "Айсберг", price: 1600, desc: "Сосиска с овощами и чесночным соусом", allowHotDogExtras: true, available: true, img: "https://i.ibb.co.com/JWVXNj2x/image.png"},
+        {id: 69, type: "simple", cat: "Хот-доги", name: "Острый", price: 1500, desc: "Острый хот-дог с сальсой, халапеньо и луком", allowHotDogExtras: true, available: true, img: "https://i.ibb.co.com/qLyxnspX/image.png"},
         
-        {id: 71, type: "simple", cat: "Пицца", name: "Сальса", price: 3000, desc: "Острая пицца с говядиной и колбасками", available: true},
-        {id: 72, type: "simple", cat: "Пицца", name: "Барбекю", price: 2450, desc: "Пицца с курицей, луком и соусом барбекю", available: true},
-        {id: 73, type: "simple", cat: "Пицца", name: "Жульен с цыпленком", price: 2600, desc: "Пицца с цыпленком, грибами и сливками", available: true},
-        {id: 74, type: "simple", cat: "Пицца", name: "Греческая", price: 2300, desc: "Пицца с овощами, маслинами и рукколой", available: true},
-        {id: 75, type: "simple", cat: "Пицца", name: "Римская с курицей", price: 2300, desc: "Пицца с курицей и грибами", available: true},
-        {id: 76, type: "simple", cat: "Пицца", name: "Римская с говядиной", price: 2700, desc: "Пицца с копченой говядиной и томатами", available: true},
-        {id: 77, type: "simple", cat: "Пицца", name: "Пепперони", price: 2100, desc: "Пицца с колбасками пепперони", available: true},
-        {id: 78, type: "simple", cat: "Пицца", name: "Маргарита", price: 1700, desc: "Классическая пицца с томатами и сыром", available: true},
-        {id: 79, type: "simple", cat: "Пицца", name: "Филадельфия", price: 3200, desc: "Сырная пицца с семгой и творожным сыром", available: true},
-        {id: 80, type: "simple", cat: "Пицца", name: "Охотничья", price: 2300, desc: "Мясная пицца с грибами и черри", available: true},
+        // ПИЦЦА
+        {id: 71, type: "simple", cat: "Пицца", name: "Сальса", price: 3000, desc: "Острая пицца с говядиной и колбасками", available: true, img: ""},
+        {id: 72, type: "simple", cat: "Пицца", name: "Барбекю", price: 2450, desc: "Пицца с курицей, луком и соусом барбекю", available: true, img: ""},
+        {id: 73, type: "simple", cat: "Пицца", name: "Жульен с цыпленком", price: 2600, desc: "Пицца с цыпленком, грибами и сливками", available: true, img: ""},
+        {id: 74, type: "simple", cat: "Пицца", name: "Греческая", price: 2300, desc: "Пицца с овощами, маслинами и рукколой", available: true, img: ""},
+        {id: 75, type: "simple", cat: "Пицца", name: "Римская с курицей", price: 2300, desc: "Пицца с курицей и грибами", available: true, img: ""},
+        {id: 76, type: "simple", cat: "Пицца", name: "Римская с говядиной", price: 2700, desc: "Пицца с копченой говядиной и томатами", available: true, img: ""},
+        {id: 77, type: "simple", cat: "Пицца", name: "Пепперони", price: 2100, desc: "Пицца с колбасками пепперони", available: true, img: ""},
+        {id: 78, type: "simple", cat: "Пицца", name: "Маргарита", price: 1700, desc: "Классическая пицца с томатами и сыром", available: true, img: ""},
+        {id: 79, type: "simple", cat: "Пицца", name: "Филадельфия", price: 3200, desc: "Сырная пицца с семгой и творожным сыром", available: true, img: ""},
+        {id: 80, type: "simple", cat: "Пицца", name: "Охотничья", price: 2300, desc: "Мясная пицца с грибами и черри", available: true, img: ""},
         
-        {id: 81, type: "simple", cat: "Закуски", name: "Сырные палочки (5 шт)", price: 1400, desc: "Хрустящие сырные палочки", available: true},
-        {id: 82, type: "simple", cat: "Закуски", name: "Наггетсы (8 шт)", price: 1100, desc: "Куриные наггетсы в хрустящей панировке", available: true},
-        {id: 83, type: "simple", cat: "Закуски", name: "Наггетсы (20 шт)", price: 2000, desc: "Большая порция куриных наггетсов", available: true},
-        {id: 84, type: "simple", cat: "Закуски", name: "Картофельные дольки", price: 800, desc: "Хрустящие картофельные дольки", available: true},
-        {id: 85, type: "simple", cat: "Закуски", name: "Картофель фри", price: 600, desc: "Золотистый картофель фри", available: true},
-        {id: 86, type: "simple", cat: "Закуски", name: "Стрипсы (5 шт)", price: 1200, desc: "Куриные стрипсы в хрустящей панировке", available: true},
+        // ЗАКУСКИ
+        {id: 81, type: "simple", cat: "Закуски", name: "Сырные палочки (5 шт)", price: 1400, desc: "Хрустящие сырные палочки", available: true, img: "https://i.ibb.co.com/qLRBBN1K/image.png"},
+        {id: 82, type: "simple", cat: "Закуски", name: "Наггетсы (8 шт)", price: 1100, desc: "Куриные наггетсы в хрустящей панировке", available: true, img: "https://i.ibb.co.com/spWpsmvt/image.png"},
+        {id: 83, type: "simple", cat: "Закуски", name: "Наггетсы (20 шт)", price: 2000, desc: "Большая порция куриных наггетсов", available: true, img: "https://i.ibb.co.com/spWpsmvt/image.png"},
+        {id: 84, type: "simple", cat: "Закуски", name: "Картофельные дольки", price: 800, desc: "Хрустящие картофельные дольки", available: true, img: "https://i.ibb.co.com/B2DVrSwM/image.png"},
+        {id: 85, type: "simple", cat: "Закуски", name: "Картофель фри", price: 600, desc: "Золотистый картофель фри", available: true, img: "https://i.ibb.co.com/8kVCzr6/image.png"},
+        {id: 86, type: "simple", cat: "Закуски", name: "Стрипсы (5 шт)", price: 1200, desc: "Куриные стрипсы в хрустящей панировке", available: true, img: "https://i.ibb.co.com/NdLqRg9b/unnamed-1.png"},
         
         {id: 88, type: "simple", cat: "Сезонное", name: "Копченный латте", price: 1500, desc: "Латте с копчёной паприкой и кленовым сиропом", available: true},
         {id: 94, type: "simple", cat: "Сезонное", name: "Глинтвейн (Б/А)", price: 1000, desc: "Теплый глинтвейн с пряностями и апельсином", available: true},
@@ -359,7 +362,7 @@
                 else if (isOutOfStock) { btnText = "НЕТ В НАЛИЧИИ"; card.classList.add('unavailable'); }
                 else if (isPizzaBlocked) btnText = "С 11:00";
                 
-                // Исправление NaN для простых товаров
+                // Исправление NaN для простых товаров и приоритет картинки
                 let displayPrice = 0;
                 if (p.type === "complex" && p.hasVolumes) {
                     displayPrice = `от ${p.volumes[0].p}`;
@@ -367,10 +370,11 @@
                     displayPrice = p.price || p.basePrice;
                 }
                 
+                const itemImage = p.img ? p.img : getImageByCategory(p.cat);
                 const badgeHtml = isOutOfStock ? `<div class="unavailable-badge">Закончилось</div>` : '';
                 
                 card.innerHTML = `
-                    <div class="card-img-container"><img src="${getImageByCategory(p.cat)}" alt="${p.name}">${badgeHtml}</div>
+                    <div class="card-img-container"><img src="${itemImage}" alt="${p.name}">${badgeHtml}</div>
                     <h3>${p.name}</h3>
                     ${p.desc ? `<div class="desc">${p.desc}</div>` : ''}
                     <div class="price-row"><div class="price">${displayPrice} ₸</div><button class="add-btn" ${isDisabled ? 'disabled' : ''} onclick="handleItemClick('${p.id}')">${btnText}</button></div>`;
@@ -387,7 +391,6 @@
         if (product.cat === 'Пицца' && !isPizzaAvailable()) { alert("Пицца доступна с 11:00!"); return; }
         if (product.available === false) return;
 
-        // Теперь ВСЕГДА открываем модалку
         openComplexModal(product);
     }
 
@@ -470,12 +473,10 @@
             <div class="checkbox-row"><span>Жареный лук (+150)</span><label class="toggle-switch"><input type="checkbox" id="hd-onion" onchange="recalcPrice()"><span class="slider"></span></label></div></div>`;
         }
 
-        // Сахар (для кофе и чая)
         if (product.cat === 'Кофе' || product.cat === 'Чай') {
             html += `<div class="option-group"><label class="option-label">Сахар</label><input type="number" id="sug" placeholder="0" min="0"></div>`;
         }
         
-        // Сироп (ТОЛЬКО ДЛЯ КОФЕ)
         if (product.cat === 'Кофе') {
             let sOpts = SYRUPS.map(s=>`<option value="${s}">${s}</option>`).join('');
             html += `<div class="option-group"><label class="option-label">Сироп (Бесплатно)</label><select id="syr" onchange="recalcPrice()">${sOpts}</select></div>`;
@@ -496,12 +497,10 @@
         let p = 0;
         const prod = currentModalProduct;
         
-        // БАЗОВАЯ ЦЕНА (Исправлен баг с NaN)
         if(prod.hasVolumes) {
             const el = document.querySelector('input[name="vol"]:checked');
             if(el) p += prod.volumes[el.value].p;
         } else {
-            // Используем basePrice если есть, иначе price
             p += (prod.basePrice !== undefined ? prod.basePrice : prod.price);
         }
 
@@ -678,4 +677,3 @@
 </script>
 </body>
 </html>
-
