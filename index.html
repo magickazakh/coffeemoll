@@ -101,7 +101,7 @@
 
 <div class="header-container">
     <header>
-        <h1 id="header-title">Кофемолка Меню</h1>
+        <h1 id="header-title">CoffeeMoll Меню</h1>
         <div id="work-status" class="status-badge">Checking...</div>
     </header>
 
@@ -137,7 +137,7 @@
                 <input type="radio" name="deliveryType" id="d-pickup" class="radio-input" value="pickup" checked onchange="toggleDelivery()"><label for="d-pickup" class="radio-label">🚶 Самовывоз</label>
                 <input type="radio" name="deliveryType" id="d-delivery" class="radio-input" value="delivery" onchange="toggleDelivery()"><label for="d-delivery" class="radio-label">🚗 Доставка</label>
             </div>
-            <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸</b> (рассчитывается менеджером и не включена в итог).</div>
+            <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸</b> (рассчитывается курьером отдельно и не включена в итог).</div>
         </div>
         <div id="address-block" style="display: none;"><div class="option-group"><label class="option-label">Адрес доставки</label><textarea id="delivery-address" placeholder="Улица, дом, квартира, подъезд..."></textarea></div></div>
         <div class="option-group">
@@ -150,7 +150,7 @@
         </div>
         <div id="payment-phone-block" style="display: none;"><div class="option-group"><label class="option-label">Номер для счета (Kaspi/Halyk)</label><input type="tel" id="payment-phone" placeholder="Номер привязанный к карте"></div></div>
         <div class="option-group"><label class="option-label">Комментарий к заказу</label><textarea id="order-comment" placeholder="Побольше салфеток, убрать лук и т.д."></textarea></div>
-        <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Согласен, что менеджер свяжется со мной для уточнения деталей.</span></div>
+        <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Согласен, что со мной свяжутся для уточнения деталей.</span></div>
         <button class="modal-add-btn" onclick="submitOrder()">Подтвердить заказ</button>
     </div>
 </div>
@@ -678,3 +678,4 @@
 </script>
 </body>
 </html>
+
