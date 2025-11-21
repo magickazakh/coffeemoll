@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Меню Кофейни</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>window.onerror = function(msg, url, line) { return false; };</script>
     <style>
         /* --- СТИЛИ --- */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #1f2937; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
@@ -32,7 +31,8 @@
         .card { background: white; border-radius: 16px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.1s; position: relative; }
         .card:active { transform: scale(0.98); }
         .card-img-container { width: 100%; height: 100px; background: #f9fafb; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; overflow: hidden; position: relative;}
-        .card img { width: 100%; height: 100%; object-fit: cover; }
+        .card img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s; opacity: 0; }
+        .card img.loaded { opacity: 1; }
         
         .card.unavailable { opacity: 0.6; background-color: #f9fafb; pointer-events: none; }
         .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
@@ -82,7 +82,8 @@
         input:checked + .slider:before { transform: translateX(22px); }
 
         .modal-footer { margin-top: 20px; display: flex; gap: 10px; }
-        .modal-add-btn { background: #2ecc71; color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .modal-add-btn { background: #2ecc71; color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        .modal-add-btn:disabled { background: #ccc; cursor: not-allowed; }
         .main-btn { position: fixed; bottom: 15px; left: 15px; right: 15px; background: #2ecc71; color: white; padding: 16px; border-radius: 14px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); display: none; z-index: 900; }
         
         .cart-item { background: #f9fafb; border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
@@ -151,7 +152,7 @@
         <div id="payment-phone-block" style="display: none;"><div class="option-group"><label class="option-label">Номер для счета (Kaspi/Halyk)</label><input type="tel" id="payment-phone" placeholder="Номер привязанный к карте"></div></div>
         <div class="option-group"><label class="option-label">Комментарий к заказу</label><textarea id="order-comment" placeholder="Побольше салфеток, убрать лук и т.д."></textarea></div>
         <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Согласен, что менеджер свяжется со мной для уточнения деталей.</span></div>
-        <button class="modal-add-btn" onclick="submitOrder()">Подтвердить заказ</button>
+        <button class="modal-add-btn" id="submit-btn" onclick="submitOrder()">Подтвердить заказ</button>
     </div>
 </div>
 
@@ -169,7 +170,6 @@
     const tg = window.Telegram.WebApp;
     tg.expand(); 
 
-    // ЦЕНЫ
     const PRICES = { 
         milk_lactose_free: 0, milk_alternative: 400, extra_shot: 300, 
         syrup: 0, 
@@ -257,16 +257,15 @@
         {id: 82, type: "simple", cat: "Пицца", name: "Филадельфия", price: 3200, desc: "Сырная пицца с семгой и творожным сыром", available: true, img: ""},
         {id: 83, type: "simple", cat: "Пицца", name: "Охотничья", price: 2300, desc: "Мясная пицца с грибами и черри", available: true, img: ""},
         
-        // ЗАКУСКИ (С ФОТО + ОБЪЕДИНЕННЫЕ НАГГЕТСЫ)
+        // ЗАКУСКИ
         {id: 84, type: "simple", cat: "Закуски", name: "Сырные палочки (5 шт)", price: 1400, desc: "Хрустящие сырные палочки", available: true, img: "https://i.ibb.co.com/qLRBBN1K/image.png"},
-        // Наггетсы объединены
+        // ОБЪЕДИНЕННЫЕ НАГГЕТСЫ
         {id: 85, type: "complex", cat: "Закуски", name: "Наггетсы", desc: "Куриные наггетсы в хрустящей панировке", fullDesc: "Куриные наггетсы в хрустящей панировке", available: true, hasVolumes: true, volumes: [{n: "8 шт", p: 1100}, {n: "20 шт", p: 2000}], basePrice: 1100, img: "https://i.ibb.co.com/spWpsmvt/image.png"},
-        
         {id: 87, type: "simple", cat: "Закуски", name: "Картофельные дольки", price: 800, desc: "Хрустящие картофельные дольки", available: true, img: "https://i.ibb.co.com/B2DVrSwM/image.png"},
         {id: 88, type: "simple", cat: "Закуски", name: "Картофель фри", price: 600, desc: "Золотистый картофель фри", available: true, img: "https://i.ibb.co.com/8kVCzr6/image.png"},
         {id: 89, type: "simple", cat: "Закуски", name: "Стрипсы (5 шт)", price: 1200, desc: "Куриные стрипсы в хрустящей панировке", available: true, img: "https://i.ibb.co.com/NdLqRg9b/unnamed-1.png"},
         
-        // СЕЗОННОЕ
+        // СЕЗОННОЕ (ID 91+)
         {id: 91, type: "simple", cat: "Сезонное", name: "Копченный латте", price: 1500, desc: "Латте с копчёной паприкой и кленовым сиропом", available: true},
         {id: 92, type: "simple", cat: "Сезонное", name: "Цитрусовый чай", price: 1000, desc: "Апельсиново-грейпфрутовый чай с мёдом и специями", available: true},
         {id: 93, type: "simple", cat: "Сезонное", name: "Чай масала", price: 1850, desc: "Сливочный крепкий чай с корицей и мёдом", available: true},
@@ -386,7 +385,10 @@
                 const badgeHtml = isOutOfStock ? `<div class="unavailable-badge">Закончилось</div>` : '';
                 
                 card.innerHTML = `
-                    <div class="card-img-container"><img src="${itemImage}" alt="${p.name}">${badgeHtml}</div>
+                    <div class="card-img-container">
+                        <img src="${itemImage}" alt="${p.name}" loading="lazy" onload="this.classList.add('loaded')">
+                        ${badgeHtml}
+                    </div>
                     <h3>${p.name}</h3>
                     ${p.desc ? `<div class="desc">${p.desc}</div>` : ''}
                     <div class="price-row"><div class="price">${displayPrice} ₸</div><button class="add-btn" ${isDisabled ? 'disabled' : ''} onclick="handleItemClick('${p.id}')">${btnText}</button></div>`;
@@ -586,6 +588,7 @@
         if(document.getElementById('esh') && document.getElementById('esh').checked) opts.push("Доп. шот");
 
         cart.push({ name: prod.name, price: price, options: opts, cat: prod.cat });
+        // Исправление: ИСПОЛЬЗОВАНИЕ ФУНКЦИИ ОЧИСТКИ ПОСЛЕ ОТПРАВКИ, НО ЗДЕСЬ МЫ ВНУТРИ ADD
         closeProductModal(true); 
         updateCartButton();
         tg.HapticFeedback.notificationOccurred('success');
@@ -656,7 +659,12 @@
         return t;
     }
 
-function submitOrder() {
+    // --- FIX FOR REPEAT ORDER ---
+    function submitOrder() {
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.innerText = "Отправка...";
+
         const name = document.getElementById('client-name').value.trim();
         const phone = document.getElementById('client-phone').value.trim();
         const address = document.getElementById('delivery-address').value.trim();
@@ -665,42 +673,41 @@ function submitOrder() {
         const payPhone = document.getElementById('payment-phone').value.trim();
         const comment = document.getElementById('order-comment').value.trim();
 
-        // ВАЛИДАЦИЯ
-        if (!name || !phone) return alert("Заполните имя и телефон");
-        if (delType === 'delivery' && !address) return alert("Укажите адрес доставки");
-        if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) return alert("Укажите номер для счета");
+        if (!name || !phone) {
+            btn.disabled = false; btn.innerText = "Подтвердить заказ";
+            return alert("Заполните имя и телефон");
+        }
+        if (delType === 'delivery' && !address) {
+            btn.disabled = false; btn.innerText = "Подтвердить заказ";
+            return alert("Укажите адрес доставки");
+        }
+        if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) {
+            btn.disabled = false; btn.innerText = "Подтвердить заказ";
+            return alert("Укажите номер для счета");
+        }
 
-        // СОХРАНЯЕМ ДАННЫЕ
         saveUserData(name, phone, address);
 
         const total = calculateCheckoutTotal();
-        
         const orderData = {
-            cart: cart, 
-            total: total,
-            info: { 
-                name: name, 
-                phone: phone, 
-                deliveryType: delType === 'delivery' ? 'Доставка' : 'Самовывоз', 
-                address: deliveryType === 'delivery' ? address : '', 
-                paymentType: payType, 
-                paymentPhone: (payType !== 'Наличными') ? payPhone : '', 
-                comment: comment 
-            }
+            cart: cart, total: total,
+            info: { name, phone, deliveryType: delType==='delivery'?'Доставка':'Самовывоз', address, paymentType: payType, paymentPhone: payPhone, comment }
         };
 
-        // 1. ОТПРАВЛЯЕМ ДАННЫЕ БОТУ
-        tg.sendData(JSON.stringify(orderData));
-
-        // 2. ОЧИЩАЕМ КОРЗИНУ И ИНТЕРФЕЙС (ИСПРАВЛЕНИЕ ПРОБЛЕМЫ)
-        cart = [];              // Обнуляем массив корзины
-        updateCartButton();     // Скрываем кнопку "К корзине"
-        closeCheckout();        // Закрываем модальное окно оформления
-        
-        // 3. ПРИНУДИТЕЛЬНО ЗАКРЫВАЕМ WEB APP
-        tg.close();
+        try {
+            tg.sendData(JSON.stringify(orderData));
+            // CLEANUP
+            cart = [];
+            updateCartButton();
+            closeCheckout();
+            tg.close();
+        } catch (e) {
+            alert("Ошибка отправки: " + e);
+            btn.disabled = false; 
+            btn.innerText = "Подтвердить заказ";
+        }
     }
-    
+
     function getImageByCategory(cat) {
         const map = { "Кофе": "https://cdn-icons-png.flaticon.com/512/751/751621.png", "Завтраки": "https://cdn-icons-png.flaticon.com/512/2771/2771406.png", "Круассаны": "https://cdn-icons-png.flaticon.com/512/3014/3014528.png", "Салаты": "https://cdn-icons-png.flaticon.com/512/2062/2062296.png", "Чай": "https://cdn-icons-png.flaticon.com/512/3054/3054889.png", "Лимонады": "https://cdn-icons-png.flaticon.com/512/2447/2447137.png", "Коктейли": "https://cdn-icons-png.flaticon.com/512/3081/3081986.png", "Хот-доги": "https://cdn-icons-png.flaticon.com/512/1980/1980788.png", "Пицца": "https://cdn-icons-png.flaticon.com/512/3132/3132693.png", "Закуски": "https://cdn-icons-png.flaticon.com/512/5787/5787016.png", "Сезонное": "https://cdn-icons-png.flaticon.com/512/4421/4421089.png", "Смузи": "https://cdn-icons-png.flaticon.com/512/1147/1147588.png", "Холодные напитки": "https://cdn-icons-png.flaticon.com/512/956/956850.png", "Пасты": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png" };
         return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png";
@@ -713,4 +720,3 @@ function submitOrder() {
 </script>
 </body>
 </html>
-
