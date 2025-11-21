@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
-# WEB SERVER
+# --- WEB SERVER ДЛЯ RENDER ---
 async def health_check(request): return web.Response(text="Bot is alive!")
 async def start_web_server():
     port = int(os.environ.get("PORT", 8080))
@@ -33,18 +33,21 @@ async def start_web_server():
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
 
-# COMMANDS
+# --- ОБРАБОТЧИКИ ---
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
-    markup = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=WEB_APP_URL))]], resize_keyboard=True)
+    markup = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=WEB_APP_URL))]], 
+        resize_keyboard=True
+    )
     await message.answer("Добро пожаловать в Кофемолку!", reply_markup=markup)
 
-# ORDER HANDLER
 @dp.message(F.web_app_data)
 async def web_app_data_handler(message: types.Message):
     try:
         json_data = message.web_app_data.data
         data = json.loads(json_data)
+        
         cart = data.get('cart', [])
         total = data.get('total', 0)
         info = data.get('info', {})
@@ -52,28 +55,47 @@ async def web_app_data_handler(message: types.Message):
         is_delivery = (info.get('deliveryType') == 'Доставка')
         order_icon = "🚗" if is_delivery else "🏃"
         
+        # Шапка чека
         text = f"{order_icon} <b>НОВЫЙ ЗАКАЗ</b>\n➖➖➖➖➖➖➖➖➖➖\n"
-        text += f"👤 <b>Имя:</b> {info.get('name')}\n📞 <b>Тел:</b> <a href='tel:{info.get('phone')}'>{info.get('phone')}</a>\n"
-        if is_delivery: text += f"📍 <b>Адрес:</b> {info.get('address')}\n"
-        else: text += f"📍 <b>Самовывоз</b>\n"
+        text += f"👤 <b>Имя:</b> {info.get('name')}\n"
+        text += f"📞 <b>Тел:</b> <a href='tel:{info.get('phone')}'>{info.get('phone')}</a>\n"
+        
+        if is_delivery:
+            text += f"📍 <b>Адрес:</b> {info.get('address')}\n"
+        else:
+            text += f"📍 <b>Самовывоз</b>\n"
         
         pay_type = info.get('paymentType')
         text += f"💳 <b>Оплата:</b> {pay_type}\n"
-        if pay_type in ['Kaspi', 'Halyk']: text += f"📱 <b>Счет на:</b> <code>{info.get('paymentPhone')}</code>\n"
-        if info.get('comment'): text += f"💬 <b>Коммент:</b> <i>{info.get('comment')}</i>\n"
+        
+        if pay_type in ['Kaspi', 'Halyk']:
+            text += f"📱 <b>Счет на:</b> <code>{info.get('paymentPhone')}</code>\n"
+            
+        if info.get('comment'):
+            text += f"💬 <b>Коммент:</b> <i>{info.get('comment')}</i>\n"
         
         text += f"➖➖➖➖➖➖➖➖➖➖\n\n<b>📋 ЗАКАЗ:</b>\n"
+        
+        # Перебор товаров (ИСПРАВЛЕННАЯ ЧАСТЬ)
         for i, item in enumerate(cart, 1):
-            opts = [o for o in item.options if o and o != "Без сахара"]
+            # Используем .get() вместо точек, так как item это словарь
+            options = item.get('options', [])
+            name = item.get('name', 'Товар')
+            
+            opts = [o for o in options if o and o != "Без сахара"]
             opts_str = f"\n   └ <i>{', '.join(opts)}</i>" if opts else ""
-            text += f"{i}. <b>{item.name}</b> {opts_str}\n"
+            
+            text += f"{i}. <b>{name}</b> {opts_str}\n"
         
         text += f"\n💰 <b>ИТОГО: {total} ₸</b>"
         if is_delivery: text += "\n⚠️ <i>+ Доставка (от 600 ₸)</i>"
 
-        # КНОПКИ ДЛЯ БАРИСТА
+        # Кнопки для бариста
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="✅ 15 мин", callback_data=f"acc_15_{message.chat.id}"), InlineKeyboardButton(text="✅ 30 мин", callback_data=f"acc_30_{message.chat.id}")],
+            [
+                InlineKeyboardButton(text="✅ 15 мин", callback_data=f"acc_15_{message.chat.id}"), 
+                InlineKeyboardButton(text="✅ 30 мин", callback_data=f"acc_30_{message.chat.id}")
+            ],
             [InlineKeyboardButton(text="❌ Отклонить", callback_data=f"dec_{message.chat.id}")]
         ])
 
@@ -85,8 +107,8 @@ async def web_app_data_handler(message: types.Message):
 
     except Exception as e:
         logging.error(f"Error: {e}")
+        # Можно отправить сообщение админу об ошибке, если нужно
 
-# CALLBACKS
 @dp.callback_query(F.data.startswith("acc_"))
 async def accept_order(callback: CallbackQuery):
     parts = callback.data.split("_")
