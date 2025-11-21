@@ -656,7 +656,7 @@
         return t;
     }
 
-    function submitOrder() {
+function submitOrder() {
         const name = document.getElementById('client-name').value.trim();
         const phone = document.getElementById('client-phone').value.trim();
         const address = document.getElementById('delivery-address').value.trim();
@@ -665,20 +665,42 @@
         const payPhone = document.getElementById('payment-phone').value.trim();
         const comment = document.getElementById('order-comment').value.trim();
 
+        // ВАЛИДАЦИЯ
         if (!name || !phone) return alert("Заполните имя и телефон");
         if (delType === 'delivery' && !address) return alert("Укажите адрес доставки");
-        if (payType !== 'Наличными' && !payPhone) return alert("Укажите номер для счета");
+        if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) return alert("Укажите номер для счета");
 
+        // СОХРАНЯЕМ ДАННЫЕ
         saveUserData(name, phone, address);
 
         const total = calculateCheckoutTotal();
+        
         const orderData = {
-            cart: cart, total: total,
-            info: { name, phone, deliveryType: delType==='delivery'?'Доставка':'Самовывоз', address, paymentType: payType, paymentPhone: payPhone, comment }
+            cart: cart, 
+            total: total,
+            info: { 
+                name: name, 
+                phone: phone, 
+                deliveryType: delType === 'delivery' ? 'Доставка' : 'Самовывоз', 
+                address: deliveryType === 'delivery' ? address : '', 
+                paymentType: payType, 
+                paymentPhone: (payType !== 'Наличными') ? payPhone : '', 
+                comment: comment 
+            }
         };
-        tg.sendData(JSON.stringify(orderData));
-    }
 
+        // 1. ОТПРАВЛЯЕМ ДАННЫЕ БОТУ
+        tg.sendData(JSON.stringify(orderData));
+
+        // 2. ОЧИЩАЕМ КОРЗИНУ И ИНТЕРФЕЙС (ИСПРАВЛЕНИЕ ПРОБЛЕМЫ)
+        cart = [];              // Обнуляем массив корзины
+        updateCartButton();     // Скрываем кнопку "К корзине"
+        closeCheckout();        // Закрываем модальное окно оформления
+        
+        // 3. ПРИНУДИТЕЛЬНО ЗАКРЫВАЕМ WEB APP
+        tg.close();
+    }
+    
     function getImageByCategory(cat) {
         const map = { "Кофе": "https://cdn-icons-png.flaticon.com/512/751/751621.png", "Завтраки": "https://cdn-icons-png.flaticon.com/512/2771/2771406.png", "Круассаны": "https://cdn-icons-png.flaticon.com/512/3014/3014528.png", "Салаты": "https://cdn-icons-png.flaticon.com/512/2062/2062296.png", "Чай": "https://cdn-icons-png.flaticon.com/512/3054/3054889.png", "Лимонады": "https://cdn-icons-png.flaticon.com/512/2447/2447137.png", "Коктейли": "https://cdn-icons-png.flaticon.com/512/3081/3081986.png", "Хот-доги": "https://cdn-icons-png.flaticon.com/512/1980/1980788.png", "Пицца": "https://cdn-icons-png.flaticon.com/512/3132/3132693.png", "Закуски": "https://cdn-icons-png.flaticon.com/512/5787/5787016.png", "Сезонное": "https://cdn-icons-png.flaticon.com/512/4421/4421089.png", "Смузи": "https://cdn-icons-png.flaticon.com/512/1147/1147588.png", "Холодные напитки": "https://cdn-icons-png.flaticon.com/512/956/956850.png", "Пасты": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png" };
         return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png";
@@ -691,3 +713,4 @@
 </script>
 </body>
 </html>
+
