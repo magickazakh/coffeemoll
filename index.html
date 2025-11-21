@@ -5,20 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Меню Кофейни</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <script>
-        // Глобальный перехват ошибок для отладки
-        window.onerror = function(msg, url, line) {
-            // alert("Ошибка: " + msg + "\nСтрока: " + line); // Если что-то не работает, раскомментируйте
-            return false;
-        };
-    </script>
-
+    <script>window.onerror = function(msg, url, line) { return false; };</script>
     <style>
         /* --- СТИЛИ --- */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #1f2937; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
         
-        /* ШАПКА */
         .header-container { background: white; position: sticky; top: 0; z-index: 40; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         header { padding: 15px 15px 10px 15px; display: flex; justify-content: space-between; align-items: center;}
         h1 { margin: 0; font-size: 18px; font-weight: 800; color: #111; }
@@ -26,18 +17,15 @@
         .status-open { background: #e6fffa; color: #047857; }
         .status-closed { background: #fef2f2; color: #b91c1c; }
 
-        /* ПОИСК */
         .search-wrapper { padding: 0 15px 10px 15px; }
         #search-input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid #eee; background: #f9fafb; font-size: 14px; outline: none; transition: 0.2s; margin: 0; box-sizing: border-box; }
         #search-input:focus { border-color: #FFD54F; background: #fff; }
 
-        /* НАВИГАЦИЯ */
         .nav-scroller { overflow-x: auto; white-space: nowrap; padding: 5px 15px 15px 15px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .nav-scroller::-webkit-scrollbar { display: none; }
         .nav-btn { display: inline-block; padding: 8px 16px; margin-right: 8px; background: #f3f4f6; border-radius: 20px; font-size: 13px; font-weight: 600; color: #4b5563; text-decoration: none; border: 1px solid transparent; transition: 0.2s; }
         .nav-btn.active { background: #3e2723; color: white; border-color: #3e2723; }
 
-        /* КАРТОЧКИ */
         .category-section { margin-bottom: 20px; scroll-margin-top: 140px; }
         .category-title { padding: 15px 15px 5px 15px; font-size: 20px; font-weight: 800; color: #374151; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
@@ -46,8 +34,8 @@
         .card-img-container { width: 100%; height: 100px; background: #f9fafb; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; overflow: hidden; position: relative;}
         .card img { width: 60%; height: 60%; object-fit: contain; }
         
-        .card.unavailable { opacity: 0.7; }
-        .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); }
+        .card.unavailable { opacity: 0.6; background-color: #f9fafb; pointer-events: none; }
+        .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
 
         .card h3 { margin: 0 0 5px 0; font-size: 14px; font-weight: 600; line-height: 1.3; }
         .card .desc { font-size: 11px; color: #6b7280; margin-bottom: 8px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -57,15 +45,15 @@
         .add-btn { background-color: #FFD54F; color: #3e2723; border: none; border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 12px; cursor: pointer; }
         .add-btn:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
 
-        /* МОДАЛЬНЫЕ ОКНА */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: flex-end; justify-content: center; }
         .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .modal-title-block { flex: 1; }
         .modal-title { font-size: 18px; font-weight: bold; }
-        .close-icon { font-size: 24px; cursor: pointer; color: #888; padding: 5px; }
+        .modal-desc { font-size: 13px; color: #666; margin-top: 4px; line-height: 1.4; }
+        .close-icon { font-size: 24px; cursor: pointer; color: #888; padding: 0 0 10px 10px; }
 
-        /* АПСЕЙЛ */
         .upsell-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1100; align-items: center; justify-content: center; }
         .upsell-content { background: white; width: 85%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; animation: popIn 0.3s; }
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -74,7 +62,6 @@
         .upsell-yes { background: #FFD54F; color: #3e2723; padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; flex: 1;}
         .upsell-no { background: #f3f4f6; color: #666; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; flex: 1;}
 
-        /* ЭЛЕМЕНТЫ ФОРМЫ */
         .option-group { margin-bottom: 15px; }
         .option-label { font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px; color: #444; }
         
@@ -139,71 +126,31 @@
             <div class="modal-title">Ваш заказ</div>
             <div class="close-icon" onclick="closeCheckout()">✕</div>
         </div>
-        
         <div id="cart-list-container"></div>
         <div class="checkout-total" id="checkout-total-sum">Итого: 0 ₸</div>
-        
         <div style="margin-top: 20px; border-top: 5px solid #f3f4f6; margin-left: -20px; margin-right: -20px;"></div>
         <h3 style="margin: 15px 0 10px 0; font-size: 16px;">Оформление</h3>
-
-        <div class="option-group">
-            <label class="option-label">Ваши контакты</label>
-            <input type="text" id="client-name" placeholder="Ваше имя">
-            <input type="tel" id="client-phone" placeholder="Номер телефона (+7...)">
-        </div>
-
+        <div class="option-group"><label class="option-label">Ваши контакты</label><input type="text" id="client-name" placeholder="Ваше имя"><input type="tel" id="client-phone" placeholder="Номер телефона (+7...)"></div>
         <div class="option-group">
             <label class="option-label">Способ получения</label>
             <div class="radio-group">
-                <input type="radio" name="deliveryType" id="d-pickup" class="radio-input" value="pickup" checked onchange="toggleDelivery()">
-                <label for="d-pickup" class="radio-label">🚶 Самовывоз</label>
-                
-                <input type="radio" name="deliveryType" id="d-delivery" class="radio-input" value="delivery" onchange="toggleDelivery()">
-                <label for="d-delivery" class="radio-label">🚗 Доставка</label>
+                <input type="radio" name="deliveryType" id="d-pickup" class="radio-input" value="pickup" checked onchange="toggleDelivery()"><label for="d-pickup" class="radio-label">🚶 Самовывоз</label>
+                <input type="radio" name="deliveryType" id="d-delivery" class="radio-input" value="delivery" onchange="toggleDelivery()"><label for="d-delivery" class="radio-label">🚗 Доставка</label>
             </div>
-            <div id="delivery-msg" class="delivery-warning">
-                ⚠️ Стоимость доставки <b>от 600 ₸</b> (рассчитывается менеджером и не включена в итог).
-            </div>
+            <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸</b> (рассчитывается менеджером и не включена в итог).</div>
         </div>
-
-        <div id="address-block" style="display: none;">
-            <div class="option-group">
-                <label class="option-label">Адрес доставки</label>
-                <textarea id="delivery-address" placeholder="Улица, дом, квартира, подъезд..."></textarea>
-            </div>
-        </div>
-
+        <div id="address-block" style="display: none;"><div class="option-group"><label class="option-label">Адрес доставки</label><textarea id="delivery-address" placeholder="Улица, дом, квартира, подъезд..."></textarea></div></div>
         <div class="option-group">
             <label class="option-label">Способ оплаты</label>
             <div class="radio-group">
-                <input type="radio" name="paymentType" id="p-cash" class="radio-input" value="Наличными" checked onchange="togglePayment()">
-                <label for="p-cash" class="radio-label">💵 Наличные</label>
-                
-                <input type="radio" name="paymentType" id="p-kaspi" class="radio-input" value="Kaspi" onchange="togglePayment()">
-                <label for="p-kaspi" class="radio-label">🔴 Kaspi</label>
-
-                <input type="radio" name="paymentType" id="p-halyk" class="radio-input" value="Halyk" onchange="togglePayment()">
-                <label for="p-halyk" class="radio-label">🟢 Halyk</label>
+                <input type="radio" name="paymentType" id="p-cash" class="radio-input" value="Наличными" checked onchange="togglePayment()"><label for="p-cash" class="radio-label">💵 Наличные</label>
+                <input type="radio" name="paymentType" id="p-kaspi" class="radio-input" value="Kaspi" onchange="togglePayment()"><label for="p-kaspi" class="radio-label">🔴 Kaspi</label>
+                <input type="radio" name="paymentType" id="p-halyk" class="radio-input" value="Halyk" onchange="togglePayment()"><label for="p-halyk" class="radio-label">🟢 Halyk</label>
             </div>
         </div>
-
-        <div id="payment-phone-block" style="display: none;">
-            <div class="option-group">
-                <label class="option-label">Номер для счета (Kaspi/Halyk)</label>
-                <input type="tel" id="payment-phone" placeholder="Номер привязанный к карте">
-            </div>
-        </div>
-
-        <div class="option-group">
-            <label class="option-label">Комментарий к заказу</label>
-            <textarea id="order-comment" placeholder="Побольше салфеток, убрать лук и т.д."></textarea>
-        </div>
-
-        <div class="contact-note">
-            <input type="checkbox" checked disabled style="width: auto; margin: 0;">
-            <span>Согласен, что менеджер свяжется со мной, если позиции не будет в наличии или для уточнения доставки.</span>
-        </div>
-
+        <div id="payment-phone-block" style="display: none;"><div class="option-group"><label class="option-label">Номер для счета (Kaspi/Halyk)</label><input type="tel" id="payment-phone" placeholder="Номер привязанный к карте"></div></div>
+        <div class="option-group"><label class="option-label">Комментарий к заказу</label><textarea id="order-comment" placeholder="Побольше салфеток, убрать лук и т.д."></textarea></div>
+        <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Согласен, что менеджер свяжется со мной для уточнения деталей.</span></div>
         <button class="modal-add-btn" onclick="submitOrder()">Подтвердить заказ</button>
     </div>
 </div>
@@ -214,10 +161,7 @@
         <img src="https://cdn-icons-png.flaticon.com/512/3014/3014528.png" alt="Croissant" class="upsell-img">
         <div style="font-weight: bold; margin-bottom: 5px;">Круассан с курицей</div>
         <div style="font-size: 14px; color: #666; margin-bottom: 15px;">1000 ₸</div>
-        <div class="upsell-btn-row">
-            <button class="upsell-no" onclick="closeUpsell()">Нет, спасибо</button>
-            <button class="upsell-yes" onclick="acceptUpsell()">Добавить</button>
-        </div>
+        <div class="upsell-btn-row"><button class="upsell-no" onclick="closeUpsell()">Нет, спасибо</button><button class="upsell-yes" onclick="acceptUpsell()">Добавить</button></div>
     </div>
 </div>
 
@@ -228,80 +172,111 @@
     const PRICES = { milk_lactose_free: 0, milk_alternative: 400, extra_shot: 300, syrup: 150, coffee_add_milk: 100, coffee_add_cream: 200, tea_add_milk: 100, tea_add_cream: 200, tea_add_honey: 300 };
     const SYRUPS = ["Нет", "Карамель", "Соленая карамель", "Кокос", "Лесной орех", "Шоколад", "Ваниль", "Ирис", "Попкорн", "Макадамия", "Крем брюле", "Шоколадное печенье", "Лемонграсс", "Фисташка", "Банан", "Амаретто", "Миндаль", "Мед", "Гранат", "Ирландский крем", "Лаванда", "Брауни", "Клубника"];
 
+    // available: true = В НАЛИЧИИ (Да в таблице), available: false = ЗАКОНЧИЛОСЬ (Нет в таблице)
     const menuData = [
-        { id: "espresso", type: "complex", cat: "Кофе", name: "Эспрессо", desc: "Насыщенный и крепкий", hasMilk: false, allowCoffeeExtras: true, hasVolumes: false, basePrice: 700, volumes: [], available: true },
-        { id: "americano", type: "complex", cat: "Кофе", name: "Американо", desc: "Мягкий черный кофе", hasMilk: false, allowCoffeeExtras: true, hasVolumes: true, volumes: [{n: "0.2 л", p: 700}, {n: "0.3 л", p: 850}], available: true },
-        { id: "flatwhite", type: "complex", cat: "Кофе", name: "Флэт уайт", desc: "Двойной эспрессо и молоко", hasMilk: true, hasVolumes: false, basePrice: 950, volumes: [], available: true },
-        { id: "cappuccino", type: "complex", cat: "Кофе", name: "Капучино", desc: "Классика с пенкой", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 1000}, {n: "0.4 л", p: 1200}], available: true },
-        { id: "latte", type: "complex", cat: "Кофе", name: "Латте", desc: "Много молока", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 950}, {n: "0.4 л", p: 1100}], available: true },
-        { id: "raf", type: "complex", cat: "Кофе", name: "Раф", desc: "На сливках", hasMilk: false, hasVolumes: true, volumes: [{n: "0.3 л", p: 1400}, {n: "0.4 л", p: 1800}], available: true },
-        { id: "mocha", type: "complex", cat: "Кофе", name: "Мокко", desc: "С шоколадом", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 1000}, {n: "0.4 л", p: 1300}], available: true },
-        { id: "hotchoc", type: "complex", cat: "Кофе", name: "Горячий шоколад", desc: "Густой и сладкий", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 850}, {n: "0.4 л", p: 1200}], available: true },
-        { id: "black_tea", type: "complex", cat: "Чай", name: "Черный чай", desc: "", hasVolumes: false, fixedVolume: "300 мл", basePrice: 250, allowTeaExtras: true, available: true },
-        { id: "green_tea", type: "complex", cat: "Чай", name: "Зеленый чай", desc: "", hasVolumes: false, fixedVolume: "300 мл", basePrice: 250, allowTeaExtras: true, available: true },
-        { id: "tashkent", type: "complex", cat: "Чай", name: "Ташкентский", desc: "С пряными нотками", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 700}, {n: "Чайник 1 л", p: 1200}], available: true },
-        { id: "oblepiha", type: "complex", cat: "Чай", name: "Облепиховый", desc: "Витаминный", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 800}, {n: "Чайник 1 л", p: 1300}], available: true },
-        { id: "citrus_tea", type: "complex", cat: "Чай", name: "Цитрусовый чай", desc: "Сезонное", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}], available: true },
-        { id: "masala", type: "complex", cat: "Чай", name: "Чай Масала", desc: "Пряный", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1850}, {n: "Чайник 1 л", p: 2800}], available: true },
-        { id: "mango_chili", type: "complex", cat: "Чай", name: "Чай Манго-Чили", desc: "Острый", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1350}, {n: "Чайник 1 л", p: 2000}], available: true },
-        { id: "cranberry", type: "complex", cat: "Чай", name: "Клюквенный чай", desc: "С кислинкой", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}], available: true },
-        { id: "rasp_lime", type: "complex", cat: "Чай", name: "Чай Малина-Лайм", desc: "Освежающий", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1100}, {n: "Чайник 1 л", p: 1700}], available: true },
-        { id: "ginger_tea", type: "complex", cat: "Чай", name: "Имбирный чай", desc: "Согревающий", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}], available: true },
-        {id: 34, type: "simple", cat: "Завтраки", name: "Английский завтрак", price: 1500, desc: "Глазунья, колбаски, тост", available: true},
-        {id: 35, type: "simple", cat: "Завтраки", name: "Скрэмбл с рукколой", price: 1400, desc: "", available: true},
-        {id: 36, type: "simple", cat: "Завтраки", name: "Сырники", price: 2000, desc: "Со сметаной и ягодой", available: true},
-        {id: 37, type: "simple", cat: "Завтраки", name: "Блинчики", price: 1200, desc: "С медом и сметаной", available: true},
-        {id: 38, type: "simple", cat: "Завтраки", name: "Деревенский завтрак", price: 2000, desc: "", available: true},
-        {id: 39, type: "simple", cat: "Круассаны", name: "Круассан с курицей", price: 1000, desc: "", available: true},
-        {id: 40, type: "simple", cat: "Круассаны", name: "Круассан с говядиной", price: 1100, desc: "", available: true},
-        {id: 41, type: "simple", cat: "Круассаны", name: "Круассан с сёмгой", price: 1300, desc: "", available: true},
-        {id: 42, type: "simple", cat: "Салаты", name: "Цезарь", price: 1700, desc: "", available: true},
-        {id: 43, type: "simple", cat: "Салаты", name: "Греческий", price: 1600, desc: "", available: true},
-        {id: 44, type: "simple", cat: "Салаты", name: "Теплый с баклажанами", price: 1500, desc: "", available: true},
-        {id: 45, type: "simple", cat: "Салаты", name: "Салат с цыплёнком", price: 1200, desc: "", available: true},
-        {id: 53, type: "simple", cat: "Лимонады", name: "Киви-лайм", price: 450, desc: "", available: true},
-        {id: 54, type: "simple", cat: "Лимонады", name: "Ананас-апельсин", price: 450, desc: "", available: true},
+        // КОФЕ (В наличии "Да" - значит available: true)
+        { id: "espresso", type: "complex", cat: "Кофе", name: "Эспрессо", desc: "Насыщенный кофе с тонкой пенкой", fullDesc: "Насыщенный и крепкий кофе с тонкой пенкой, приготовленный под высоким давлением", hasMilk: false, allowCoffeeExtras: true, hasVolumes: false, basePrice: 700, volumes: [], available: true },
+        { id: "americano", type: "complex", cat: "Кофе", name: "Американо", desc: "Мягкий кофе в маленькой порции", fullDesc: "Мягкий кофе, приготовленный путем разбавления эспрессо горячей водой", hasMilk: false, allowCoffeeExtras: true, hasVolumes: true, volumes: [{n: "0.2 л", p: 700}, {n: "0.3 л", p: 850}], available: true },
+        { id: "flatwhite", type: "complex", cat: "Кофе", name: "Флэт уайт", desc: "Кофе с бархатистым молоком", fullDesc: "Нежный кофейный напиток с двойной порцией эспрессо и бархатистым молоком, без густой пенки", hasMilk: true, hasVolumes: false, basePrice: 950, volumes: [], available: true },
+        { id: "cappuccino", type: "complex", cat: "Кофе", name: "Капучино", desc: "Кофе с молоком и пенкой", fullDesc: "Нежный кофе с равными частями эспрессо, молока и воздушной молочной пенки", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 1000}, {n: "0.4 л", p: 1200}], available: true },
+        { id: "latte", type: "complex", cat: "Кофе", name: "Латте", desc: "Кофе с молоком и легкой пенкой", fullDesc: "Нежный кофейный напиток с большим количеством молока и легкой пенкой", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 950}, {n: "0.4 л", p: 1100}], available: true },
+        { id: "raf", type: "complex", cat: "Кофе", name: "Раф", desc: "Сливочный кофе без сахара", fullDesc: "Сливочный кофейный напиток, приготовленный из эспрессо и сливок, взбитых вместе до нежной текстуры", hasMilk: false, hasVolumes: true, volumes: [{n: "0.3 л", p: 1400}, {n: "0.4 л", p: 1800}], available: true },
+        { id: "mocha", type: "complex", cat: "Кофе", name: "Мокко", desc: "Шоколадный кофе", fullDesc: "Шоколадный кофейный напиток с эспрессо, молоком, шоколадом и легкой пенкой", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 1000}, {n: "0.4 л", p: 1300}], available: true },
+        { id: "hotchoc", type: "complex", cat: "Кофе", name: "Горячий шоколад", desc: "Густой горячий шоколад", fullDesc: "Насыщенный и густой напиток из шоколада и молока", hasMilk: true, hasVolumes: true, volumes: [{n: "0.3 л", p: 850}, {n: "0.4 л", p: 1200}], available: true },
+        
+        // ЧАЙ (В наличии "Да", кроме некоторых сезонных)
+        { id: "black_tea", type: "complex", cat: "Чай", name: "Черный чай", desc: "", fullDesc: "", hasVolumes: false, fixedVolume: "300 мл", basePrice: 250, allowTeaExtras: true, available: true },
+        { id: "green_tea", type: "complex", cat: "Чай", name: "Зеленый чай", desc: "", fullDesc: "", hasVolumes: false, fixedVolume: "300 мл", basePrice: 250, allowTeaExtras: true, available: true },
+        { id: "tashkent", type: "complex", cat: "Чай", name: "Ташкентский", desc: "Черный чай с пряностями", fullDesc: "Ароматный черный чай с пряными нотками, приготовленный по традиционному рецепту", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 700}, {n: "Чайник 1 л", p: 1200}], available: true },
+        { id: "oblepiha", type: "complex", cat: "Чай", name: "Облепиховый", desc: "Облепиховый чай", fullDesc: "Насыщенный и витаминный чай с ярким вкусом облепихи", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 800}, {n: "Чайник 1 л", p: 1300}], available: true },
+        // Сезонные чаи из таблицы - В наличии "Да"
+        { id: "citrus_tea", type: "complex", cat: "Чай", name: "Цитрусовый чай", desc: "Апельсиново-грейпфрутовый", fullDesc: "Апельсиново-грейпфрутовый чай с мёдом и специями", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}], available: true },
+        { id: "masala", type: "complex", cat: "Чай", name: "Чай Масала", desc: "Сливочный крепкий чай", fullDesc: "Сливочный крепкий чай с корицей и мёдом", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1850}, {n: "Чайник 1 л", p: 2800}], available: true },
+        { id: "mango_chili", type: "complex", cat: "Чай", name: "Чай Манго-Чили", desc: "Пряный чай с манго и чили", fullDesc: "Пряный чай с манго, чили и апельсином", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1350}, {n: "Чайник 1 л", p: 2000}], available: true },
+        { id: "cranberry", type: "complex", cat: "Чай", name: "Клюквенный чай", desc: "Бодрящий чай с кислинкой", fullDesc: "Бодрящий чай с клюквенной кислинкой", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}], available: true },
+        { id: "rasp_lime", type: "complex", cat: "Чай", name: "Чай Малина-Лайм", desc: "Освежающий чай с малиной", fullDesc: "Освежающий чай с малиной, лаймом, малиновым сиропом и сахаром", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1100}, {n: "Чайник 1 л", p: 1700}], available: true },
+        { id: "ginger_tea", type: "complex", cat: "Чай", name: "Имбирный чай", desc: "Чай с имбирем и медом", fullDesc: "Ароматный чай с имбирем, медом, лимоном, апельсином", hasVolumes: true, allowTeaExtras: true, volumes: [{n: "Стакан 400 мл", p: 1000}, {n: "Чайник 1 л", p: 1600}], available: true },
+
+        // ЕДА - В наличии "Да"
+        {id: 34, type: "simple", cat: "Завтраки", name: "Английский завтрак", price: 1500, desc: "Глазунья с колбасками, тостом и овощным салатом", available: true},
+        {id: 35, type: "simple", cat: "Завтраки", name: "Скрэмбл с рукколой", price: 1400, desc: "Скрэмбл с рукколой, томатами и бальзамической заправкой", available: true},
+        {id: 36, type: "simple", cat: "Завтраки", name: "Сырники", price: 2000, desc: "Ванильные сырники с ягодой и сметаной", available: true},
+        {id: 37, type: "simple", cat: "Завтраки", name: "Блинчики", price: 1200, desc: "Свежие блинчики с мёдом и сметаной", available: true},
+        {id: 38, type: "simple", cat: "Завтраки", name: "Деревенский завтрак", price: 2000, desc: "Плотный завтрак с мясной нарезкой и картофелем", available: true},
+        
+        {id: 39, type: "simple", cat: "Круассаны", name: "Круассан с курицей", price: 1000, desc: "Нежный круассан с курицей, листом салата, свежим огурцом", available: true},
+        {id: 40, type: "simple", cat: "Круассаны", name: "Круассан с говядиной", price: 1100, desc: "Ароматный круассан с говядиной и творожным сыром", available: true},
+        {id: 41, type: "simple", cat: "Круассаны", name: "Круассан с сёмгой", price: 1300, desc: "Нежный круассан с ломтиками сёмги и творожным сыром", available: true},
+        
+        {id: 42, type: "simple", cat: "Салаты", name: "Цезарь", price: 1700, desc: "Курица, томаты, сухарики и соус цезарь", available: true},
+        {id: 43, type: "simple", cat: "Салаты", name: "Греческий", price: 1600, desc: "Свежие овощи, фетакса и оливково-лимонная заправка", available: true},
+        {id: 44, type: "simple", cat: "Салаты", name: "Теплый салат с баклажанами", price: 1500, desc: "Теплые хрустящие баклажаны с томатами", available: true},
+        {id: 45, type: "simple", cat: "Салаты", name: "Салат с цыплёнком", price: 1200, desc: "Лёгкий салат с копчёной курицей и йогуртовой заправкой", available: true},
+        
+        // НАПИТКИ - В наличии "Да"
+        {id: 53, type: "simple", cat: "Лимонады", name: "Киви-лайм лимонад", price: 450, desc: "", available: true},
+        {id: 54, type: "simple", cat: "Лимонады", name: "Ананас-апельсин лимонад", price: 450, desc: "", available: true},
         {id: 55, type: "simple", cat: "Лимонады", name: "Клюквенный морс", price: 450, desc: "", available: true},
         {id: 56, type: "simple", cat: "Коктейли", name: "Классический", price: 850, desc: "", available: true},
         {id: 57, type: "simple", cat: "Коктейли", name: "Шоколадный", price: 900, desc: "", available: true},
         {id: 58, type: "simple", cat: "Коктейли", name: "Клубничный", price: 900, desc: "", available: true},
         {id: 59, type: "simple", cat: "Коктейли", name: "Банановый", price: 1000, desc: "", available: true},
         {id: 60, type: "simple", cat: "Коктейли", name: "Фраппучино", price: 1800, desc: "", available: true},
-        {id: 61, type: "simple", cat: "Хот-доги", name: "Классика", price: 1100, desc: "", available: true},
-        {id: 62, type: "simple", cat: "Хот-доги", name: "Сырный", price: 1600, desc: "", available: true},
-        {id: 63, type: "simple", cat: "Хот-доги", name: "Барбекю", price: 1300, desc: "", available: true},
-        {id: 64, type: "simple", cat: "Хот-доги", name: "Датский", price: 1300, desc: "", available: true},
-        {id: 65, type: "simple", cat: "Хот-доги", name: "Бангкок", price: 1500, desc: "", available: true},
-        {id: 66, type: "simple", cat: "Хот-доги", name: "Френч-дог", price: 1200, desc: "", available: true},
-        {id: 67, type: "simple", cat: "Хот-доги", name: "Ковбой", price: 1600, desc: "", available: true},
-        {id: 68, type: "simple", cat: "Хот-доги", name: "Айсберг", price: 1600, desc: "", available: true},
-        {id: 69, type: "simple", cat: "Хот-доги", name: "Острый", price: 1500, desc: "", available: true},
-        {id: 71, type: "simple", cat: "Пицца", name: "Сальса", price: 3000, desc: "", available: true},
-        {id: 72, type: "simple", cat: "Пицца", name: "Барбекю", price: 2450, desc: "", available: true},
-        {id: 73, type: "simple", cat: "Пицца", name: "Жульен с цыпленком", price: 2600, desc: "", available: true},
-        {id: 74, type: "simple", cat: "Пицца", name: "Греческая", price: 2300, desc: "", available: true},
-        {id: 75, type: "simple", cat: "Пицца", name: "Римская с курицей", price: 2300, desc: "", available: true},
-        {id: 76, type: "simple", cat: "Пицца", name: "Римская с говядиной", price: 2700, desc: "", available: true},
-        {id: 77, type: "simple", cat: "Пицца", name: "Пепперони", price: 2100, desc: "", available: true},
-        {id: 78, type: "simple", cat: "Пицца", name: "Маргарита", price: 1700, desc: "", available: true},
-        {id: 79, type: "simple", cat: "Пицца", name: "Филадельфия", price: 3200, desc: "", available: true},
-        {id: 80, type: "simple", cat: "Пицца", name: "Охотничья", price: 2300, desc: "", available: true},
-        {id: 81, type: "simple", cat: "Закуски", name: "Сырные палочки (5 шт)", price: 1400, desc: "", available: true},
-        {id: 82, type: "simple", cat: "Закуски", name: "Наггетсы (8 шт)", price: 1100, desc: "", available: true},
-        {id: 83, type: "simple", cat: "Закуски", name: "Наггетсы (20 шт)", price: 2000, desc: "", available: true},
-        {id: 84, type: "simple", cat: "Закуски", name: "Картофельные дольки", price: 800, desc: "", available: true},
-        {id: 85, type: "simple", cat: "Закуски", name: "Картофель фри", price: 600, desc: "", available: true},
-        {id: 86, type: "simple", cat: "Закуски", name: "Стрипсы (5 шт)", price: 1200, desc: "", available: true},
-        {id: 88, type: "simple", cat: "Сезонное", name: "Копченный латте", price: 1500, desc: "", available: true},
-        {id: 94, type: "simple", cat: "Сезонное", name: "Глинтвейн (Б/А)", price: 1000, desc: "", available: true},
-        {id: 96, type: "simple", cat: "Сезонное", name: "Какао с маршмеллоу", price: 1000, desc: "", available: true},
-        {id: 97, type: "simple", cat: "Сезонное", name: "Капучино Сникерс", price: 1500, desc: "", available: true},
-        {id: 100, type: "simple", cat: "Холодные напитки", name: "Апельсиновый бамбл", price: 900, desc: "", available: true},
-        {id: 101, type: "simple", cat: "Холодные напитки", name: "Летний Boom", price: 900, desc: "", available: true},
-        {id: 102, type: "simple", cat: "Холодные напитки", name: "Мохито", price: 800, desc: "", available: true},
-        {id: 98, type: "simple", cat: "Холодные напитки", name: "Ice Латте", price: 1100, desc: "", available: true},
-        {id: 99, type: "simple", cat: "Холодные напитки", name: "Ice Капучино", price: 1200, desc: "", available: true},
-        {id: 104, type: "simple", cat: "Сезонное", name: "Ice Латте Рафаэлло", price: 1400, desc: "Кокос, шоколад", available: false}
+        
+        // ФАСТФУД - В наличии "Да"
+        {id: 61, type: "simple", cat: "Хот-доги", name: "Классика", price: 1100, desc: "Говяжья сосиска с кетчупом и горчицей", available: true},
+        {id: 62, type: "simple", cat: "Хот-доги", name: "Сырный", price: 1600, desc: "Сосиска с сыром чеддер и сырным соусом", available: true},
+        {id: 63, type: "simple", cat: "Хот-доги", name: "Барбекю", price: 1300, desc: "Сосиска с соусом барбекю и жареным луком", available: true},
+        {id: 64, type: "simple", cat: "Хот-доги", name: "Датский", price: 1300, desc: "Сосиска с кетчупом, горчицей, огурцом и луком", available: true},
+        {id: 65, type: "simple", cat: "Хот-доги", name: "Бангкок", price: 1500, desc: "Сосиска с кисло-сладким соусом и овощами", available: true},
+        {id: 66, type: "simple", cat: "Хот-доги", name: "Френч-дог", price: 1200, desc: "Сосиска в французской булочке с кетчупом и горчицей", available: true},
+        {id: 67, type: "simple", cat: "Хот-доги", name: "Ковбой", price: 1600, desc: "Сосиска с барбекю, сыром, помидором и халапеньо", available: true},
+        {id: 68, type: "simple", cat: "Хот-доги", name: "Айсберг", price: 1600, desc: "Сосиска с овощами и чесночным соусом", available: true},
+        {id: 69, type: "simple", cat: "Хот-доги", name: "Острый", price: 1500, desc: "Острый хот-дог с сальсой, халапеньо и луком", available: true},
+        
+        {id: 71, type: "simple", cat: "Пицца", name: "Сальса", price: 3000, desc: "Острая пицца с говядиной и колбасками", available: true},
+        {id: 72, type: "simple", cat: "Пицца", name: "Барбекю", price: 2450, desc: "Пицца с курицей, луком и соусом барбекю", available: true},
+        {id: 73, type: "simple", cat: "Пицца", name: "Жульен с цыпленком", price: 2600, desc: "Пицца с цыпленком, грибами и сливками", available: true},
+        {id: 74, type: "simple", cat: "Пицца", name: "Греческая", price: 2300, desc: "Пицца с овощами, маслинами и рукколой", available: true},
+        {id: 75, type: "simple", cat: "Пицца", name: "Римская с курицей", price: 2300, desc: "Пицца с курицей и грибами", available: true},
+        {id: 76, type: "simple", cat: "Пицца", name: "Римская с говядиной", price: 2700, desc: "Пицца с копченой говядиной и томатами", available: true},
+        {id: 77, type: "simple", cat: "Пицца", name: "Пепперони", price: 2100, desc: "Пицца с колбасками пепперони", available: true},
+        {id: 78, type: "simple", cat: "Пицца", name: "Маргарита", price: 1700, desc: "Классическая пицца с томатами и сыром", available: true},
+        {id: 79, type: "simple", cat: "Пицца", name: "Филадельфия", price: 3200, desc: "Сырная пицца с семгой и творожным сыром", available: true},
+        {id: 80, type: "simple", cat: "Пицца", name: "Охотничья", price: 2300, desc: "Мясная пицца с грибами и черри", available: true},
+        
+        {id: 81, type: "simple", cat: "Закуски", name: "Сырные палочки (5 шт)", price: 1400, desc: "Хрустящие сырные палочки", available: true},
+        {id: 82, type: "simple", cat: "Закуски", name: "Наггетсы (8 шт)", price: 1100, desc: "Куриные наггетсы в хрустящей панировке", available: true},
+        {id: 83, type: "simple", cat: "Закуски", name: "Наггетсы (20 шт)", price: 2000, desc: "Большая порция куриных наггетсов", available: true},
+        {id: 84, type: "simple", cat: "Закуски", name: "Картофельные дольки", price: 800, desc: "Хрустящие картофельные дольки", available: true},
+        {id: 85, type: "simple", cat: "Закуски", name: "Картофель фри", price: 600, desc: "Золотистый картофель фри", available: true},
+        {id: 86, type: "simple", cat: "Закуски", name: "Стрипсы (5 шт)", price: 1200, desc: "Куриные стрипсы в хрустящей панировке", available: true},
+        
+        // СЕЗОННОЕ И ХОЛОДНЫЕ - В наличии "Да"
+        {id: 88, type: "simple", cat: "Сезонное", name: "Копченный латте", price: 1500, desc: "Латте с копчёной паприкой и кленовым сиропом", available: true},
+        {id: 94, type: "simple", cat: "Сезонное", name: "Глинтвейн (Б/А)", price: 1000, desc: "Теплый глинтвейн с пряностями и апельсином", available: true},
+        {id: 96, type: "simple", cat: "Сезонное", name: "Какао", price: 1000, desc: "Нежное какао с маршмеллоу", available: true},
+        {id: 97, type: "simple", cat: "Сезонное", name: "Капучино Сникерс", price: 1500, desc: "Капучино с арахисом и карамелью", available: true},
+        {id: 100, type: "simple", cat: "Холодные напитки", name: "Апельсиновый бамбл", price: 900, desc: "Кофейно-апельсиновый бамбл с карамелью", available: true},
+        {id: 101, type: "simple", cat: "Холодные напитки", name: "Летний Boom", price: 900, desc: "Освежающий цитрусовый лимонад с мятой и ананасом", available: true},
+        {id: 102, type: "simple", cat: "Холодные напитки", name: "Мохито", price: 800, desc: "Освежающий мохито с лаймом и мятой", available: true},
+        {id: 103, type: "simple", cat: "Холодные напитки", name: "Манговый закат", price: 1000, desc: "Тропический газированный коктейль с маракуйей", available: true},
+        {id: 98, type: "simple", cat: "Холодные напитки", name: "Ice Латте", price: 1100, desc: "Холодный латте со льдом", available: true},
+        {id: 99, type: "simple", cat: "Холодные напитки", name: "Ice Капучино", price: 1200, desc: "Холодный капучинно со льдом", available: true},
+        
+        // СТОП-ЛИСТ (В наличии "Нет")
+        {id: 104, type: "simple", cat: "Сезонное", name: "Ice Латте Рафаэлло", price: 1400, desc: "Кокосово-шоколадный латте со сливками", available: false},
+        {id: 105, type: "simple", cat: "Сезонное", name: "Ice Чай", price: 900, desc: "Холодный зелёный чай с цитрусами и мёдом", available: false},
+        {id: 106, type: "simple", cat: "Сезонное", name: "Вишневый бамбл", price: 900, desc: "Кофейно-вишневый бамбл с шоколадом", available: false},
+        {id: 107, type: "simple", cat: "Сезонное", name: "Малиновый мохито", price: 800, desc: "Малиновый мохито с лаймом", available: false},
+        {id: 108, type: "simple", cat: "Сезонное", name: "Black Moll", price: 1000, desc: "Тропический газированный коктейль с маракуйей и вишней", available: false},
+        {id: 109, type: "simple", cat: "Сезонное", name: "Киви-мята", price: 1000, desc: "Киви-мятный лимонад с апельсином", available: false},
+        {id: 110, type: "simple", cat: "Смузи", name: "Киви смузи", price: 1200, desc: "Свежий смузи из киви", available: false},
+        {id: 111, type: "simple", cat: "Смузи", name: "Апельсин смузи", price: 1100, desc: "Апельсиновый смузи", available: false},
+        {id: 112, type: "simple", cat: "Смузи", name: "Апельсин-яблоко смузи", price: 1000, desc: "Фруктовый смузи с апельсином и яблоком", available: false},
+        {id: 113, type: "simple", cat: "Смузи", name: "Киви-апельсин-банан смузи", price: 1400, desc: "Тропический смузи с киви, апельсином и бананом", available: false},
+        {id: 114, type: "simple", cat: "Смузи", name: "Киви-банан-груша смузи", price: 1300, desc: "Фруктовый смузи с киви, бананом и грушей", available: false},
+        {id: 115, type: "simple", cat: "Смузи", name: "Ягодное смузи", price: 1800, desc: "Ягодный микс-смузи с бананом", available: false}
     ];
 
     let cart = [];
@@ -441,7 +416,7 @@
         const content = document.getElementById('product-modal-content');
         
         let html = '';
-        html += `<div class="modal-header"><div class="modal-title">${product.name}</div><div class="close-icon" onclick="closeProductModal(true)">✕</div></div>`;
+        html += `<div class="modal-header"><div class="modal-title-block"><div class="modal-title">${product.name}</div><div class="modal-desc">${product.fullDesc || product.desc}</div></div><div class="close-icon" onclick="closeProductModal(true)">✕</div></div>`;
         
         if (product.hasVolumes) {
             html += `<div class="option-group"><label class="option-label">Объем</label><div class="radio-group">`;
@@ -501,7 +476,6 @@
             if(el && el.value === 'alt') p += 400;
         }
         
-        // Безопасные проверки (если элемента нет, он просто игнорируется)
         if(document.getElementById('cm') && document.getElementById('cm').checked) p += 100;
         if(document.getElementById('cc') && document.getElementById('cc').checked) p += 200;
         if(document.getElementById('tm') && document.getElementById('tm').checked) p += 100;
@@ -551,21 +525,18 @@
         if(document.getElementById('esh') && document.getElementById('esh').checked) opts.push("Доп. шот");
 
         cart.push({ name: prod.name, price: price, options: opts, cat: prod.cat });
-        closeProductModal(true); // Принудительно закрываем
+        closeProductModal(true); 
         updateCartButton();
         tg.HapticFeedback.notificationOccurred('success');
         if (!upsellShown && (prod.cat === 'Кофе' || prod.cat === 'Чай')) checkUpsell();
     }
 
     function closeProductModal(force) {
-        // Если force == true, закрываем принудительно.
-        // Иначе проверяем event (e), чтобы закрывать только по фону.
         if (force === true) {
             document.getElementById('product-modal').style.display = 'none';
             return;
         }
-        // Обработчик клика по фону:
-        const e = force; // В HTML передается event
+        const e = force; 
         if (e && e.target.id === 'product-modal') {
             document.getElementById('product-modal').style.display = 'none';
         }
