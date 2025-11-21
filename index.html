@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Меню Кофейни</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>window.onerror = function(msg, url, line) { return false; };</script>
     <style>
         /* --- СТИЛИ --- */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #1f2937; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
@@ -82,7 +83,7 @@
         input:checked + .slider:before { transform: translateX(22px); }
 
         .modal-footer { margin-top: 20px; display: flex; gap: 10px; }
-        .modal-add-btn { background: #2ecc71; color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        .modal-add-btn { background: #2ecc71; color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .modal-add-btn:disabled { background: #ccc; cursor: not-allowed; }
         .main-btn { position: fixed; bottom: 15px; left: 15px; right: 15px; background: #2ecc71; color: white; padding: 16px; border-radius: 14px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); display: none; z-index: 900; }
         
@@ -257,15 +258,16 @@
         {id: 82, type: "simple", cat: "Пицца", name: "Филадельфия", price: 3200, desc: "Сырная пицца с семгой и творожным сыром", available: true, img: ""},
         {id: 83, type: "simple", cat: "Пицца", name: "Охотничья", price: 2300, desc: "Мясная пицца с грибами и черри", available: true, img: ""},
         
-        // ЗАКУСКИ
+        // ЗАКУСКИ (С ФОТО + ОБЪЕДИНЕННЫЕ НАГГЕТСЫ)
         {id: 84, type: "simple", cat: "Закуски", name: "Сырные палочки (5 шт)", price: 1400, desc: "Хрустящие сырные палочки", available: true, img: "https://i.ibb.co.com/qLRBBN1K/image.png"},
-        // ОБЪЕДИНЕННЫЕ НАГГЕТСЫ
+        // Наггетсы объединены
         {id: 85, type: "complex", cat: "Закуски", name: "Наггетсы", desc: "Куриные наггетсы в хрустящей панировке", fullDesc: "Куриные наггетсы в хрустящей панировке", available: true, hasVolumes: true, volumes: [{n: "8 шт", p: 1100}, {n: "20 шт", p: 2000}], basePrice: 1100, img: "https://i.ibb.co.com/spWpsmvt/image.png"},
+        
         {id: 87, type: "simple", cat: "Закуски", name: "Картофельные дольки", price: 800, desc: "Хрустящие картофельные дольки", available: true, img: "https://i.ibb.co.com/B2DVrSwM/image.png"},
         {id: 88, type: "simple", cat: "Закуски", name: "Картофель фри", price: 600, desc: "Золотистый картофель фри", available: true, img: "https://i.ibb.co.com/8kVCzr6/image.png"},
         {id: 89, type: "simple", cat: "Закуски", name: "Стрипсы (5 шт)", price: 1200, desc: "Куриные стрипсы в хрустящей панировке", available: true, img: "https://i.ibb.co.com/NdLqRg9b/unnamed-1.png"},
         
-        // СЕЗОННОЕ (ID 91+)
+        // СЕЗОННОЕ
         {id: 91, type: "simple", cat: "Сезонное", name: "Копченный латте", price: 1500, desc: "Латте с копчёной паприкой и кленовым сиропом", available: true},
         {id: 92, type: "simple", cat: "Сезонное", name: "Цитрусовый чай", price: 1000, desc: "Апельсиново-грейпфрутовый чай с мёдом и специями", available: true},
         {id: 93, type: "simple", cat: "Сезонное", name: "Чай масала", price: 1850, desc: "Сливочный крепкий чай с корицей и мёдом", available: true},
@@ -277,26 +279,26 @@
         {id: 99, type: "simple", cat: "Сезонное", name: "Какао", price: 1000, desc: "Нежное какао с маршмеллоу", available: true},
         {id: 100, type: "simple", cat: "Сезонное", name: "Капучино Сникерс", price: 1500, desc: "Капучино с арахисом и карамелью", available: true},
         
-        {id: 101, type: "simple", cat: "Холодные напитки", name: "Ice Латте", price: 1100, desc: "Холодный латте со льдом", available: true},
-        {id: 102, type: "simple", cat: "Холодные напитки", name: "Ice Капучино", price: 1200, desc: "Холодный капучинно со льдом", available: true},
-        {id: 103, type: "simple", cat: "Холодные напитки", name: "Апельсиновый бамбл", price: 900, desc: "Кофейно-апельсиновый бамбл с карамелью", available: true},
-        {id: 104, type: "simple", cat: "Холодные напитки", name: "Летний Boom", price: 900, desc: "Освежающий цитрусовый лимонад с мятой и ананасом", available: true},
-        {id: 105, type: "simple", cat: "Холодные напитки", name: "Мохито", price: 800, desc: "Освежающий мохито с лаймом и мятой", available: true},
-        {id: 106, type: "simple", cat: "Холодные напитки", name: "Манговый закат", price: 1000, desc: "Тропический газированный коктейль с маракуйей", available: true},
+        {id: 101, type: "simple", cat: "Холодные напитки", name: "Апельсиновый бамбл", price: 900, desc: "Кофейно-апельсиновый бамбл с карамелью", available: true},
+        {id: 102, type: "simple", cat: "Холодные напитки", name: "Летний Boom", price: 900, desc: "Освежающий цитрусовый лимонад с мятой и ананасом", available: true},
+        {id: 103, type: "simple", cat: "Холодные напитки", name: "Мохито", price: 800, desc: "Освежающий мохито с лаймом и мятой", available: true},
+        {id: 104, type: "simple", cat: "Холодные напитки", name: "Манговый закат", price: 1000, desc: "Тропический газированный коктейль с маракуйей", available: true},
+        {id: 98, type: "simple", cat: "Холодные напитки", name: "Ice Латте", price: 1100, desc: "Холодный латте со льдом", available: true},
+        {id: 99, type: "simple", cat: "Холодные напитки", name: "Ice Капучино", price: 1200, desc: "Холодный капучинно со льдом", available: true},
         
         // СТОП-ЛИСТ
-        {id: 107, type: "simple", cat: "Сезонное", name: "Ice Латте Рафаэлло", price: 1400, desc: "Кокосово-шоколадный латте со сливками", available: false},
-        {id: 108, type: "simple", cat: "Сезонное", name: "Ice Чай", price: 900, desc: "Холодный зелёный чай с цитрусами и мёдом", available: false},
-        {id: 109, type: "simple", cat: "Сезонное", name: "Вишневый бамбл", price: 900, desc: "Кофейно-вишневый бамбл с шоколадом", available: false},
-        {id: 110, type: "simple", cat: "Сезонное", name: "Малиновый мохито", price: 800, desc: "Малиновый мохито с лаймом", available: false},
-        {id: 111, type: "simple", cat: "Сезонное", name: "Black Moll", price: 1000, desc: "Тропический газированный коктейль с маракуйей и вишней", available: false},
-        {id: 112, type: "simple", cat: "Сезонное", name: "Киви-мята", price: 1000, desc: "Киви-мятный лимонад с апельсином", available: false},
-        {id: 113, type: "simple", cat: "Смузи", name: "Киви смузи", price: 1200, desc: "Свежий смузи из киви", available: false},
-        {id: 114, type: "simple", cat: "Смузи", name: "Апельсин смузи", price: 1100, desc: "Апельсиновый смузи", available: false},
-        {id: 115, type: "simple", cat: "Смузи", name: "Апельсин-яблоко смузи", price: 1000, desc: "Фруктовый смузи с апельсином и яблоком", available: false},
-        {id: 116, type: "simple", cat: "Смузи", name: "Киви-апельсин-банан смузи", price: 1400, desc: "Тропический смузи с киви, апельсином и бананом", available: false},
-        {id: 117, type: "simple", cat: "Смузи", name: "Киви-банан-груша смузи", price: 1300, desc: "Фруктовый смузи с киви, бананом и грушей", available: false},
-        {id: 118, type: "simple", cat: "Смузи", name: "Ягодное смузи", price: 1800, desc: "Ягодный микс-смузи с бананом", available: false}
+        {id: 104, type: "simple", cat: "Сезонное", name: "Ice Латте Рафаэлло", price: 1400, desc: "Кокосово-шоколадный латте со сливками", available: false},
+        {id: 105, type: "simple", cat: "Сезонное", name: "Ice Чай", price: 900, desc: "Холодный зелёный чай с цитрусами и мёдом", available: false},
+        {id: 106, type: "simple", cat: "Сезонное", name: "Вишневый бамбл", price: 900, desc: "Кофейно-вишневый бамбл с шоколадом", available: false},
+        {id: 107, type: "simple", cat: "Сезонное", name: "Малиновый мохито", price: 800, desc: "Малиновый мохито с лаймом", available: false},
+        {id: 108, type: "simple", cat: "Сезонное", name: "Black Moll", price: 1000, desc: "Тропический газированный коктейль с маракуйей и вишней", available: false},
+        {id: 109, type: "simple", cat: "Сезонное", name: "Киви-мята", price: 1000, desc: "Киви-мятный лимонад с апельсином", available: false},
+        {id: 110, type: "simple", cat: "Смузи", name: "Киви смузи", price: 1200, desc: "Свежий смузи из киви", available: false},
+        {id: 111, type: "simple", cat: "Смузи", name: "Апельсин смузи", price: 1100, desc: "Апельсиновый смузи", available: false},
+        {id: 112, type: "simple", cat: "Смузи", name: "Апельсин-яблоко смузи", price: 1000, desc: "Фруктовый смузи с апельсином и яблоком", available: false},
+        {id: 113, type: "simple", cat: "Смузи", name: "Киви-апельсин-банан смузи", price: 1400, desc: "Тропический смузи с киви, апельсином и бананом", available: false},
+        {id: 114, type: "simple", cat: "Смузи", name: "Киви-банан-груша смузи", price: 1300, desc: "Фруктовый смузи с киви, бананом и грушей", available: false},
+        {id: 115, type: "simple", cat: "Смузи", name: "Ягодное смузи", price: 1800, desc: "Ягодный микс-смузи с бананом", available: false}
     ];
 
     let cart = [];
@@ -588,7 +590,7 @@
         if(document.getElementById('esh') && document.getElementById('esh').checked) opts.push("Доп. шот");
 
         cart.push({ name: prod.name, price: price, options: opts, cat: prod.cat });
-        // Исправление: ИСПОЛЬЗОВАНИЕ ФУНКЦИИ ОЧИСТКИ ПОСЛЕ ОТПРАВКИ, НО ЗДЕСЬ МЫ ВНУТРИ ADD
+        // FIX: BUTTON RESET FOR IPHONE
         closeProductModal(true); 
         updateCartButton();
         tg.HapticFeedback.notificationOccurred('success');
@@ -659,9 +661,10 @@
         return t;
     }
 
-    // --- FIX FOR REPEAT ORDER ---
     function submitOrder() {
         const btn = document.getElementById('submit-btn');
+        
+        // Disable button to prevent double click
         btn.disabled = true;
         btn.innerText = "Отправка...";
 
@@ -673,22 +676,27 @@
         const payPhone = document.getElementById('payment-phone').value.trim();
         const comment = document.getElementById('order-comment').value.trim();
 
+        // Validation
         if (!name || !phone) {
+            alert("Заполните имя и телефон");
             btn.disabled = false; btn.innerText = "Подтвердить заказ";
-            return alert("Заполните имя и телефон");
+            return;
         }
         if (delType === 'delivery' && !address) {
+            alert("Укажите адрес доставки");
             btn.disabled = false; btn.innerText = "Подтвердить заказ";
-            return alert("Укажите адрес доставки");
+            return;
         }
         if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) {
+            alert("Укажите номер для счета");
             btn.disabled = false; btn.innerText = "Подтвердить заказ";
-            return alert("Укажите номер для счета");
+            return;
         }
 
         saveUserData(name, phone, address);
 
         const total = calculateCheckoutTotal();
+        
         const orderData = {
             cart: cart, total: total,
             info: { name, phone, deliveryType: delType==='delivery'?'Доставка':'Самовывоз', address, paymentType: payType, paymentPhone: payPhone, comment }
@@ -696,14 +704,21 @@
 
         try {
             tg.sendData(JSON.stringify(orderData));
-            // CLEANUP
+            
+            // RESET STATE FOR IOS
             cart = [];
             updateCartButton();
             closeCheckout();
+            
+            // RE-ENABLE BUTTON
+            btn.disabled = false;
+            btn.innerText = "Подтвердить заказ";
+            
+            // CLOSE APP
             tg.close();
         } catch (e) {
-            alert("Ошибка отправки: " + e);
-            btn.disabled = false; 
+            alert("Ошибка: " + e);
+            btn.disabled = false;
             btn.innerText = "Подтвердить заказ";
         }
     }
