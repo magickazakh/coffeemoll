@@ -12,9 +12,12 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 # --- НАСТРОЙКИ ---
-TOKEN = os.getenv("BOT_TOKEN", "8444027240:AAFEiACM5x-OPmR9CFgk1zyrmU24PgovyCY") 
-ADMIN_CHAT_ID = 1054308942 # ВАШ ID (ЧИСЛОМ)
-WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
+# Токен берем из секретов Hugging Face
+TOKEN = os.environ.get("BOT_TOKEN") 
+
+# ВАШИ НАСТРОЙКИ (ИЗМЕНИТЕ ЭТО!)
+ADMIN_CHAT_ID = 12345678 # <--- ВАШ ID (ЦИФРЫ)
+WEB_APP_URL = "https://ваш-ник.github.io/ваша-папка/" # <--- ССЫЛКА НА GITHUB PAGES
 # -----------------
 
 logging.basicConfig(level=logging.INFO)
@@ -22,25 +25,34 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
-# --- WEB SERVER ДЛЯ RENDER ---
-async def health_check(request): return web.Response(text="Bot is alive!")
+# --- WEB SERVER (ОБЯЗАТЕЛЬНО ДЛЯ HUGGING FACE) ---
+async def health_check(request):
+    return web.Response(text="Bot is alive!")
+
 async def start_web_server():
-    port = int(os.environ.get("PORT", 8080))
+    # Hugging Face всегда использует порт 7860
+    port = int(os.environ.get("PORT", 7860))
     app = web.Application()
     app.router.add_get("/", health_check)
+    app.router.add_get("/health", health_check)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
+    print(f"Web server started on port {port}")
 
-# --- ОБРАБОТЧИКИ ---
+# --- ЛОГИКА БОТА ---
+
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
     markup = ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=WEB_APP_URL))]], 
+        keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=WEB_APP_URL))]],
         resize_keyboard=True
     )
-    await message.answer("Добро пожаловать в Кофемолку!", reply_markup=markup)
+    await message.answer(
+        "Добро пожаловать в Кофемолку! 🥐\nНажмите кнопку ниже, чтобы открыть меню.",
+        reply_markup=markup
+    )
 
 @dp.message(F.web_app_data)
 async def web_app_data_handler(message: types.Message):
@@ -55,7 +67,6 @@ async def web_app_data_handler(message: types.Message):
         is_delivery = (info.get('deliveryType') == 'Доставка')
         order_icon = "🚗" if is_delivery else "🏃"
         
-        # Шапка чека
         text = f"{order_icon} <b>НОВЫЙ ЗАКАЗ</b>\n➖➖➖➖➖➖➖➖➖➖\n"
         text += f"👤 <b>Имя:</b> {info.get('name')}\n"
         text += f"📞 <b>Тел:</b> <a href='tel:{info.get('phone')}'>{info.get('phone')}</a>\n"
@@ -64,36 +75,34 @@ async def web_app_data_handler(message: types.Message):
             text += f"📍 <b>Адрес:</b> {info.get('address')}\n"
         else:
             text += f"📍 <b>Самовывоз</b>\n"
-        
+            
         pay_type = info.get('paymentType')
         text += f"💳 <b>Оплата:</b> {pay_type}\n"
         
         if pay_type in ['Kaspi', 'Halyk']:
-            text += f"📱 <b>Счет на:</b> <code>{info.get('paymentPhone')}</code>\n"
+            text += f"📱 <b>Счет на номер:</b> <code>{info.get('paymentPhone')}</code>\n"
             
         if info.get('comment'):
-            text += f"💬 <b>Коммент:</b> <i>{info.get('comment')}</i>\n"
-        
+            text += f"💬 <b>Комментарий:</b> <i>{info.get('comment')}</i>\n"
+            
         text += f"➖➖➖➖➖➖➖➖➖➖\n\n<b>📋 ЗАКАЗ:</b>\n"
         
-        # Перебор товаров (ИСПРАВЛЕННАЯ ЧАСТЬ)
         for i, item in enumerate(cart, 1):
-            # Используем .get() вместо точек, так как item это словарь
             options = item.get('options', [])
-            name = item.get('name', 'Товар')
-            
+            # Фильтр пустых опций (безопасный метод)
             opts = [o for o in options if o and o != "Без сахара"]
             opts_str = f"\n   └ <i>{', '.join(opts)}</i>" if opts else ""
             
-            text += f"{i}. <b>{name}</b> {opts_str}\n"
-        
+            item_name = item.get('name', 'Товар')
+            text += f"{i}. <b>{item_name}</b> {opts_str}\n"
+            
         text += f"\n💰 <b>ИТОГО: {total} ₸</b>"
         if is_delivery: text += "\n⚠️ <i>+ Доставка (от 600 ₸)</i>"
 
-        # Кнопки для бариста
+        # Кнопки
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ 15 мин", callback_data=f"acc_15_{message.chat.id}"), 
+                InlineKeyboardButton(text="✅ 15 мин", callback_data=f"acc_15_{message.chat.id}"),
                 InlineKeyboardButton(text="✅ 30 мин", callback_data=f"acc_30_{message.chat.id}")
             ],
             [InlineKeyboardButton(text="❌ Отклонить", callback_data=f"dec_{message.chat.id}")]
@@ -101,28 +110,26 @@ async def web_app_data_handler(message: types.Message):
 
         await bot.send_message(chat_id=ADMIN_CHAT_ID, text=text, reply_markup=kb)
         
-        resp = f"✅ Заказ принят!\nСумма: {total} ₸"
-        if is_delivery: resp += "\nМенеджер свяжется для подтверждения."
-        await message.answer(resp)
+        response_text = f"✅ Заказ принят!\nСумма: {total} ₸"
+        if is_delivery: response_text += "\nМенеджер свяжется для подтверждения."
+        await message.answer(response_text)
 
     except Exception as e:
         logging.error(f"Error: {e}")
-        # Можно отправить сообщение админу об ошибке, если нужно
 
 @dp.callback_query(F.data.startswith("acc_"))
 async def accept_order(callback: CallbackQuery):
     parts = callback.data.split("_")
     time, user_id = parts[1], parts[2]
-    
     await callback.message.edit_text(text=f"{callback.message.text}\n\n✅ <b>ПРИНЯТ ({time} мин)</b>", reply_markup=None)
-    try: await bot.send_message(chat_id=user_id, text=f"👨‍🍳 Ваш заказ принят в работу!\nГотовность через: <b>{time} мин</b>.")
+    try: await bot.send_message(chat_id=user_id, text=f"👨‍🍳 Ваш заказ принят!\nГотовность через: <b>{time} мин</b>.")
     except: pass
 
 @dp.callback_query(F.data.startswith("dec_"))
 async def decline_order(callback: CallbackQuery):
     user_id = callback.data.split("_")[1]
     await callback.message.edit_text(text=f"{callback.message.text}\n\n❌ <b>ОТКЛОНЕН</b>", reply_markup=None)
-    try: await bot.send_message(chat_id=user_id, text=f"😔 Извините, мы не можем принять заказ сейчас. Менеджер свяжется с вами.")
+    try: await bot.send_message(chat_id=user_id, text=f"😔 Извините, мы не можем принять заказ. Менеджер свяжется с вами.")
     except: pass
 
 async def main():
