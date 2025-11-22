@@ -9,6 +9,7 @@
     <script>window.onerror=function(msg,url,line){return false;};</script>
 
     <style>
+        /* Стили остаются прежними */
         body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:0;background-color:#f3f4f6;color:#1f2937;padding-bottom:100px;-webkit-tap-highlight-color:transparent}
         .header-container{background:white;position:sticky;top:0;z-index:40;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
         header{padding:15px 15px 10px 15px;display:flex;justify-content:space-between;align-items:center}
@@ -45,6 +46,7 @@
         .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:flex-end;justify-content:center}
         .modal-content{background:white;width:100%;max-width:500px;border-radius:20px 20px 0 0;padding:20px;box-sizing:border-box;max-height:90vh;overflow-y:auto;animation:slideUp 0.3s ease-out}
         .modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:15px;border-bottom:1px solid #eee;padding-bottom:10px}
+        .modal-title-block{flex:1}
         .modal-title{font-size:18px;font-weight:bold}
         .modal-desc{font-size:13px;color:#666;margin-top:4px;line-height:1.4}
         .close-icon{font-size:24px;cursor:pointer;color:#888;padding:0 0 10px 10px}
@@ -110,12 +112,13 @@
 <div class="main-btn" id="cart-btn" onclick="openCheckout()">К корзине</div>
 
 <div class="modal-overlay" id="product-modal" onclick="closeProductModal(event)"><div class="modal-content" id="product-modal-content"></div></div>
+
 <div class="modal-overlay" id="checkout-modal"><div class="modal-content" id="checkout-content">
     <div class="modal-header"><div class="modal-title">Ваш заказ</div><div class="close-icon" onclick="closeCheckout()">✕</div></div>
     <div id="cart-list-container"></div>
     <div class="checkout-total" id="checkout-total-sum">Итого: 0 ₸</div>
-    <div style="margin-top:20px;border-top:5px solid #f3f4f6;margin-left:-20px;margin-right:-20px;"></div>
-    <h3 style="margin:15px 0 10px 0;font-size:16px;">Оформление</h3>
+    <div style="margin-top: 20px; border-top: 5px solid #f3f4f6; margin-left: -20px; margin-right: -20px;"></div>
+    <h3 style="margin: 15px 0 10px 0; font-size: 16px;">Оформление</h3>
     <div class="option-group"><label class="option-label">Ваши контакты</label><input type="text" id="client-name" placeholder="Ваше имя"><input type="tel" id="client-phone" placeholder="Номер телефона (+7...)"></div>
     <div class="option-group">
         <label class="option-label">Способ получения</label>
@@ -125,7 +128,7 @@
         </div>
         <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸</b> (рассчитывается менеджером).</div>
     </div>
-    <div id="address-block" style="display:none;"><div class="option-group"><label class="option-label">Адрес доставки</label><textarea id="delivery-address" placeholder="Улица, дом, квартира..."></textarea></div></div>
+    <div id="address-block" style="display: none;"><div class="option-group"><label class="option-label">Адрес доставки</label><textarea id="delivery-address" placeholder="Улица, дом, квартира..."></textarea></div></div>
     <div class="option-group">
         <label class="option-label">Способ оплаты</label>
         <div class="radio-group">
@@ -134,9 +137,9 @@
             <input type="radio" name="paymentType" id="p-halyk" value="Halyk" onchange="togglePayment()"><label for="p-halyk" class="radio-label">🟢 Halyk</label>
         </div>
     </div>
-    <div id="payment-phone-block" style="display:none;"><div class="option-group"><label class="option-label">Номер для счета</label><input type="tel" id="payment-phone" placeholder="Номер привязанный к карте"></div></div>
+    <div id="payment-phone-block" style="display: none;"><div class="option-group"><label class="option-label">Номер для счета</label><input type="tel" id="payment-phone" placeholder="Номер привязанный к карте"></div></div>
     <div class="option-group"><label class="option-label">Комментарий</label><textarea id="order-comment" placeholder="Пожелания..."></textarea></div>
-    <div class="contact-note"><input type="checkbox" checked disabled style="width:auto;margin:0;"><span>Согласен, что менеджер свяжется со мной.</span></div>
+    <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Согласен, что менеджер свяжется со мной.</span></div>
     <button class="modal-add-btn" id="submit-btn" onclick="submitOrder()">Подтвердить заказ</button>
 </div></div>
 
@@ -152,9 +155,10 @@
     const tg = window.Telegram.WebApp;
     tg.expand(); 
 
-    // === ВСТАВЬТЕ ССЫЛКУ ===
+    // === ВАЖНО: ВСТАВЬТЕ СЮДА ВАШУ ССЫЛКУ ===
     const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv"; 
-    // !!! ЗАМЕНИТЕ НА СВОЮ !!!
+    // !!! ЗАМЕНИТЕ ССЫЛКУ ВЫШЕ НА СВОЮ (ОПУБЛИКОВАННУЮ) !!!
+    
     const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL);
 
     const CATEGORY_ORDER = ["Популярное", "Сезонное", "Кофе", "Чай", "Холодные напитки", "Молочные коктейли", "Завтраки", "Круассаны", "Хот-доги", "Салаты", "Пицца", "Пасты", "Закуски"];
@@ -194,7 +198,7 @@
     function initMenu() {
         const loadingScreen = document.getElementById('loading-screen');
         if (RAW_SHEET_URL.includes("XXXXXXXXX")) {
-            alert("Ошибка: Ссылка на таблицу не вставлена!");
+            alert("Внимание! Вы не вставили ссылку на таблицу.");
             loadingScreen.innerHTML = "Ошибка настройки";
             return;
         }
@@ -240,23 +244,25 @@
                         volumes: []
                     };
 
-                    // 1. Объемы из таблицы
+                    // 1. Объемы из таблицы (ПРИОРИТЕТ)
                     if (volumeStr && volumeStr.includes('=')) {
-                        product.type = 'complex'; product.hasVolumes = true;
+                        product.type = 'complex';
+                        product.hasVolumes = true;
                         product.volumes = volumeStr.split(';').map(v => {
                             let parts = v.split('=');
                             return { n: parts[0].trim(), p: parsePrice(parts[1]) };
                         });
                     }
 
-                    // 2. Логика по ID (обновленная нумерация 1-93)
+                    // 2. Логика по ID для добавок
                     if (normCat.includes('кофе')) {
-                        product.showSugar = true; product.showSyrup = true;
-                        // Эспрессо(1), Американо(2) - есть добавки
+                        product.showSugar = true; 
+                        product.showSyrup = true;
+                        // Эспрессо(1), Американо(2)
                         if (['1', '2'].includes(pid)) product.allowCoffeeExtras = true;
-                        // Капучино(4), Латте(5), Мокко(7), Гор.Шок(8) - есть молоко
+                        // Капучино(4), Латте(5), Мокко(7), Гор.Шок(8)
                         if (['4', '5', '7', '8'].includes(pid)) product.hasMilk = true;
-                        // Флэт(3) - есть молоко
+                        // Флэт(3)
                         if (pid === '3') product.hasMilk = true;
                     }
 
@@ -264,14 +270,20 @@
                         product.showSugar = true;
                         // Черный(9), Зеленый(10) - есть добавки
                         if (['9', '10'].includes(pid)) product.allowTeaExtras = true;
-                        // Остальные чаи - без добавок, но объемы из таблицы
+                        // Остальные чаи (в том числе сезонные, если они попали в парсер) берут объемы из CSV
+                    }
+                    
+                    // Сезонные чаи (вдруг они в категории Сезонное)
+                    if (cat === 'Сезонное' && (name.toLowerCase().includes('чай') || name.toLowerCase().includes('сбитень'))) {
+                         // Если в CSV прописаны объемы, они применятся выше.
+                         // Если нужно добавлять "сахар" к сезонным чаям, раскомментируйте:
+                         // product.showSugar = true;
                     }
 
                     if (normCat.includes('хот-дог')) product.allowHotDogExtras = true;
                     if (normCat.includes('закуски')) product.allowSnackExtras = true;
                     
-                    // Завтраки: Английский(37), Деревенский(41)
-                    if (['37', '41'].includes(pid)) {
+                    if (['37', '41'].includes(pid)) { 
                         product.allowBreakfastExtras = true;
                         product.saucePrice = (pid === '37') ? 0 : 150;
                     }
@@ -279,7 +291,6 @@
                     return product;
                 }).filter(item => item !== null);
 
-                // Дублирование популярных
                 let popularItems = [];
                 rawData.forEach(p => {
                     if (p.popular) { let clone = {...p}; clone.cat = "Популярное"; popularItems.push(clone); }
@@ -293,23 +304,101 @@
         });
     }
 
-    // ... (ФУНКЦИИ ОТРИСОВКИ И ЛОГИКИ - СТАНДАРТНЫЕ) ...
-    // Я не меняю их, они работают. Скопируйте их из предыдущего кода или оставьте как есть.
     function getLocalHour() { const now = new Date(); return now.getHours(); }
-    function checkWorkingHours() { const badge = document.getElementById('work-status'); if(badge) { badge.innerText = "Открыто"; badge.className = "status-badge status-open"; } return true; }
+    function checkWorkingHours() {
+        const badge = document.getElementById('work-status');
+        if(badge) { badge.innerText = "Открыто"; badge.className = "status-badge status-open"; }
+        return true; 
+    }
     function isPizzaAvailable() { return true; }
-    function filterMenu() { const query = document.getElementById('search-input').value.toLowerCase(); const cards = document.querySelectorAll('.card'); cards.forEach(card => { const name = card.querySelector('h3').innerText.toLowerCase(); if (name.includes(query)) card.style.display = 'flex'; else card.style.display = 'none'; }); }
-    function renderNav() { const navContainer = document.getElementById('nav-container'); const uniqueCats = [...new Set(menuData.map(p => p.cat))]; const sortedCats = uniqueCats.sort((a, b) => { const idxA = CATEGORY_ORDER.indexOf(a); const idxB = CATEGORY_ORDER.indexOf(b); return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB); }); navContainer.innerHTML = ''; sortedCats.forEach(cat => { const btn = document.createElement('a'); btn.className = 'nav-btn'; btn.innerText = cat; btn.href = `#cat-${cat.replace(/\s+/g, '-')}`; btn.onclick = (e) => { e.preventDefault(); const section = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`); if(section) { const y = section.getBoundingClientRect().top + window.scrollY - 140; window.scrollTo({top: y, behavior: 'smooth'}); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } }; navContainer.appendChild(btn); }); }
-    function renderMenu() { const app = document.getElementById('app'); if (!app) return; renderNav(); checkWorkingHours(); const uniqueCats = [...new Set(menuData.map(p => p.cat))]; const sortedCats = uniqueCats.sort((a, b) => { const idxA = CATEGORY_ORDER.indexOf(a); const idxB = CATEGORY_ORDER.indexOf(b); return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB); }); app.innerHTML = ''; sortedCats.forEach(cat => { const section = document.createElement('div'); section.className = 'category-section'; section.id = `cat-${cat.replace(/\s+/g, '-')}`; section.innerHTML = `<div class="category-title">${cat}</div>`; const grid = document.createElement('div'); grid.className = 'grid'; menuData.filter(p => p.cat === cat).forEach((p, index) => { const card = document.createElement('div'); card.className = 'card'; card.style.animationDelay = `${index * 0.05}s`; let isOutOfStock = !p.available; let isDisabled = isOutOfStock; let btnText = "ВЫБРАТЬ"; if (isOutOfStock) { btnText = "НЕТ В НАЛИЧИИ"; card.classList.add('unavailable'); } let displayPrice = 0; if (p.hasVolumes && p.volumes.length > 0) displayPrice = `от ${p.volumes[0].p}`; else displayPrice = p.price || p.basePrice; const itemImage = p.img ? p.img : getImageByCategory(p.cat); const badgeHtml = isOutOfStock ? `<div class="unavailable-badge">Закончилось</div>` : ''; let cardBadgeHtml = ''; if (p.badge && !isOutOfStock) { let bClass = 'card-badge'; if(p.badge.toLowerCase().includes('хит')) bClass += ' badge-hot'; if(p.badge.toLowerCase().includes('new')) bClass += ' badge-new'; cardBadgeHtml = `<div class="${bClass}">${p.badge}</div>`; } card.innerHTML = `<div class="card-img-container"><img src="${itemImage}" alt="${p.name}" loading="lazy" onload="this.classList.add('loaded')">${badgeHtml}${cardBadgeHtml}</div><h3>${p.name}</h3>${p.desc ? `<div class="desc">${p.desc}</div>` : ''}<div class="price-row"><div class="price">${displayPrice} ₸</div><button class="add-btn" ${isDisabled ? 'disabled' : ''} onclick="handleItemClick('${p.id}', '${p.cat}')">${btnText}</button></div>`; grid.appendChild(card); }); section.appendChild(grid); app.appendChild(section); }); }
-    function handleItemClick(id, cat) { const product = menuData.find(p => String(p.id) === String(id)); if (!product || !product.available) return; openComplexModal(product); }
-    function checkUpsell() { setTimeout(() => { document.getElementById('upsell-modal').style.display = 'flex'; upsellShown = true; }, 500); }
-    function closeUpsell() { document.getElementById('upsell-modal').style.display = 'none'; }
-    function acceptUpsell() { const c = menuData.find(p=>p.id=='42'); if(c) { cart.push({name:c.name,price:c.price,options:[],cat:c.cat}); updateCartButton(); tg.HapticFeedback.notificationOccurred('success'); } closeUpsell(); } // Апсейл на круассан с курицей (ID 42)
-    function loadUserData() { const n=localStorage.getItem('coffee_username'); if(n)document.getElementById('client-name').value=n; const p=localStorage.getItem('coffee_phone'); if(p)document.getElementById('client-phone').value=p; const a=localStorage.getItem('coffee_address'); if(a)document.getElementById('delivery-address').value=a; }
-    function saveUserData(n,p,a) { localStorage.setItem('coffee_username',n); localStorage.setItem('coffee_phone',p); if(a)localStorage.setItem('coffee_address',a); }
-    function getImageByCategory(cat) { const map = { "Кофе": "https://cdn-icons-png.flaticon.com/512/751/751621.png", "Завтраки": "https://cdn-icons-png.flaticon.com/512/2771/2771406.png", "Круассаны": "https://cdn-icons-png.flaticon.com/512/3014/3014528.png", "Салаты": "https://cdn-icons-png.flaticon.com/512/2062/2062296.png", "Чай": "https://cdn-icons-png.flaticon.com/512/3054/3054889.png", "Лимонады": "https://cdn-icons-png.flaticon.com/512/2447/2447137.png", "Коктейли": "https://cdn-icons-png.flaticon.com/512/3081/3081986.png", "Хот-доги": "https://cdn-icons-png.flaticon.com/512/1980/1980788.png", "Пицца": "https://cdn-icons-png.flaticon.com/512/3132/3132693.png", "Закуски": "https://cdn-icons-png.flaticon.com/512/5787/5787016.png", "Сезонное": "https://cdn-icons-png.flaticon.com/512/4421/4421089.png", "Смузи": "https://cdn-icons-png.flaticon.com/512/1147/1147588.png", "Холодные напитки": "https://cdn-icons-png.flaticon.com/512/956/956850.png", "Пасты": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png" }; return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png"; }
 
-    // --- МОДАЛКА И КОРЗИНА (ОБНОВЛЕННЫЕ) ---
+    function filterMenu() {
+        const query = document.getElementById('search-input').value.toLowerCase();
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            const name = card.querySelector('h3').innerText.toLowerCase();
+            if (name.includes(query)) card.style.display = 'flex'; else card.style.display = 'none';
+        });
+    }
+
+    function renderNav() {
+        const navContainer = document.getElementById('nav-container');
+        const uniqueCats = [...new Set(menuData.map(p => p.cat))];
+        const sortedCats = uniqueCats.sort((a, b) => {
+            const idxA = CATEGORY_ORDER.indexOf(a); const idxB = CATEGORY_ORDER.indexOf(b);
+            return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+        });
+        navContainer.innerHTML = '';
+        sortedCats.forEach(cat => {
+            const btn = document.createElement('a'); btn.className = 'nav-btn'; btn.innerText = cat; btn.href = `#cat-${cat.replace(/\s+/g, '-')}`;
+            btn.onclick = (e) => { e.preventDefault(); const section = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`); if(section) { const y = section.getBoundingClientRect().top + window.scrollY - 140; window.scrollTo({top: y, behavior: 'smooth'}); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } };
+            navContainer.appendChild(btn);
+        });
+    }
+
+    function renderMenu() {
+        const app = document.getElementById('app');
+        if (!app) return;
+        renderNav(); checkWorkingHours();
+        const uniqueCats = [...new Set(menuData.map(p => p.cat))];
+        const sortedCats = uniqueCats.sort((a, b) => {
+            const idxA = CATEGORY_ORDER.indexOf(a); const idxB = CATEGORY_ORDER.indexOf(b);
+            return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+        });
+        app.innerHTML = '';
+
+        sortedCats.forEach(cat => {
+            const section = document.createElement('div'); section.className = 'category-section'; section.id = `cat-${cat.replace(/\s+/g, '-')}`; section.innerHTML = `<div class="category-title">${cat}</div>`;
+            const grid = document.createElement('div'); grid.className = 'grid';
+            
+            menuData.filter(p => p.cat === cat).forEach((p, index) => {
+                const card = document.createElement('div'); card.className = 'card'; card.style.animationDelay = `${index * 0.05}s`;
+                let isOutOfStock = !p.available; let isDisabled = isOutOfStock; let btnText = "ВЫБРАТЬ";
+                if (isOutOfStock) { btnText = "НЕТ В НАЛИЧИИ"; card.classList.add('unavailable'); }
+                
+                let displayPrice = 0;
+                if (p.hasVolumes && p.volumes.length > 0) displayPrice = `от ${p.volumes[0].p}`;
+                else displayPrice = p.price || p.basePrice;
+                
+                const itemImage = p.img ? p.img : getImageByCategory(p.cat);
+                const badgeHtml = isOutOfStock ? `<div class="unavailable-badge">Закончилось</div>` : '';
+                let cardBadgeHtml = '';
+                if (p.badge && !isOutOfStock) {
+                    let bClass = 'card-badge'; if(p.badge.toLowerCase().includes('хит')) bClass += ' badge-hot'; if(p.badge.toLowerCase().includes('new')) bClass += ' badge-new';
+                    cardBadgeHtml = `<div class="${bClass}">${p.badge}</div>`;
+                }
+                
+                card.innerHTML = `<div class="card-img-container"><img src="${itemImage}" alt="${p.name}" loading="lazy" onload="this.classList.add('loaded')">${badgeHtml}${cardBadgeHtml}</div><h3>${p.name}</h3>${p.desc ? `<div class="desc">${p.desc}</div>` : ''}<div class="price-row"><div class="price">${displayPrice} ₸</div><button class="add-btn" ${isDisabled ? 'disabled' : ''} onclick="handleItemClick('${p.id}', '${p.cat}')">${btnText}</button></div>`;
+                grid.appendChild(card);
+            });
+            section.appendChild(grid); app.appendChild(section);
+        });
+    }
+
+    function handleItemClick(id, cat) {
+        const product = menuData.find(p => String(p.id) === String(id));
+        if (!product || !product.available) return;
+        openComplexModal(product);
+    }
+
+    function checkUpsell() {
+        setTimeout(() => { document.getElementById('upsell-modal').style.display = 'flex'; upsellShown = true; }, 500);
+    }
+    function closeUpsell() { document.getElementById('upsell-modal').style.display = 'none'; }
+    function acceptUpsell() {
+        const croissant = menuData.find(p => p.id == 42); // ID КРУАССАНА (ИЗ ТАБЛИЦЫ)
+        if(croissant) { cart.push({ name: croissant.name, price: croissant.price, options: [], cat: croissant.cat }); updateCartButton(); tg.HapticFeedback.notificationOccurred('success'); }
+        closeUpsell();
+    }
+
+    function loadUserData() {
+        const n=localStorage.getItem('coffee_username'); if(n)document.getElementById('client-name').value=n;
+        const p=localStorage.getItem('coffee_phone'); if(p)document.getElementById('client-phone').value=p;
+        const a=localStorage.getItem('coffee_address'); if(a)document.getElementById('delivery-address').value=a;
+    }
+
+    function saveUserData(n,p,a) { localStorage.setItem('coffee_username',n); localStorage.setItem('coffee_phone',p); if(a)localStorage.setItem('coffee_address',a); }
+
     function openComplexModal(product) {
         currentModalProduct = product;
         const content = document.getElementById('product-modal-content');
@@ -387,10 +476,11 @@
         
         if(prod.hasVolumes && prod.volumes.length > 0) {
             const el = document.querySelector('input[name="vol"]:checked');
+            // Если есть объемы, но ничего не выбрано (баг?), берем первый. Иначе берем выбранный.
             if(el) p += prod.volumes[el.value].p;
-            else p += prod.volumes[0].p; // Fallback to first
+            else p += prod.volumes[0].p; 
         } else {
-            p += (prod.basePrice || 0);
+            p += (prod.basePrice || prod.price || 0);
         }
 
         if(prod.hasMilk) {
