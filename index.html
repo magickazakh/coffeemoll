@@ -6,95 +6,82 @@
     <title>Меню Кофейни</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    
-    <script>
-        // Показываем ошибки, если скрипт сломается
-        window.onerror = function(msg, url, line) {
-            alert("Ошибка JS: " + msg + "\nСтрока: " + line);
-            return false;
-        };
-    </script>
-
+    <script>window.onerror=function(msg,url,line){return false;};</script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #1f2937; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
-        .header-container { background: white; position: sticky; top: 0; z-index: 40; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        header { padding: 15px 15px 10px 15px; display: flex; justify-content: space-between; align-items: center;}
-        h1 { margin: 0; font-size: 18px; font-weight: 800; color: #111; }
-        .status-badge { font-size: 12px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; }
-        .search-wrapper { padding: 0 15px 10px 15px; }
-        #search-input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid #eee; background: #f9fafb; font-size: 14px; outline: none; transition: 0.2s; margin: 0; box-sizing: border-box; }
-        #search-input:focus { border-color: #FFD54F; background: #fff; }
-        .nav-scroller { overflow-x: auto; white-space: nowrap; padding: 5px 15px 15px 15px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-        .nav-scroller::-webkit-scrollbar { display: none; }
-        .nav-btn { display: inline-block; padding: 8px 16px; margin-right: 8px; background: #f3f4f6; border-radius: 20px; font-size: 13px; font-weight: 600; color: #4b5563; text-decoration: none; border: 1px solid transparent; transition: 0.2s; }
-        .nav-btn.active { background: #3e2723; color: white; border-color: #3e2723; }
-        .category-section { margin-bottom: 20px; scroll-margin-top: 140px; }
-        .category-title { padding: 15px 15px 5px 15px; font-size: 20px; font-weight: 800; color: #374151; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
-        .card { background: white; border-radius: 16px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.1s; position: relative; opacity: 0; animation: fadeInUp 0.5s ease-out forwards; }
-        .card:active { transform: scale(0.98); }
-        .card-img-container { width: 100%; height: 100px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; overflow: hidden; position: relative; background: #ffffff; background-image: linear-gradient(to right, #f0f0f0 0%, #f8f8f8 20%, #f0f0f0 40%, #f0f0f0 100%); background-size: 800px 104px; animation: shimmer 1s linear infinite forwards; }
-        .card img { width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 0.3s ease-in; }
-        .card img.loaded { opacity: 1; }
-        .card.unavailable { opacity: 0.6; background-color: #f9fafb; pointer-events: none; }
-        .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
-        .card-badge { position: absolute; top: 8px; right: 8px; background: #FFD54F; color: #3e2723; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-transform: uppercase; }
-        .badge-hot { background: #ef4444; color: white; }
-        .badge-new { background: #3b82f6; color: white; }
-        .card h3 { margin: 0 0 5px 0; font-size: 14px; font-weight: 600; line-height: 1.3; }
-        .card .desc { font-size: 11px; color: #6b7280; margin-bottom: 8px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
-        .price { font-weight: 700; font-size: 15px; color: #111; }
-        .add-btn { background-color: #FFD54F; color: #3e2723; border: none; border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 12px; cursor: pointer; }
-        .add-btn:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
-        
-        .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction: column; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #FFD54F; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px;}
-
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: flex-end; justify-content: center; }
-        .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease-out; }
-        .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .modal-title-block { flex: 1; }
-        .modal-title { font-size: 18px; font-weight: bold; }
-        .modal-desc { font-size: 13px; color: #666; margin-top: 4px; line-height: 1.4; }
-        .close-icon { font-size: 24px; cursor: pointer; color: #888; padding: 0 0 10px 10px; }
-        .option-group { margin-bottom: 15px; position: relative; z-index: 1; }
-        .option-label { font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px; color: #444; }
-        .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
-        .radio-label { flex: 1; text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 13px; transition: 0.2s; min-width: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center;}
-        .radio-input { display: none; }
-        .radio-input:checked + .radio-label { background-color: #FFD54F; border-color: #FFD54F; color: #3e2723; font-weight: bold; }
-        select, input[type="text"], input[type="number"], input[type="tel"], textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; -webkit-appearance: none; background: #fff; margin-bottom: 10px; font-family: inherit; }
-        textarea { resize: none; height: 60px; }
-        .checkbox-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid #eee; }
-        .toggle-switch { position: relative; display: inline-block; width: 46px; height: 24px; }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #FFD54F; }
-        input:checked + .slider:before { transform: translateX(22px); }
-        .modal-footer { margin-top: 20px; display: flex; gap: 10px; }
-        .modal-add-btn { background: #2ecc71; color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-        .modal-add-btn:disabled { background: #ccc; cursor: not-allowed; }
-        
-        .main-btn { position: fixed; bottom: 15px; left: 15px; right: 15px; background: #2ecc71; color: white; padding: 16px; border-radius: 14px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); display: none; z-index: 900; }
-        .cart-item { background: #f9fafb; border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .cart-item-info { flex: 1; }
-        .cart-item-title { font-weight: bold; font-size: 14px; margin-bottom: 2px; }
-        .cart-item-opts { font-size: 11px; color: #666; }
-        .cart-item-price { font-weight: bold; margin: 0 10px; font-size: 14px; }
-        .cart-del-btn { color: #ef4444; padding: 5px 10px; cursor: pointer; font-size: 20px; }
-        .checkout-total { font-size: 18px; font-weight: bold; margin-top: 15px; text-align: right; border-top: 2px solid #eee; padding-top: 10px; }
-        .delivery-warning { font-size: 13px; color: #d97706; background: #fef3c7; padding: 8px; border-radius: 8px; margin-top: 5px; display: none; }
-        .contact-note { font-size: 12px; color: #6b7280; margin-top: 15px; display: flex; gap: 5px; align-items: flex-start; }
-        
-        .upsell-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1100; align-items: center; justify-content: center; }
-        .upsell-content { background: white; width: 85%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; animation: popIn 0.3s; }
-        .upsell-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
-        .upsell-btn-row { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
-        .upsell-yes { background: #FFD54F; color: #3e2723; padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; flex: 1;}
-        .upsell-no { background: #f3f4f6; color: #666; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; flex: 1;}
-        
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:0;background-color:#f3f4f6;color:#1f2937;padding-bottom:100px;-webkit-tap-highlight-color:transparent}
+        .header-container{background:white;position:sticky;top:0;z-index:40;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+        header{padding:15px 15px 10px 15px;display:flex;justify-content:space-between;align-items:center}
+        h1{margin:0;font-size:18px;font-weight:800;color:#111}
+        .status-badge{font-size:12px;padding:4px 8px;border-radius:12px;font-weight:bold;background:#e6fffa;color:#047857}
+        .search-wrapper{padding:0 15px 10px 15px}
+        #search-input{width:100%;padding:10px 12px;border-radius:12px;border:1px solid #eee;background:#f9fafb;font-size:14px;outline:none;transition:0.2s;margin:0;box-sizing:border-box}
+        #search-input:focus{border-color:#FFD54F;background:#fff}
+        .nav-scroller{overflow-x:auto;white-space:nowrap;padding:5px 15px 15px 15px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+        .nav-scroller::-webkit-scrollbar{display:none}
+        .nav-btn{display:inline-block;padding:8px 16px;margin-right:8px;background:#f3f4f6;border-radius:20px;font-size:13px;font-weight:600;color:#4b5563;text-decoration:none;border:1px solid transparent;transition:0.2s}
+        .nav-btn.active{background:#3e2723;color:white;border-color:#3e2723}
+        .category-section{margin-bottom:20px;scroll-margin-top:140px}
+        .category-title{padding:15px 15px 5px 15px;font-size:20px;font-weight:800;color:#374151}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px}
+        .card{background:white;border-radius:16px;padding:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.1s;position:relative;opacity:0;animation:fadeInUp 0.5s ease-out forwards}
+        .card:active{transform:scale(0.98)}
+        .card-img-container{width:100%;height:100px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;overflow:hidden;position:relative;background:#fff;background-image:linear-gradient(to right,#f0f0f0 0%,#f8f8f8 20%,#f0f0f0 40%,#f0f0f0 100%);background-size:800px 104px;animation:shimmer 1s linear infinite forwards}
+        .card img{width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 0.3s ease-in}
+        .card img.loaded{opacity:1}
+        .card.unavailable{opacity:0.6;background-color:#f9fafb;pointer-events:none}
+        .unavailable-badge{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#ef4444;font-size:14px;text-transform:uppercase;border-radius:12px;transform:rotate(-15deg);z-index:10;text-shadow:0 0 2px white}
+        .card-badge{position:absolute;top:8px;right:8px;background:#FFD54F;color:#3e2723;font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px;z-index:20;box-shadow:0 2px 4px rgba(0,0,0,0.1);text-transform:uppercase}
+        .badge-hot{background:#ef4444;color:white}
+        .badge-new{background:#3b82f6;color:white}
+        .card h3{margin:0 0 5px 0;font-size:14px;font-weight:600;line-height:1.3}
+        .card .desc{font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .price-row{display:flex;justify-content:space-between;align-items:center;margin-top:auto}
+        .price{font-weight:700;font-size:15px;color:#111}
+        .add-btn{background-color:#FFD54F;color:#3e2723;border:none;border-radius:8px;padding:6px 12px;font-weight:600;font-size:12px;cursor:pointer}
+        .add-btn:disabled{background-color:#e5e7eb;color:#9ca3af;cursor:not-allowed}
+        .loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:2000;display:flex;align-items:center;justify-content:center;flex-direction:column}
+        .spinner{border:4px solid #f3f3f3;border-top:4px solid #FFD54F;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin-bottom:10px}
+        .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:flex-end;justify-content:center}
+        .modal-content{background:white;width:100%;max-width:500px;border-radius:20px 20px 0 0;padding:20px;box-sizing:border-box;max-height:90vh;overflow-y:auto;animation:slideUp 0.3s ease-out}
+        .modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:15px;border-bottom:1px solid #eee;padding-bottom:10px}
+        .modal-title-block{flex:1}
+        .modal-title{font-size:18px;font-weight:bold}
+        .modal-desc{font-size:13px;color:#666;margin-top:4px;line-height:1.4}
+        .close-icon{font-size:24px;cursor:pointer;color:#888;padding:0 0 10px 10px}
+        .option-group{margin-bottom:15px;position:relative;z-index:1}
+        .option-label{font-weight:600;margin-bottom:8px;display:block;font-size:14px;color:#444}
+        .radio-group{display:flex;gap:10px;flex-wrap:wrap}
+        .radio-label{flex:1;text-align:center;padding:10px;border:1px solid #ddd;border-radius:10px;cursor:pointer;font-size:13px;transition:0.2s;min-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+        .radio-input{display:none}
+        .radio-input:checked+.radio-label{background-color:#FFD54F;border-color:#FFD54F;color:#3e2723;font-weight:bold}
+        select,input[type="text"],input[type="number"],input[type="tel"],textarea{width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;font-size:16px;box-sizing:border-box;-webkit-appearance:none;background:#fff;margin-bottom:10px;font-family:inherit}
+        textarea{resize:none;height:60px}
+        .checkbox-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #eee}
+        .toggle-switch{position:relative;display:inline-block;width:46px;height:24px}
+        .toggle-switch input{opacity:0;width:0;height:0}
+        .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#ccc;transition:.4s;border-radius:34px}
+        .slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background-color:white;transition:.4s;border-radius:50%}
+        input:checked+.slider{background-color:#FFD54F}
+        input:checked+.slider:before{transform:translateX(22px)}
+        .modal-footer{margin-top:20px;display:flex;gap:10px}
+        .modal-add-btn{background:#2ecc71;color:white;width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;transition:background 0.2s}
+        .modal-add-btn:disabled{background:#ccc;cursor:not-allowed}
+        .main-btn{position:fixed;bottom:15px;left:15px;right:15px;background:#2ecc71;color:white;padding:16px;border-radius:14px;text-align:center;font-size:16px;font-weight:700;box-shadow:0 4px 12px rgba(46,204,113,0.4);display:none;z-index:900}
+        .cart-item{background:#f9fafb;border-radius:10px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+        .cart-item-info{flex:1}
+        .cart-item-title{font-weight:bold;font-size:14px;margin-bottom:2px}
+        .cart-item-opts{font-size:11px;color:#666}
+        .cart-item-price{font-weight:bold;margin:0 10px;font-size:14px}
+        .cart-del-btn{color:#ef4444;padding:5px 10px;cursor:pointer;font-size:20px}
+        .checkout-total{font-size:18px;font-weight:bold;margin-top:15px;text-align:right;border-top:2px solid #eee;padding-top:10px}
+        .delivery-warning{font-size:13px;color:#d97706;background:#fef3c7;padding:8px;border-radius:8px;margin-top:5px;display:none}
+        .contact-note{font-size:12px;color:#6b7280;margin-top:15px;display:flex;gap:5px;align-items:flex-start}
+        .upsell-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1100;align-items:center;justify-content:center}
+        .upsell-content{background:white;width:85%;max-width:350px;border-radius:16px;padding:20px;text-align:center;animation:popIn 0.3s}
+        .upsell-img{width:80px;height:80px;object-fit:contain;margin-bottom:10px}
+        .upsell-btn-row{display:flex;gap:10px;margin-top:15px;justify-content:center}
+        .upsell-yes{background:#FFD54F;color:#3e2723;padding:10px 20px;border-radius:10px;border:none;font-weight:bold;cursor:pointer;flex:1}
+        .upsell-no{background:#f3f4f6;color:#666;padding:10px 20px;border-radius:10px;border:none;cursor:pointer;flex:1}
         @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
         @keyframes shimmer{0%{background-position:-468px 0}100%{background-position:468px 0}}
         @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
@@ -166,25 +153,31 @@
     const tg = window.Telegram.WebApp;
     tg.expand(); 
 
-    // === ВСТАВЬТЕ ССЫЛКУ ===
+    // === ВАЖНО: ВСТАВЬТЕ СЮДА ВАШУ ССЫЛКУ ===
     const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv"; 
-    // !!! ЗАМЕНИТЕ ССЫЛКУ НА ВАШУ !!!
+    // ЗАМЕНИТЕ НА СВОЮ!!!
 
     const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL);
     const CATEGORY_ORDER = ["Популярное", "Сезонное", "Кофе", "Чай", "Холодные напитки", "Молочные коктейли", "Завтраки", "Круассаны", "Хот-доги", "Салаты", "Пицца", "Пасты", "Закуски"];
 
-    // Глобальные переменные с ВАШИМИ ценами (Defaults)
-    // Они будут работать, даже если таблица SETTINGS не прогрузится
-    let PRICES = { 
-        alt_milk: 400, add_milk: 50, add_cream: 50, add_honey: 100, add_lemon: 50, 
-        syrup: 0, shot: 300, 
-        hotdog_add_cheese: 150, hotdog_add_jalapeno: 150, hotdog_add_onion: 150, 
-        breakfast_add_egg: 70, sauce_paid: 150, sauce_free: 0 
+    // Названия добавок для отображения
+    const MOD_LABELS = {
+        milk: "Доп. молоко",
+        cream: "Доп. сливки",
+        honey: "Мед",
+        lemon: "Лимон",
+        syrup: "Сироп",
+        shot: "Доп. шот",
+        egg: "Доп. яйцо",
+        cheese: "Сыр",
+        jalapeno: "Халапеньо",
+        onion: "Жареный лук",
+        sauce: "Соус"
     };
-    let SYRUPS = ["Нет", "Карамель", "Соленая карамель", "Кокос", "Лесной орех", "Шоколад", "Ваниль", "Ирис", "Попкорн", "Макадамия", "Крем брюле", "Шоколадное печенье", "Лемонграсс", "Фисташка", "Банан", "Амаретто", "Миндаль", "Мед", "Гранат", "Ирландский крем", "Лаванда", "Брауни", "Клубника"];
-    let SAUCES = ["Нет", "Кетчуп", "Сырный", "Чесночный", "Барбекю", "Кисло-Сладкий", "Горчица"];
-    let ALT_MILKS = ["Кокосовое", "Миндальное", "Банановое", "Лесной орех"];
 
+    let SYRUPS = [];
+    let SAUCES = [];
+    let ALT_MILKS = [];
     let menuData = [];
     let cart = [];
     let currentModalProduct = null;
@@ -220,7 +213,7 @@
                     alert("Ошибка: Таблица пустая."); loadingScreen.style.display = 'none'; return;
                 }
 
-                // 1. ПАРСИМ НАСТРОЙКИ (если есть строка SETTINGS)
+                // 1. ПАРСИМ НАСТРОЙКИ
                 const settingsRow = results.data.find(row => {
                     const id = getVal(row, ['id', 'Идентификатор']);
                     return id && id.toUpperCase() === 'SETTINGS';
@@ -237,18 +230,6 @@
                             if (k === 'alt_milks') ALT_MILKS = v.split(',');
                             if (k === 'syrup_names') SYRUPS = v.split(',');
                             if (k === 'sauce_names') SAUCES = v.split(',');
-                            
-                            // Переопределяем цены, если они есть в таблице
-                            if (k === 'price_alt_milk') PRICES.alt_milk = parsePrice(v);
-                            if (k === 'price_add_milk') PRICES.add_milk = parsePrice(v);
-                            if (k === 'price_add_cream') PRICES.add_cream = parsePrice(v);
-                            if (k === 'price_add_honey') PRICES.add_honey = parsePrice(v);
-                            if (k === 'price_add_lemon') PRICES.add_lemon = parsePrice(v);
-                            if (k === 'price_syrup') PRICES.syrup = parsePrice(v);
-                            if (k === 'price_shot') PRICES.shot = parsePrice(v);
-                            if (k === 'price_hd_mod') { PRICES.hotdog_add_cheese = parsePrice(v); PRICES.hotdog_add_jalapeno = parsePrice(v); PRICES.hotdog_add_onion = parsePrice(v); }
-                            if (k === 'price_egg') PRICES.breakfast_add_egg = parsePrice(v);
-                            if (k === 'price_sauce') PRICES.sauce_paid = parsePrice(v);
                         }
                     });
                 }
@@ -268,12 +249,22 @@
                     let popularVal = getVal(item, ['popular', 'Популярный товар']);
                     let volumeStr = getVal(item, ['volumes', 'Варианты', 'Volumes']);
                     let badgeText = getVal(item, ['badge', 'Метка']);
-                    let modsStr = getVal(item, ['modifiers', 'Модификаторы', 'mods']);
+                    let modsStr = getVal(item, ['modifiers', 'Модификаторы']);
 
                     let isAvailable = (String(availVal).trim().toLowerCase() === 'true' || String(availVal).trim().toLowerCase() === 'да');
                     let isPopular = (String(popularVal).trim().toLowerCase() === 'true' || String(popularVal).trim().toLowerCase() === 'да');
                     let cleanPrice = parsePrice(priceVal);
-                    let mods = modsStr ? modsStr.toLowerCase().split(',').map(s => s.trim()) : [];
+                    
+                    // Парсим модификаторы: key=price; key=price
+                    let mods = {};
+                    if (modsStr) {
+                        modsStr.split(';').forEach(m => {
+                            let [k, p] = m.split('=');
+                            if (k) {
+                                mods[k.trim()] = p ? parsePrice(p) : 0;
+                            }
+                        });
+                    }
 
                     if (cat.toLowerCase().includes('лимонад')) cat = 'Холодные напитки';
                     
@@ -283,9 +274,6 @@
                         price: cleanPrice, basePrice: cleanPrice, badge: badgeText,
                         type: 'simple',
                         hasVolumes: false, hasMilk: false,
-                        allowCoffeeExtras: false, allowTeaExtras: false, allowHotDogExtras: false,
-                        allowBreakfastExtras: false, allowSnackExtras: false,
-                        showSugar: false, showSyrup: false,
                         volumes: [], mods: mods
                     };
 
@@ -299,17 +287,10 @@
                         });
                     }
                     
-                    // Авто-определение "Основного молока" для кофе (Капучино, Латте)
-                    if (cat === 'Кофе' && product.hasVolumes) {
-                         // Если в имени нет слов "Американо", "Эспрессо", "Раф" - значит, можно выбрать молоко
-                         if (!name.toLowerCase().includes('американо') && 
-                             !name.toLowerCase().includes('эспрессо') &&
-                             !name.toLowerCase().includes('раф')) {
-                             product.hasMilk = true;
-                         }
+                    // Авто-определение молока для кофе (если есть альт. молоко в списке модов)
+                    if (mods['alt_milk'] !== undefined) {
+                         product.hasMilk = true;
                     }
-
-                    // Если это Раф, но нет флага молока - норм, он просто с объемами
 
                     return product;
                 }).filter(item => item !== null);
@@ -327,7 +308,6 @@
         });
     }
 
-    // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
     function getLocalHour() { const now = new Date(); return now.getHours(); }
     function checkWorkingHours() {
         const badge = document.getElementById('work-status');
@@ -364,7 +344,6 @@
         const app = document.getElementById('app');
         if (!app) return;
         renderNav(); checkWorkingHours();
-        
         const uniqueCats = [...new Set(menuData.map(p => p.cat))];
         const sortedCats = uniqueCats.sort((a, b) => {
             const idxA = CATEGORY_ORDER.indexOf(a); const idxB = CATEGORY_ORDER.indexOf(b);
@@ -444,62 +423,54 @@
             html += `</div></div>`;
         } else if (product.fixedVolume) { html += `<div class="option-group"><label class="option-label">Объем: ${product.fixedVolume}</label></div>`; }
 
-        // 2. Основное молоко (для Капучино и т.д.)
+        // 2. Молоко (если есть alt_milk в модификаторах)
         if(product.hasMilk) {
             html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group">
                 <input type="radio" name="milk" id="m1" value="std" class="radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label">Обычное</label>
                 <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label">Безлакт.<br>+0</label>
-                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label">Альтерн.<br>+${PRICES.alt_milk}</label>
+                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label">Альтерн.<br>+${product.mods['alt_milk']}</label>
             </div>
             <div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
             ALT_MILKS.forEach(m => html += `<option value="${m}">${m}</option>`);
             html += `</select></div></div>`;
         }
 
-        // 3. Модификаторы (из колонки mods)
-        if (product.mods.length > 0) {
-             html += `<div class="option-group"><label class="option-label">Добавки</label>`;
-             
-             if (product.mods.includes('milk')) html += `<div class="checkbox-row"><span>Доп. молоко (+${PRICES.add_milk})</span><label class="toggle-switch"><input type="checkbox" id="cm" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
-             if (product.mods.includes('cream')) html += `<div class="checkbox-row"><span>Доп. сливки (+${PRICES.add_cream})</span><label class="toggle-switch"><input type="checkbox" id="cc" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
-             if (product.mods.includes('honey')) html += `<div class="checkbox-row"><span>Мед (+${PRICES.add_honey})</span><label class="toggle-switch"><input type="checkbox" id="th" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
-             if (product.mods.includes('lemon')) html += `<div class="checkbox-row"><span>Лимон (+${PRICES.add_lemon})</span><label class="toggle-switch"><input type="checkbox" id="tl" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
-             if (product.mods.includes('br_egg')) html += `<div class="checkbox-row"><span>Доп. яйцо (+${PRICES.breakfast_add_egg})</span><label class="toggle-switch"><input type="checkbox" id="br-egg" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
-             
-             // Хот-доги (сет)
-             if (product.mods.includes('hd_set')) {
-                 html += `<div class="checkbox-row"><span>Сыр (+${PRICES.hotdog_add_cheese})</span><label class="toggle-switch"><input type="checkbox" id="hd-cheese" onchange="recalcPrice()"><span class="slider"></span></label></div>
-                 <div class="checkbox-row"><span>Халапеньо (+${PRICES.hotdog_add_jalapeno})</span><label class="toggle-switch"><input type="checkbox" id="hd-jalapeno" onchange="recalcPrice()"><span class="slider"></span></label></div>
-                 <div class="checkbox-row"><span>Жареный лук (+${PRICES.hotdog_add_onion})</span><label class="toggle-switch"><input type="checkbox" id="hd-onion" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
-             }
-             
-             // Соусы (бесплатный и платный)
-             // Деревенский завтрак (ID 41) - соус платный. Английский (37) - бесплатный. Остальные платный.
-             if (product.mods.includes('sauce')) {
-                 let sauceCost = PRICES.sauce_paid;
-                 if (product.id === '37') sauceCost = PRICES.sauce_free;
-                 
-                 html += `<label class="option-label" style="margin-top:10px;">Соус (${sauceCost > 0 ? '+' + sauceCost : 'Бесплатно'})</label><select id="snack-sauce" onchange="recalcPrice()">`;
-                 SAUCES.forEach(s => html += `<option value="${s}">${s}</option>`);
-                 html += `</select>`;
-             }
-             
-             html += `</div>`;
+        // 3. Модификаторы (динамически из product.mods)
+        let hasExtras = false;
+        // Проверяем обычные чекбоксы
+        const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
+        let checkboxHtml = '';
+        checkboxes.forEach(key => {
+            if (key in product.mods) {
+                hasExtras = true;
+                checkboxHtml += `<div class="checkbox-row"><span>${MOD_LABELS[key]} (+${product.mods[key]})</span><label class="toggle-switch"><input type="checkbox" id="mod-${key}" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
+            }
+        });
+        
+        if (hasExtras) {
+            html += `<div class="option-group"><label class="option-label">Добавки</label>${checkboxHtml}</div>`;
         }
 
-        // Сахар и Сироп (из mods)
-        if (product.mods.includes('sugar')) {
+        // Соусы (select)
+        if ('sauce' in product.mods) {
+            let price = product.mods['sauce'];
+            html += `<div class="option-group"><label class="option-label">Соус (${price > 0 ? '+' + price : 'Бесплатно'})</label><select id="sauce-select" onchange="recalcPrice()">`;
+            SAUCES.forEach(s => html += `<option value="${s}">${s}</option>`);
+            html += `</select></div>`;
+        }
+
+        // Сахар (если есть ключ sugar)
+        if ('sugar' in product.mods) {
             html += `<div class="option-group"><label class="option-label">Сахар</label><input type="number" id="sug" placeholder="0" min="0"></div>`;
         }
-        if (product.mods.includes('syrup')) {
-            let sOpts = SYRUPS.map(s=>`<option value="${s}">${s}</option>`).join('');
-            html += `<div class="option-group"><label class="option-label">Сироп (+${PRICES.syrup})</label><select id="syr" onchange="recalcPrice()">${sOpts}</select></div>`;
+        
+        // Сироп (если есть ключ syrup)
+        if ('syrup' in product.mods) {
+             let price = product.mods['syrup'];
+             let sOpts = SYRUPS.map(s=>`<option value="${s}">${s}</option>`).join('');
+             html += `<div class="option-group"><label class="option-label">Сироп (${price > 0 ? '+' + price : 'Бесплатно'})</label><select id="syr" onchange="recalcPrice()">${sOpts}</select></div>`;
         }
         
-        if (product.mods.includes('shot')) {
-             html += `<div class="checkbox-row"><span>Доп. шот (+${PRICES.shot})</span><label class="toggle-switch"><input type="checkbox" id="esh" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
-        }
-
         html += `<div class="modal-footer"><button class="modal-add-btn" id="modal-btn" onclick="addComplexToCart()">Добавить</button></div>`;
         content.innerHTML = html;
         document.getElementById('product-modal').style.display = 'flex';
@@ -524,34 +495,27 @@
         // Молоко
         if(prod.hasMilk) {
             const el = document.querySelector('input[name="milk"]:checked');
-            if(el && el.value === 'alt') p += PRICES.alt_milk;
+            if(el && el.value === 'alt') p += prod.mods['alt_milk'];
         }
         
-        // Модификаторы
-        if(document.getElementById('cm')?.checked) p += PRICES.add_milk;
-        if(document.getElementById('cc')?.checked) p += PRICES.add_cream;
-        if(document.getElementById('tm')?.checked) p += PRICES.tea_add_milk;
-        if(document.getElementById('tc')?.checked) p += PRICES.tea_add_cream;
-        if(document.getElementById('th')?.checked) p += PRICES.tea_add_honey;
-        if(document.getElementById('tl')?.checked) p += PRICES.tea_add_lemon;
-        if(document.getElementById('br-egg')?.checked) p += PRICES.breakfast_add_egg;
-        
-        // Хот-доги
-        if(document.getElementById('hd-cheese')?.checked) p += PRICES.hotdog_add_cheese;
-        if(document.getElementById('hd-jalapeno')?.checked) p += PRICES.hotdog_add_jalapeno;
-        if(document.getElementById('hd-onion')?.checked) p += PRICES.hotdog_add_onion;
+        // Чекбоксы
+        const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
+        checkboxes.forEach(key => {
+            const el = document.getElementById(`mod-${key}`);
+            if (el && el.checked) p += prod.mods[key];
+        });
         
         // Соус
-        if(document.getElementById('snack-sauce')?.value && document.getElementById('snack-sauce')?.value !== "Нет") {
-             // Английский завтрак (ID 37) - бесплатно
-             if (prod.id !== '37') p += PRICES.sauce_paid;
+        if(document.getElementById('sauce-select')) {
+             const val = document.getElementById('sauce-select').value;
+             if (val && val !== "Нет") p += prod.mods['sauce'];
         }
 
         // Сироп
-        if(document.getElementById('syr')?.value && document.getElementById('syr')?.value !== "Нет") p += PRICES.syrup;
-        
-        // Шот
-        if(document.getElementById('esh')?.checked) p += PRICES.shot;
+        if(document.getElementById('syr')) {
+            const val = document.getElementById('syr').value;
+            if (val && val !== "Нет") p += prod.mods['syrup'];
+        }
 
         const btn = document.getElementById('modal-btn');
         if(btn) { btn.innerText = `Добавить за ${p} ₸`; btn.dataset.price = p; }
@@ -575,35 +539,36 @@
             const m = document.querySelector('input[name="milk"]:checked').value;
             if(m==='lf') opts.push("Молоко: Безлакт.");
             if(m==='alt') {
-                const type = document.getElementById('alt-milk-type').value;
-                opts.push(`Молоко: Альтерн. (${type})`);
+                const t = document.getElementById('alt-milk-type').value;
+                opts.push(`Молоко: Альтерн. (${t})`);
             }
         }
 
-        // Галочки
-        if(document.getElementById('cm')?.checked) opts.push("Доп: Молоко");
-        if(document.getElementById('cc')?.checked) opts.push("Доп: Сливки");
-        if(document.getElementById('tm')?.checked) opts.push("Доп: Молоко");
-        if(document.getElementById('tc')?.checked) opts.push("Доп: Сливки");
-        if(document.getElementById('th')?.checked) opts.push("Доп: Мед");
-        if(document.getElementById('tl')?.checked) opts.push("Доп: Лимон");
-        if(document.getElementById('br-egg')?.checked) opts.push("Доп: Яйцо");
+        // Чекбоксы
+        const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
+        checkboxes.forEach(key => {
+            const el = document.getElementById(`mod-${key}`);
+            if (el && el.checked) opts.push(`Доп: ${MOD_LABELS[key]}`);
+        });
 
-        if(document.getElementById('hd-cheese')?.checked) opts.push("Доп: Сыр");
-        if(document.getElementById('hd-jalapeno')?.checked) opts.push("Доп: Халапеньо");
-        if(document.getElementById('hd-onion')?.checked) opts.push("Доп: Жареный лук");
-        
-        const ss = document.getElementById('snack-sauce')?.value;
-        if(ss && ss !== "Нет") opts.push(`Соус: ${ss}`);
+        // Соус
+        if(document.getElementById('sauce-select')) {
+             const val = document.getElementById('sauce-select').value;
+             if (val && val !== "Нет") opts.push(`Соус: ${val}`);
+        }
 
-        // Сахар/Сироп
-        const s = document.getElementById('sug')?.value;
-        if (s) opts.push(`Сахар: ${s}`);
+        // Сахар
+        if(document.getElementById('sug')) {
+            const s = document.getElementById('sug').value;
+            if (s) opts.push(`Сахар: ${s}`);
+            else opts.push("Без сахара"); // Явно пишем
+        }
 
-        const syr = document.getElementById('syr')?.value;
-        if(syr && syr !== "Нет") opts.push(`Сироп: ${syr}`);
-
-        if(document.getElementById('esh')?.checked) opts.push("Доп. шот");
+        // Сироп
+        if(document.getElementById('syr')) {
+            const val = document.getElementById('syr').value;
+            if (val && val !== "Нет") opts.push(`Сироп: ${val}`);
+        }
 
         cart.push({ name: prod.name, price: price, options: opts, cat: prod.cat });
         closeProductModal(true); 
@@ -620,43 +585,7 @@
     function toggleDelivery() { const isDel = document.getElementById('d-delivery').checked; document.getElementById('address-block').style.display = isDel ? 'block' : 'none'; document.getElementById('delivery-msg').style.display = isDel ? 'block' : 'none'; calculateCheckoutTotal(); }
     function togglePayment() { const isCash = document.getElementById('p-cash').checked; document.getElementById('payment-phone-block').style.display = isCash ? 'none' : 'block'; }
     function calculateCheckoutTotal() { const t = cart.reduce((s, i) => s + i.price, 0); document.getElementById('checkout-total-sum').innerText = `Итого: ${t} ₸`; return t; }
-    
-    // === ИСПРАВЛЕННАЯ ФУНКЦИЯ SUBMITORDER (ВЫНЕСЕНА) ===
-    function submitOrder() { 
-        const btn = document.getElementById('submit-btn'); 
-        btn.disabled = true; btn.innerText = "Отправка..."; 
-        
-        const name = document.getElementById('client-name').value.trim(); 
-        const phone = document.getElementById('client-phone').value.trim(); 
-        const address = document.getElementById('delivery-address').value.trim(); 
-        
-        const delTypeEl = document.querySelector('input[name="deliveryType"]:checked');
-        const delType = delTypeEl ? delTypeEl.value : 'pickup';
-        
-        const payTypeEl = document.querySelector('input[name="paymentType"]:checked');
-        const payType = payTypeEl ? payTypeEl.value : 'Наличными';
-        
-        const payPhone = document.getElementById('payment-phone').value.trim(); 
-        const comment = document.getElementById('order-comment').value.trim(); 
-        
-        if (!name || !phone) { alert("Заполните имя и телефон"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
-        if (delType === 'delivery' && !address) { alert("Укажите адрес доставки"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
-        if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) { alert("Укажите номер для счета"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
-        
-        saveUserData(name, phone, address); 
-        const total = calculateCheckoutTotal(); 
-        const orderData = { cart: cart, total: total, info: { name, phone, deliveryType: delType==='delivery'?'Доставка':'Самовывоз', address, paymentType: payType, paymentPhone: payPhone, comment } }; 
-        
-        try { 
-            tg.sendData(JSON.stringify(orderData)); 
-            // Сброс после отправки
-            cart = []; updateCartButton(); closeCheckout(); 
-            tg.close(); 
-        } catch (e) { 
-            alert("Ошибка: " + e); btn.disabled = false; btn.innerText = "Подтвердить заказ"; 
-        } 
-    }
-    
+    function submitOrder() { const btn = document.getElementById('submit-btn'); btn.disabled = true; btn.innerText = "Отправка..."; const name = document.getElementById('client-name').value.trim(); const phone = document.getElementById('client-phone').value.trim(); const address = document.getElementById('delivery-address').value.trim(); const delType = document.querySelector('input[name="deliveryType"]:checked').value; const payType = document.querySelector('input[name="paymentType"]:checked').value; const payPhone = document.getElementById('payment-phone').value.trim(); const comment = document.getElementById('order-comment').value.trim(); if (!name || !phone) { alert("Заполните имя и телефон"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } if (delType === 'delivery' && !address) { alert("Укажите адрес доставки"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) { alert("Укажите номер для счета"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } saveUserData(name, phone, address); const total = calculateCheckoutTotal(); const orderData = { cart: cart, total: total, info: { name, phone, deliveryType: delType==='delivery'?'Доставка':'Самовывоз', address, paymentType: payType, paymentPhone: payPhone, comment } }; try { tg.sendData(JSON.stringify(orderData)); cart = []; updateCartButton(); closeCheckout(); tg.close(); } catch (e) { alert("Ошибка: " + e); btn.disabled = false; btn.innerText = "Подтвердить заказ"; } }
     function getImageByCategory(cat) { const map = { "Кофе": "https://cdn-icons-png.flaticon.com/512/751/751621.png", "Завтраки": "https://cdn-icons-png.flaticon.com/512/2771/2771406.png", "Круассаны": "https://cdn-icons-png.flaticon.com/512/3014/3014528.png", "Салаты": "https://cdn-icons-png.flaticon.com/512/2062/2062296.png", "Чай": "https://cdn-icons-png.flaticon.com/512/3054/3054889.png", "Лимонады": "https://cdn-icons-png.flaticon.com/512/2447/2447137.png", "Коктейли": "https://cdn-icons-png.flaticon.com/512/3081/3081986.png", "Хот-доги": "https://cdn-icons-png.flaticon.com/512/1980/1980788.png", "Пицца": "https://cdn-icons-png.flaticon.com/512/3132/3132693.png", "Закуски": "https://cdn-icons-png.flaticon.com/512/5787/5787016.png", "Сезонное": "https://cdn-icons-png.flaticon.com/512/4421/4421089.png", "Смузи": "https://cdn-icons-png.flaticon.com/512/1147/1147588.png", "Холодные напитки": "https://cdn-icons-png.flaticon.com/512/956/956850.png", "Пасты": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png" }; return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png"; }
 
     try {
