@@ -65,50 +65,48 @@
         .modal-desc { font-size: 13px; color: #666; margin-top: 4px; line-height: 1.4; }
         .close-icon { font-size: 24px; cursor: pointer; color: #888; padding: 0 0 10px 10px; }
         
-        /* ПОЛЯ ВВОДА И КНОПКИ (ИСПРАВЛЕНЫ) */
         .option-group { margin-bottom: 15px; position: relative; z-index: 1; }
         .option-label { font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px; color: #444; }
         
-        /* Сетка для радио-кнопок */
+        /* --- ОБНОВЛЕННЫЕ КНОПКИ --- */
         .radio-group { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
             gap: 8px; 
         }
         
-        /* Стиль самой кнопки */
         .radio-label { 
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 10px; 
+            padding: 8px 5px;         /* Компактнее */
             background: #fff;
             border: 1px solid #e5e7eb; 
-            border-radius: 12px; 
+            border-radius: 10px;      /* Скругление */
             cursor: pointer; 
-            font-size: 14px; /* Шрифт покрупнее */
+            font-size: 13px;          /* Аккуратный шрифт */
             font-weight: 600;
-            color: #374151;
-            transition: all 0.2s;
-            min-height: 44px; /* Фиксированная высота */
+            color: #4b5563;
+            transition: all 0.1s;
+            min-height: 38px;         /* Фиксированная высота */
+            line-height: 1.1;
             box-sizing: border-box;
-            white-space: nowrap; /* Текст в одну строку */
+            user-select: none;
         }
         
         .radio-input { display: none; }
         
-        /* Активная кнопка */
         .radio-input:checked + .radio-label { 
             background-color: #FFD54F; 
             border-color: #FFD54F; 
             color: #3e2723; 
-            box-shadow: 0 2px 5px rgba(255, 213, 79, 0.4);
+            box-shadow: 0 2px 4px rgba(255, 213, 79, 0.3);
         }
+        /* --------------------------- */
 
         select, input[type="text"], input[type="number"], input[type="tel"], textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; -webkit-appearance: none; background: #fff; margin-bottom: 10px; font-family: inherit; }
         textarea { resize: none; height: 60px; }
-        
         .checkbox-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid #eee; }
         .toggle-switch { position: relative; display: inline-block; width: 46px; height: 24px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
@@ -116,7 +114,6 @@
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #FFD54F; }
         input:checked + .slider:before { transform: translateX(22px); }
-        
         .modal-footer { margin-top: 20px; display: flex; gap: 10px; }
         .modal-add-btn { background: #2ecc71; color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         .modal-add-btn:disabled { background: #ccc; cursor: not-allowed; }
@@ -214,7 +211,7 @@
 
     // === ВАЖНО: ВСТАВЬТЕ СЮДА ВАШУ ССЫЛКУ ===
     const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv"; 
-    // !!! ЗАМЕНИТЕ ССЫЛКУ ВЫШЕ НА ВАШУ !!!
+    // !!! ЗАМЕНИТЕ ССЫЛКУ НА ВАШУ !!!
 
     const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL);
     const CATEGORY_ORDER = ["Популярное", "Сезонное", "Кофе", "Чай", "Холодные напитки", "Молочные коктейли", "Завтраки", "Круассаны", "Хот-доги", "Салаты", "Пицца", "Пасты", "Закуски"];
@@ -326,10 +323,11 @@
                             if (k) {
                                 k = k.trim();
                                 let val = p ? parsePrice(p) : (PRICES[k] || PRICES['add_'+k] || 0);
+                                // Маппинг для ключей из настроек
                                 if (!p && k==='alt_milk') val = PRICES.alt_milk;
                                 if (!p && k==='shot') val = PRICES.shot;
                                 if (!p && k==='syrup') val = PRICES.syrup;
-                                if (!p && k==='sauce') val = PRICES.sauce_paid;
+                                if (!p && k==='sauce') val = PRICES.sauce_paid; // По умолчанию платный
                                 if (!p && k==='egg') val = PRICES.breakfast_add_egg;
                                 if (!p && k==='milk') val = PRICES.add_milk;
                                 if (!p && k==='cream') val = PRICES.add_cream;
