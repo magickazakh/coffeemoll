@@ -16,7 +16,7 @@ from aiogram.enums import ParseMode
 TOKEN = os.getenv("BOT_TOKEN", "8444027240:AAFEiACM5x-OPmR9CFgk1zyrmU24PgovyCY") 
 
 # Ваш ID (куда приходят заказы)
-ADMIN_CHAT_ID = 1054308942
+ADMIN_CHAT_ID = -1003356844624
 
 # Ссылка на ваш сайт (GitHub Pages)
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
@@ -186,3 +186,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Бот остановлен.")
+
