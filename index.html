@@ -8,11 +8,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     
     <script>
-        window.onerror = function(msg, url, line) { return false; };
+        window.onerror = function(msg, url, line) {
+            // alert("Ошибка JS: " + msg + " (Строка " + line + ")");
+            return false;
+        };
     </script>
 
     <style>
-        /* --- БАЗОВЫЕ СТИЛИ --- */
+        /* --- СТИЛИ --- */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #1f2937; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
         .header-container { background: white; position: sticky; top: 0; z-index: 40; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         header { padding: 15px 15px 10px 15px; display: flex; justify-content: space-between; align-items: center;}
@@ -21,6 +24,7 @@
         .search-wrapper { padding: 0 15px 10px 15px; }
         #search-input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid #eee; background: #f9fafb; font-size: 14px; outline: none; transition: 0.2s; margin: 0; box-sizing: border-box; }
         #search-input:focus { border-color: #FFD54F; background: #fff; }
+        
         .nav-scroller { overflow-x: auto; white-space: nowrap; padding: 5px 15px 15px 15px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .nav-scroller::-webkit-scrollbar { display: none; }
         .nav-btn { display: inline-block; padding: 8px 16px; margin-right: 8px; background: #f3f4f6; border-radius: 20px; font-size: 13px; font-weight: 600; color: #4b5563; text-decoration: none; border: 1px solid transparent; transition: 0.2s; }
@@ -31,21 +35,24 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         .card { background: white; border-radius: 16px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.1s; position: relative; opacity: 0; animation: fadeInUp 0.5s ease-out forwards; }
         .card:active { transform: scale(0.98); }
+        
         .card-img-container { width: 100%; height: 100px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; overflow: hidden; position: relative; background: #ffffff; background-image: linear-gradient(to right, #f0f0f0 0%, #f8f8f8 20%, #f0f0f0 40%, #f0f0f0 100%); background-size: 800px 104px; animation: shimmer 1s linear infinite forwards; }
         .card img { width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 0.3s ease-in; }
         .card img.loaded { opacity: 1; }
+        
         .card.unavailable { opacity: 0.6; background-color: #f9fafb; pointer-events: none; }
         .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
         .card-badge { position: absolute; top: 8px; right: 8px; background: #FFD54F; color: #3e2723; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-transform: uppercase; }
         .badge-hot { background: #ef4444; color: white; }
         .badge-new { background: #3b82f6; color: white; }
+        
         .card h3 { margin: 0 0 5px 0; font-size: 14px; font-weight: 600; line-height: 1.3; }
         .card .desc { font-size: 11px; color: #6b7280; margin-bottom: 8px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
         .price { font-weight: 700; font-size: 15px; color: #111; }
         .add-btn { background-color: #FFD54F; color: #3e2723; border: none; border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 12px; cursor: pointer; }
         .add-btn:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
-        
+
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction: column; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #FFD54F; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px;}
 
@@ -57,65 +64,17 @@
         .modal-title { font-size: 18px; font-weight: bold; }
         .modal-desc { font-size: 13px; color: #666; margin-top: 4px; line-height: 1.4; }
         .close-icon { font-size: 24px; cursor: pointer; color: #888; padding: 0 0 10px 10px; }
+        
         .option-group { margin-bottom: 15px; position: relative; z-index: 1; }
         .option-label { font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px; color: #444; }
         
-        /* --- НОВЫЕ СТИЛИ ДЛЯ РАДИО-КНОПОК --- */
-        .radio-group { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 8px; 
-        }
-        
-        .radio-label { 
-            display: flex;
-            align-items: center;
-            /* Выравнивание текста по левому краю для аккуратности */
-            justify-content: flex-start; 
-            padding: 8px 12px;
-            background: #fff;
-            border: 1px solid #e5e7eb; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            font-size: 14px; 
-            font-weight: 500; /* Чуть тоньше, чем было */
-            color: #374151;
-            transition: all 0.2s;
-            min-height: 40px;
-            box-sizing: border-box;
-            position: relative;
-        }
-
-        /* Рисуем кастомный кружочек радио-кнопки */
-        .radio-label::before {
-            content: '';
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #d1d5db;
-            border-radius: 50%;
-            margin-right: 10px;
-            box-sizing: border-box;
-            transition: 0.2s;
-            flex-shrink: 0;
-        }
-        
+        /* Радио кнопки */
+        .radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .radio-label { display: flex; align-items: center; justify-content: flex-start; padding: 8px 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; color: #374151; transition: all 0.2s; min-height: 40px; box-sizing: border-box; position: relative; }
+        .radio-label::before { content: ''; display: inline-block; width: 16px; height: 16px; border: 2px solid #d1d5db; border-radius: 50%; margin-right: 10px; box-sizing: border-box; transition: 0.2s; flex-shrink: 0; }
         .radio-input { display: none; }
-        
-        /* Активное состояние */
-        .radio-input:checked + .radio-label { 
-            background-color: #FFF8E1; /* Очень легкий желтый */
-            border-color: #3e2723;     /* Темная рамка */
-            color: #111;
-        }
-
-        /* Активный кружочек */
-        .radio-input:checked + .radio-label::before {
-            border-color: #3e2723;
-            background-color: #3e2723;
-            box-shadow: inset 0 0 0 3px #FFF8E1; /* Эффект бублика */
-        }
-        /* ------------------------------------- */
+        .radio-input:checked + .radio-label { background-color: #FFF8E1; border-color: #3e2723; color: #111; }
+        .radio-input:checked + .radio-label::before { border-color: #3e2723; background-color: #3e2723; box-shadow: inset 0 0 0 3px #FFF8E1; }
 
         select, input[type="text"], input[type="number"], input[type="tel"], textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; -webkit-appearance: none; background: #fff; margin-bottom: 10px; font-family: inherit; }
         textarea { resize: none; height: 60px; }
@@ -219,6 +178,7 @@
 
 <script>
     const tg = window.Telegram.WebApp;
+    tg.ready(); // Инициализация Telegram Web App
     tg.expand(); 
 
     // === ВАЖНО: ВСТАВЬТЕ СЮДА ВАШУ ССЫЛКУ ===
@@ -679,9 +639,14 @@
     function togglePayment() { const isCash = document.getElementById('p-cash').checked || document.getElementById('p-card').checked; document.getElementById('payment-phone-block').style.display = isCash ? 'none' : 'block'; }
     function calculateCheckoutTotal() { const t = cart.reduce((s, i) => s + i.price, 0); document.getElementById('checkout-total-sum').innerText = `Итого: ${t} ₸`; return t; }
     
+    // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ (Для iPhone и двойных кликов) ---
     function submitOrder() { 
+        // 1. Убираем фокус с полей, чтобы скрыть клавиатуру
+        if (document.activeElement) { document.activeElement.blur(); }
+
         const btn = document.getElementById('submit-btn'); 
-        btn.disabled = true; btn.innerText = "Отправка..."; 
+        btn.disabled = true; 
+        btn.innerText = "Отправка..."; 
         
         const name = document.getElementById('client-name').value.trim(); 
         const phone = document.getElementById('client-phone').value.trim(); 
@@ -699,6 +664,7 @@
         const payPhone = document.getElementById('payment-phone').value.trim(); 
         const comment = document.getElementById('order-comment').value.trim(); 
         
+        // Валидация
         if (!name || !phone) { alert("Заполните имя и телефон"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
         if (delType === 'delivery' && !address) { alert("Укажите адрес доставки"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
         if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) { alert("Укажите номер для счета"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
@@ -707,12 +673,16 @@
         const total = calculateCheckoutTotal(); 
         const orderData = { cart: cart, total: total, info: { name, phone, deliveryType: prettyDelivery, address: (delType==='delivery'?address:''), paymentType: payType, paymentPhone: payPhone, comment } }; 
         
-        try { 
-            tg.sendData(JSON.stringify(orderData)); 
-            cart = []; updateCartButton(); closeCheckout(); tg.close(); 
-        } catch (e) { 
-            alert("Ошибка: " + e); btn.disabled = false; btn.innerText = "Подтвердить заказ"; 
-        } 
+        // 2. Отправка данных с задержкой
+        tg.sendData(JSON.stringify(orderData)); 
+        
+        // 3. Ждем немного, чтобы данные успели уйти, прежде чем закрывать
+        setTimeout(function() {
+            cart = []; 
+            updateCartButton(); 
+            closeCheckout(); 
+            tg.close();
+        }, 100);
     }
     
     function getImageByCategory(cat) { const map = { "Кофе": "https://cdn-icons-png.flaticon.com/512/751/751621.png", "Завтраки": "https://cdn-icons-png.flaticon.com/512/2771/2771406.png", "Круассаны": "https://cdn-icons-png.flaticon.com/512/3014/3014528.png", "Салаты": "https://cdn-icons-png.flaticon.com/512/2062/2062296.png", "Чай": "https://cdn-icons-png.flaticon.com/512/3054/3054889.png", "Лимонады": "https://cdn-icons-png.flaticon.com/512/2447/2447137.png", "Коктейли": "https://cdn-icons-png.flaticon.com/512/3081/3081986.png", "Хот-доги": "https://cdn-icons-png.flaticon.com/512/1980/1980788.png", "Пицца": "https://cdn-icons-png.flaticon.com/512/3132/3132693.png", "Закуски": "https://cdn-icons-png.flaticon.com/512/5787/5787016.png", "Сезонное": "https://cdn-icons-png.flaticon.com/512/4421/4421089.png", "Смузи": "https://cdn-icons-png.flaticon.com/512/1147/1147588.png", "Холодные напитки": "https://cdn-icons-png.flaticon.com/512/956/956850.png", "Пасты": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png" }; return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png"; }
