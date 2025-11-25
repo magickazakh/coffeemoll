@@ -17,7 +17,7 @@
         .header-container { background: white; position: sticky; top: 0; z-index: 40; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         header { padding: 15px 15px 10px 15px; display: flex; justify-content: space-between; align-items: center;}
         h1 { margin: 0; font-size: 18px; font-weight: 800; color: #111; }
-        .status-badge { font-size: 12px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; }
+        .status-badge { font-size: 12px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; transition: 0.3s; }
         
         .search-wrapper { padding: 0 15px 10px 15px; }
         #search-input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid #eee; background: #f9fafb; font-size: 14px; outline: none; transition: 0.2s; margin: 0; box-sizing: border-box; }
@@ -82,14 +82,13 @@
         .radio-input:checked + .radio-label { background-color: #FFF8E1; border-color: #3e2723; color: #111; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .radio-input:checked + .radio-label::before { border-color: #3e2723; background-color: #3e2723; box-shadow: inset 0 0 0 3px #FFF8E1; }
 
-        /* --- ИЗОЛИРОВАННЫЕ СТИЛИ ДЛЯ КОРЗИНЫ (ЧТОБЫ НЕ ЛОМАЛОСЬ) --- */
+        /* --- ИЗОЛИРОВАННЫЕ СТИЛИ ДЛЯ КОРЗИНЫ --- */
         .checkout-radio-group { 
             display: grid !important; 
             grid-template-columns: 1fr 1fr !important; 
             gap: 10px !important; 
             width: 100% !important; 
         }
-        
         .checkout-radio-label { 
             display: flex !important;
             align-items: center !important;
@@ -108,7 +107,6 @@
             box-sizing: border-box !important;
             position: relative !important;
         }
-
         .checkout-radio-label::before {
             content: '' !important;
             display: inline-block !important;
@@ -121,16 +119,13 @@
             flex-shrink: 0 !important;
             transition: 0.2s !important;
         }
-        
         .checkout-radio-input { display: none !important; }
-        
         .checkout-radio-input:checked + .checkout-radio-label { 
             background-color: #FFF8E1 !important; 
             border-color: #3e2723 !important; 
             color: #111 !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
         }
-
         .checkout-radio-input:checked + .checkout-radio-label::before {
             border-color: #3e2723 !important;
             background-color: #3e2723 !important;
@@ -138,7 +133,7 @@
         }
         /* ---------------------------------------------------------- */
 
-        select, input[type="text"], input[type="number"], input[type="tel"], textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; -webkit-appearance: none; background: #fff; margin-bottom: 10px; font-family: inherit; }
+        select, input[type="text"], input[type="number"], input[type="tel"], textarea, input[type="time"] { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; -webkit-appearance: none; background: #fff; margin-bottom: 10px; font-family: inherit; }
         textarea { resize: none; height: 60px; }
         .checkbox-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid #eee; }
         .toggle-switch { position: relative; display: inline-block; width: 46px; height: 24px; }
@@ -160,16 +155,14 @@
         .checkout-total { font-size: 18px; font-weight: bold; margin-top: 15px; text-align: right; border-top: 2px solid #eee; padding-top: 10px; }
         .delivery-warning { font-size: 13px; color: #d97706; background: #fef3c7; padding: 8px; border-radius: 8px; margin-top: 5px; display: none; }
         .contact-note { font-size: 12px; color: #6b7280; margin-top: 15px; display: flex; gap: 5px; align-items: flex-start; }
-        .upsell-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1100; align-items: center; justify-content: center; }
-        .upsell-content { background: white; width: 85%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; animation: popIn 0.3s; }
-        .upsell-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
-        .upsell-btn-row { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
-        .upsell-yes { background: #FFD54F; color: #3e2723; padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; flex: 1;}
-        .upsell-no { background: #f3f4f6; color: #666; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; flex: 1;}
+        
+        /* Стили для уведомлений о закрытии и пицце */
+        .warning-box { background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; display: none; border: 1px solid #fecaca; line-height: 1.4; }
+        .info-box { background: #e0f2fe; color: #075985; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; display: none; border: 1px solid #bae6fd; line-height: 1.4; }
+
         @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
         @keyframes shimmer{0%{background-position:-468px 0}100%{background-position:468px 0}}
         @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes popIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
     </style>
 </head>
 <body>
@@ -197,6 +190,10 @@
 
 <div class="modal-overlay" id="checkout-modal"><div class="modal-content" id="checkout-content">
     <div class="modal-header"><div class="modal-title">Ваш заказ</div><div class="close-icon" onclick="closeCheckout()">✕</div></div>
+    
+    <div id="closed-warning" class="warning-box">🌙 <b>Мы сейчас закрыты.</b><br>Приготовим ваш заказ в рабочее время (с 09:00).</div>
+    <div id="pizza-warning" class="info-box">🍕 <b>Пицца доступна с 11:00.</b><br>Начнем готовить её после 11:00.</div>
+
     <div id="cart-list-container"></div>
     <div class="checkout-total" id="checkout-total-sum">Итого: 0 ₸</div>
     <div style="margin-top: 20px; border-top: 5px solid #f3f4f6; margin-left: -20px; margin-right: -20px;"></div>
@@ -207,6 +204,20 @@
         <input type="tel" id="client-phone" placeholder="Номер телефона (+7...)">
     </div>
     
+    <div class="option-group">
+        <label class="option-label">Время готовности</label>
+        <div class="checkout-radio-group">
+            <input type="radio" name="orderTimeType" id="t-asap" value="asap" class="checkout-radio-input" checked onchange="toggleTimePicker()">
+            <label for="t-asap" class="checkout-radio-label">⚡ Как можно скорее</label>
+
+            <input type="radio" name="orderTimeType" id="t-time" value="time" class="checkout-radio-input" onchange="toggleTimePicker()">
+            <label for="t-time" class="checkout-radio-label">⏰ Ко времени</label>
+        </div>
+        <div id="time-picker-container" style="display: none; margin-top: 10px;">
+            <input type="time" id="specific-time">
+        </div>
+    </div>
+
     <div class="option-group">
         <label class="option-label">Способ получения</label>
         <div class="checkout-radio-group">
@@ -258,14 +269,6 @@
     <button class="modal-add-btn" id="submit-btn" onclick="submitOrder()">Подтвердить заказ</button>
 </div></div>
 
-<div class="upsell-overlay" id="upsell-modal"><div class="upsell-content">
-    <h3 style="margin:0 0 10px 0;">К кофе идеально подойдет!</h3>
-    <img src="https://file.garden/aSB7wx7270Kujihk/%D0%9A%D1%80%D1%83%D0%B0%D1%81%D1%81%D0%B0%D0%BD%20%D0%BA%D1%83%D1%80%D0%B8%D1%86%D0%B0.png" alt="Croissant" class="upsell-img">
-    <div style="font-weight: bold; margin-bottom: 5px;">Круассан с курицей</div>
-    <div style="font-size: 14px; color: #666; margin-bottom: 15px;">1000 ₸</div>
-    <div class="upsell-btn-row"><button class="upsell-no" onclick="closeUpsell()">Нет, спасибо</button><button class="upsell-yes" onclick="acceptUpsell()">Добавить</button></div>
-</div></div>
-
 <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
@@ -295,7 +298,6 @@
     let menuData = [];
     let cart = [];
     let currentModalProduct = null;
-    let upsellShown = false;
 
     function parsePrice(val) {
         if (!val) return 0;
@@ -367,8 +369,8 @@
                     let name = getVal(item, ['name', 'Название']).trim();
                     let priceVal = getVal(item, ['price', 'Цена']);
                     let desc = getVal(item, ['description', 'Короткое описание']).trim();
-                    let fullDesc = getVal(item, ['fullDesc', 'Описание', 'full_description', 'Полное описание']); // Ищем полное описание
-                    if (!fullDesc) fullDesc = desc; // Если нет, берем короткое
+                    let fullDesc = getVal(item, ['fullDesc', 'Описание', 'full_description', 'Полное описание']); 
+                    if (!fullDesc) fullDesc = desc;
 
                     let availVal = getVal(item, ['available', 'В наличии']);
                     let imgUrl = getVal(item, ['image', 'Фото']).trim();
@@ -446,11 +448,26 @@
 
     function getLocalHour() { const now = new Date(); return now.getHours(); }
     function checkWorkingHours() {
+        const now = new Date();
+        const hour = now.getHours();
+        const isOpen = hour >= 9 && hour < 23; // с 9:00 до 23:00
+        
         const badge = document.getElementById('work-status');
-        if(badge) { badge.innerText = "Открыто"; badge.className = "status-badge status-open"; }
-        return true; 
+        if(isOpen) {
+            badge.innerText = "Открыто (09:00 - 23:00)";
+            badge.style.background = "#e6fffa"; 
+            badge.style.color = "#047857";
+        } else {
+            badge.innerText = "Закрыто (с 09:00)";
+            badge.style.background = "#fee2e2"; 
+            badge.style.color = "#991b1b";
+        }
+        return isOpen; 
     }
-    function isPizzaAvailable() { return true; }
+    function isPizzaAvailable() { 
+        const hour = new Date().getHours();
+        return hour >= 11; // Пицца доступна с 11
+    }
 
     function filterMenu() {
         const query = document.getElementById('search-input').value.toLowerCase();
@@ -518,7 +535,6 @@
                     cardBadgeHtml = `<div class="${bClass}">${p.badge}</div>`;
                 }
                 
-                // ВАЖНО: onclick теперь на самой карточке
                 card.onclick = () => handleItemClick(p.id);
                 
                 card.innerHTML = `<div class="card-img-container"><img src="${itemImage}" alt="${p.name}" loading="lazy" onload="this.classList.add('loaded')">${badgeHtml}${cardBadgeHtml}</div><h3>${p.name}</h3>${p.desc ? `<div class="desc">${p.desc}</div>` : ''}<div class="price-row"><div class="price">${displayPrice} ₸</div><button class="add-btn" ${isDisabled ? 'disabled' : ''}>${btnText}</button></div>`;
@@ -539,16 +555,6 @@
         for (let btn of navBtns) {
             if (btn.innerText.includes(catName)) { btn.click(); return; }
         }
-    }
-
-    function checkUpsell() {
-        setTimeout(() => { document.getElementById('upsell-modal').style.display = 'flex'; upsellShown = true; }, 500);
-    }
-    function closeUpsell() { document.getElementById('upsell-modal').style.display = 'none'; }
-    function acceptUpsell() {
-        const croissant = menuData.find(p => p.id == 42); 
-        if(croissant) { cart.push({ name: croissant.name, price: croissant.price, options: [], cat: croissant.cat }); updateCartButton(); tg.HapticFeedback.notificationOccurred('success'); }
-        closeUpsell();
     }
 
     function loadUserData() {
@@ -737,19 +743,36 @@
         closeProductModal(true); 
         updateCartButton();
         tg.HapticFeedback.notificationOccurred('success');
-        if (!upsellShown && (prod.cat.toLowerCase().includes('кофе') || prod.cat.toLowerCase().includes('чай'))) checkUpsell();
     }
 
     function closeProductModal(force) { if (force === true) { document.getElementById('product-modal').style.display = 'none'; return; } const e = force; if (e && e.target.id === 'product-modal') document.getElementById('product-modal').style.display = 'none'; }
     function updateCartButton() { const btn = document.getElementById('cart-btn'); if (cart.length > 0) { const total = cart.reduce((s, i) => s + i.price, 0); btn.style.display = 'block'; btn.innerText = `Оформить заказ: ${total} ₸`; } else btn.style.display = 'none'; }
     function renderCartItems() { const c = document.getElementById('cart-list-container'); c.innerHTML = ''; cart.forEach((item, i) => { const vOpts = item.options ? item.options.filter(o=>o&&o!=="Без сахара").join(', ') : ''; c.innerHTML += `<div class="cart-item"><div class="cart-item-info"><div class="cart-item-title">${item.name}</div><div class="cart-item-opts">${vOpts}</div></div><div class="cart-item-price">${item.price}</div><div class="cart-del-btn" onclick="removeFromCart(${i})">✕</div></div>`; }); }
     function removeFromCart(i) { cart.splice(i, 1); renderCartItems(); updateCartButton(); calculateCheckoutTotal(); }
-    function openCheckout() { if (cart.length === 0) return; document.getElementById('checkout-modal').style.display = 'flex'; loadUserData(); if(tg.initDataUnsafe?.user && !document.getElementById('client-name').value) document.getElementById('client-name').value = tg.initDataUnsafe.user.first_name; renderCartItems(); calculateCheckoutTotal(); }
     function closeCheckout() { document.getElementById('checkout-modal').style.display = 'none'; }
     function toggleDelivery() { const isDel = document.getElementById('d-delivery').checked; document.getElementById('address-block').style.display = isDel ? 'block' : 'none'; document.getElementById('delivery-msg').style.display = isDel ? 'block' : 'none'; calculateCheckoutTotal(); }
     function togglePayment() { const isCash = document.getElementById('p-cash').checked || document.getElementById('p-card').checked; document.getElementById('payment-phone-block').style.display = isCash ? 'none' : 'block'; }
+    function toggleTimePicker() { const isTime = document.getElementById('t-time').checked; document.getElementById('time-picker-container').style.display = isTime ? 'block' : 'none'; }
     function calculateCheckoutTotal() { const t = cart.reduce((s, i) => s + i.price, 0); document.getElementById('checkout-total-sum').innerText = `Итого: ${t} ₸`; return t; }
     
+    // Открытие корзины + Проверка времени
+    function openCheckout() { 
+        if (cart.length === 0) return; 
+        document.getElementById('checkout-modal').style.display = 'flex'; 
+        loadUserData(); 
+        if(tg.initDataUnsafe?.user && !document.getElementById('client-name').value) document.getElementById('client-name').value = tg.initDataUnsafe.user.first_name; 
+        renderCartItems(); 
+        calculateCheckoutTotal(); 
+        
+        const isOpen = checkWorkingHours();
+        const hasPizza = cart.some(i => i.cat && i.cat.toLowerCase().includes('пицца'));
+        const pizzaTime = isPizzaAvailable();
+        
+        // Показываем предупреждения
+        document.getElementById('closed-warning').style.display = isOpen ? 'none' : 'block';
+        document.getElementById('pizza-warning').style.display = (hasPizza && !pizzaTime) ? 'block' : 'none';
+    }
+
     function submitOrder() { 
         if (document.activeElement) { document.activeElement.blur(); }
         const btn = document.getElementById('submit-btn'); 
@@ -765,7 +788,18 @@
         const payTypeEl = document.querySelector('input[name="paymentType"]:checked');
         const payType = payTypeEl ? payTypeEl.value : 'Наличными';
         const payPhone = document.getElementById('payment-phone').value.trim(); 
-        const comment = document.getElementById('order-comment').value.trim(); 
+        let comment = document.getElementById('order-comment').value.trim(); 
+        
+        // Время заказа
+        const timeTypeEl = document.querySelector('input[name="orderTimeType"]:checked');
+        if(timeTypeEl && timeTypeEl.value === 'time') {
+            const specTime = document.getElementById('specific-time').value;
+            if(!specTime) { alert("Выберите время готовности"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; }
+            comment = `⏰ К ${specTime}. ${comment}`;
+        } else {
+            comment = `⚡ Как можно скорее. ${comment}`;
+        }
+
         if (!name || !phone) { alert("Заполните имя и телефон"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
         if (delType === 'delivery' && !address) { alert("Укажите адрес доставки"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
         if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) { alert("Укажите номер для счета"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
