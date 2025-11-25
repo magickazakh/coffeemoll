@@ -153,8 +153,8 @@
         <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸</b> (рассчитывается менеджером).</div>
     </div>
     <div id="address-block" style="display: none;"><div class="option-group"><label class="option-label">Адрес доставки</label><textarea id="delivery-address" placeholder="Улица, дом, квартира..."></textarea></div></div>
-    <div class="option-group">
-        <label class="option-label">Способ оплаты</label>
+    <div class="radio-group">
+        <label class="radio-label">Способ оплаты</label>
         <div class="radio-group">
             <input type="radio" name="paymentType" id="p-cash" value="Наличными" checked onchange="togglePayment()"><label for="p-cash" class="radio-label">💵 Наличные</label>
             <input type="radio" name="paymentType" id="p-card" value="Картой" onchange="togglePayment()"><label for="p-card" class="radio-label">💳 Картой</label>
@@ -694,4 +694,5 @@
 </script>
 </body>
 </html>
+
 
