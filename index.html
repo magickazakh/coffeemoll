@@ -12,12 +12,13 @@
     </script>
 
     <style>
-        /* --- СТИЛИ --- */
+        /* --- БАЗОВЫЕ СТИЛИ --- */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: #1f2937; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
         .header-container { background: white; position: sticky; top: 0; z-index: 40; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         header { padding: 15px 15px 10px 15px; display: flex; justify-content: space-between; align-items: center;}
         h1 { margin: 0; font-size: 18px; font-weight: 800; color: #111; }
         .status-badge { font-size: 12px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; }
+        
         .search-wrapper { padding: 0 15px 10px 15px; }
         #search-input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid #eee; background: #f9fafb; font-size: 14px; outline: none; transition: 0.2s; margin: 0; box-sizing: border-box; }
         #search-input:focus { border-color: #FFD54F; background: #fff; }
@@ -38,23 +39,15 @@
         .card img.loaded { opacity: 1; }
         .card.unavailable { opacity: 0.6; background-color: #f9fafb; pointer-events: none; }
         .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
+        
+        /* БЕЙДЖИ */
         .card-badge { position: absolute; top: 8px; right: 8px; background: #FFD54F; color: #3e2723; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-transform: uppercase; }
         .badge-hot { background: #ef4444; color: white; }
         .badge-new { background: #3b82f6; color: white; }
-        /* Зеленый для Веганов и ПП */
         .badge-green { background: #10b981; color: white; }
-
-/* Оранжевый для Акций и Острого */
         .badge-orange { background: #f59e0b; color: white; }
-
-/* Фиолетовый для Выбора бариста или Эксклюзива */
         .badge-purple { background: #8b5cf6; color: white; }
-
-/* Голубой для Айс/Холодного */
         .badge-ice { background: #3b82f6; color: white; }
-
-/* Черный для Premium */
-        .badge-black { background: #1f2937; color: #FFD54F; }
         
         .card h3 { margin: 0 0 5px 0; font-size: 14px; font-weight: 600; line-height: 1.3; }
         .card .desc { font-size: 11px; color: #6b7280; margin-bottom: 8px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
@@ -81,13 +74,69 @@
         .option-group { margin-bottom: 15px; position: relative; z-index: 1; }
         .option-label { font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px; color: #444; }
         
-        /* Радио кнопки */
-        .radio-group, .checkout-radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
-        .radio-label, .checkout-radio-label { display: flex; align-items: center; justify-content: flex-start; padding: 8px 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; color: #374151; transition: all 0.2s; min-height: 42px; width: 100%; box-sizing: border-box; position: relative; }
-        .radio-label::before, .checkout-radio-label::before { content: ''; display: inline-block; width: 16px; height: 16px; border: 2px solid #9ca3af; border-radius: 50%; margin-right: 10px; box-sizing: border-box; flex-shrink: 0; transition: 0.2s; }
-        .radio-input, .checkout-radio-input { display: none; }
-        .radio-input:checked + .radio-label, .checkout-radio-input:checked + .checkout-radio-label { background-color: #FFF8E1; border-color: #3e2723; color: #111; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .radio-input:checked + .radio-label::before, .checkout-radio-input:checked + .checkout-radio-label::before { border-color: #3e2723; background-color: #3e2723; box-shadow: inset 0 0 0 3px #FFF8E1; }
+        /* Обычные радио кнопки (в товаре) */
+        .radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+        .radio-label { display: flex; align-items: center; justify-content: flex-start; padding: 8px 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; color: #374151; transition: all 0.2s; min-height: 42px; width: 100%; box-sizing: border-box; position: relative; }
+        .radio-label::before { content: ''; display: inline-block; width: 16px; height: 16px; border: 2px solid #9ca3af; border-radius: 50%; margin-right: 10px; box-sizing: border-box; flex-shrink: 0; transition: 0.2s; }
+        .radio-input { display: none; }
+        .radio-input:checked + .radio-label { background-color: #FFF8E1; border-color: #3e2723; color: #111; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .radio-input:checked + .radio-label::before { border-color: #3e2723; background-color: #3e2723; box-shadow: inset 0 0 0 3px #FFF8E1; }
+
+        /* --- ИЗОЛИРОВАННЫЕ СТИЛИ ДЛЯ КОРЗИНЫ (ЧТОБЫ НЕ ЛОМАЛОСЬ) --- */
+        .checkout-radio-group { 
+            display: grid !important; 
+            grid-template-columns: 1fr 1fr !important; 
+            gap: 10px !important; 
+            width: 100% !important; 
+        }
+        
+        .checkout-radio-label { 
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            padding: 10px 12px !important;
+            background: #fff !important;
+            border: 1px solid #e5e7eb !important; 
+            border-radius: 10px !important; 
+            cursor: pointer !important; 
+            font-size: 14px !important; 
+            font-weight: 500 !important;
+            color: #374151 !important;
+            transition: all 0.2s !important;
+            min-height: 44px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            position: relative !important;
+        }
+
+        .checkout-radio-label::before {
+            content: '' !important;
+            display: inline-block !important;
+            width: 16px !important;
+            height: 16px !important;
+            border: 2px solid #9ca3af !important;
+            border-radius: 50% !important;
+            margin-right: 10px !important;
+            box-sizing: border-box !important;
+            flex-shrink: 0 !important;
+            transition: 0.2s !important;
+        }
+        
+        .checkout-radio-input { display: none !important; }
+        
+        .checkout-radio-input:checked + .checkout-radio-label { 
+            background-color: #FFF8E1 !important; 
+            border-color: #3e2723 !important; 
+            color: #111 !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+        }
+
+        .checkout-radio-input:checked + .checkout-radio-label::before {
+            border-color: #3e2723 !important;
+            background-color: #3e2723 !important;
+            box-shadow: inset 0 0 0 3px #FFF8E1 !important; 
+        }
+        /* ---------------------------------------------------------- */
 
         select, input[type="text"], input[type="number"], input[type="tel"], textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; -webkit-appearance: none; background: #fff; margin-bottom: 10px; font-family: inherit; }
         textarea { resize: none; height: 60px; }
@@ -152,27 +201,58 @@
     <div class="checkout-total" id="checkout-total-sum">Итого: 0 ₸</div>
     <div style="margin-top: 20px; border-top: 5px solid #f3f4f6; margin-left: -20px; margin-right: -20px;"></div>
     <h3 style="margin: 15px 0 10px 0; font-size: 16px;">Оформление</h3>
-    <div class="option-group"><label class="option-label">Ваши контакты</label><input type="text" id="client-name" placeholder="Ваше имя"><input type="tel" id="client-phone" placeholder="Номер телефона (+7...)"></div>
+    
+    <div class="option-group"><label class="option-label">Ваши контакты</label>
+        <input type="text" id="client-name" placeholder="Ваше имя">
+        <input type="tel" id="client-phone" placeholder="Номер телефона (+7...)">
+    </div>
+    
     <div class="option-group">
         <label class="option-label">Способ получения</label>
-        <div class="radio-group">
-            <input type="radio" name="deliveryType" id="d-pickup" value="pickup" checked onchange="toggleDelivery()"><label for="d-pickup" class="radio-label">🚶 Самовывоз</label>
-            <input type="radio" name="deliveryType" id="d-dinein" value="dinein" onchange="toggleDelivery()"><label for="d-dinein" class="radio-label">🍽️ В зале</label>
-            <input type="radio" name="deliveryType" id="d-delivery" value="delivery" onchange="toggleDelivery()"><label for="d-delivery" class="radio-label">🚗 Доставка</label>
+        <div class="checkout-radio-group">
+            <input type="radio" name="deliveryType" id="d-pickup" value="pickup" class="checkout-radio-input" checked onchange="toggleDelivery()">
+            <label for="d-pickup" class="checkout-radio-label">🚶 Самовывоз</label>
+            
+            <input type="radio" name="deliveryType" id="d-dinein" value="dinein" class="checkout-radio-input" onchange="toggleDelivery()">
+            <label for="d-dinein" class="checkout-radio-label">🍽️ В зале</label>
+            
+            <input type="radio" name="deliveryType" id="d-delivery" value="delivery" class="checkout-radio-input" onchange="toggleDelivery()">
+            <label for="d-delivery" class="checkout-radio-label">🚗 Доставка</label>
         </div>
         <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸</b> (рассчитывается менеджером).</div>
     </div>
-    <div id="address-block" style="display: none;"><div class="option-group"><label class="option-label">Адрес доставки</label><textarea id="delivery-address" placeholder="Улица, дом, квартира..."></textarea></div></div>
-    <div class="option-group">
-        <label class="option-label">Способ оплаты</label>
-        <div class="radio-group">
-            <input type="radio" name="paymentType" id="p-cash" value="Наличными" checked onchange="togglePayment()"><label for="p-cash" class="radio-label">💵 Наличные</label>
-            <input type="radio" name="paymentType" id="p-card" value="Картой" onchange="togglePayment()"><label for="p-card" class="radio-label">💳 Картой</label>
-            <input type="radio" name="paymentType" id="p-kaspi" value="Kaspi" onchange="togglePayment()"><label for="p-kaspi" class="radio-label">🔴 Kaspi</label>
-            <input type="radio" name="paymentType" id="p-halyk" value="Halyk" onchange="togglePayment()"><label for="p-halyk" class="radio-label">🟢 Halyk</label>
+    
+    <div id="address-block" style="display: none;">
+        <div class="option-group">
+            <label class="option-label">Адрес доставки</label>
+            <textarea id="delivery-address" placeholder="Улица, дом, квартира..."></textarea>
         </div>
     </div>
-    <div id="payment-phone-block" style="display: none;"><div class="option-group"><label class="option-label">Номер для счета</label><input type="tel" id="payment-phone" placeholder="Номер привязанный к карте"></div></div>
+    
+    <div class="option-group">
+        <label class="option-label">Способ оплаты</label>
+        <div class="checkout-radio-group">
+            <input type="radio" name="paymentType" id="p-cash" value="Наличными" class="checkout-radio-input" checked onchange="togglePayment()">
+            <label for="p-cash" class="checkout-radio-label">💵 Наличные</label>
+            
+            <input type="radio" name="paymentType" id="p-card" value="Картой" class="checkout-radio-input" onchange="togglePayment()">
+            <label for="p-card" class="checkout-radio-label">💳 Картой</label>
+            
+            <input type="radio" name="paymentType" id="p-kaspi" value="Kaspi" class="checkout-radio-input" onchange="togglePayment()">
+            <label for="p-kaspi" class="checkout-radio-label">🔴 Kaspi</label>
+            
+            <input type="radio" name="paymentType" id="p-halyk" value="Halyk" class="checkout-radio-input" onchange="togglePayment()">
+            <label for="p-halyk" class="checkout-radio-label">🟢 Halyk</label>
+        </div>
+    </div>
+    
+    <div id="payment-phone-block" style="display: none;">
+        <div class="option-group">
+            <label class="option-label">Номер для счета</label>
+            <input type="tel" id="payment-phone" placeholder="Номер привязанный к карте">
+        </div>
+    </div>
+    
     <div class="option-group"><label class="option-label">Комментарий</label><textarea id="order-comment" placeholder="Пожелания..."></textarea></div>
     <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Согласен, что менеджер свяжется со мной.</span></div>
     <button class="modal-add-btn" id="submit-btn" onclick="submitOrder()">Подтвердить заказ</button>
@@ -180,7 +260,7 @@
 
 <div class="upsell-overlay" id="upsell-modal"><div class="upsell-content">
     <h3 style="margin:0 0 10px 0;">К кофе идеально подойдет!</h3>
-    <img src="https://i.ibb.co.com/DHKNkMvB/image.png" alt="Croissant" class="upsell-img">
+    <img src="https://file.garden/aSB7wx7270Kujihk/%D0%9A%D1%80%D1%83%D0%B0%D1%81%D1%81%D0%B0%D0%BD%20%D0%BA%D1%83%D1%80%D0%B8%D1%86%D0%B0.png" alt="Croissant" class="upsell-img">
     <div style="font-weight: bold; margin-bottom: 5px;">Круассан с курицей</div>
     <div style="font-size: 14px; color: #666; margin-bottom: 15px;">1000 ₸</div>
     <div class="upsell-btn-row"><button class="upsell-no" onclick="closeUpsell()">Нет, спасибо</button><button class="upsell-yes" onclick="acceptUpsell()">Добавить</button></div>
@@ -423,31 +503,20 @@
                 
                 const itemImage = p.img ? p.img : getImageByCategory(p.cat);
                 const badgeHtml = isOutOfStock ? `<div class="unavailable-badge">Закончилось</div>` : '';
+                
+                // --- ЛОГИКА БЕЙДЖЕЙ (ЦВЕТНЫЕ) ---
                 let cardBadgeHtml = '';
                 if (p.badge && !isOutOfStock) {
-    let bClass = 'card-badge';
-    const txt = p.badge.toLowerCase();
-    
-    // Красный
-    if(txt.includes('хит') || txt.includes('hot')) bClass += ' badge-hot';
-    
-    // Синий
-    if(txt.includes('new') || txt.includes('новинка')) bClass += ' badge-new';
-    
-    // Зеленый (Веган, ПП, Эко)
-    if(txt.includes('vegan') || txt.includes('пп') || txt.includes('эко')) bClass += ' badge-green';
-    
-    // Оранжевый (Острое, Акция, Скидка)
-    if(txt.includes('острое') || txt.includes('акция') || txt.includes('%') || txt.includes('скидка')) bClass += ' badge-orange';
-    
-    // Голубой (Айс, Лед)
-    if(txt.includes('айс') || txt.includes('ice') || txt.includes('холод')) bClass += ' badge-ice';
-    
-    // Фиолетовый (Топ, Выбор)
-    if(txt.includes('топ') || txt.includes('выбор')) bClass += ' badge-purple';
-
-    cardBadgeHtml = `<div class="${bClass}">${p.badge}</div>`;
-}
+                    let bClass = 'card-badge';
+                    const txt = p.badge.toLowerCase();
+                    if(txt.includes('хит') || txt.includes('hot')) bClass += ' badge-hot';
+                    if(txt.includes('new') || txt.includes('новинка')) bClass += ' badge-new';
+                    if(txt.includes('vegan') || txt.includes('пп') || txt.includes('эко')) bClass += ' badge-green';
+                    if(txt.includes('острое') || txt.includes('акция') || txt.includes('%') || txt.includes('скидка')) bClass += ' badge-orange';
+                    if(txt.includes('айс') || txt.includes('ice') || txt.includes('холод')) bClass += ' badge-ice';
+                    if(txt.includes('топ') || txt.includes('выбор')) bClass += ' badge-purple';
+                    cardBadgeHtml = `<div class="${bClass}">${p.badge}</div>`;
+                }
                 
                 // ВАЖНО: onclick теперь на самой карточке
                 card.onclick = () => handleItemClick(p.id);
@@ -463,6 +532,13 @@
         const product = menuData.find(p => String(p.id) === String(id));
         if (!product || !product.available) return;
         openComplexModal(product);
+    }
+
+    function goToCategory(catName) {
+        const navBtns = document.querySelectorAll('.nav-btn');
+        for (let btn of navBtns) {
+            if (btn.innerText.includes(catName)) { btn.click(); return; }
+        }
     }
 
     function checkUpsell() {
@@ -501,7 +577,6 @@
         currentModalProduct = product;
         const content = document.getElementById('product-modal-content');
         
-        // Добавляем фото и полное описание
         let imgHtml = '';
         if (product.img) {
             imgHtml = `<div class="modal-img-wrapper"><img src="${product.img}" class="modal-img"></div>`;
@@ -583,7 +658,6 @@
         let p = 0;
         const prod = currentModalProduct;
         
-        // База
         if(prod.hasVolumes && prod.volumes.length > 0) {
             const el = document.querySelector('input[name="vol"]:checked');
             if(el) p += prod.volumes[el.value].p;
@@ -592,26 +666,22 @@
             p += (prod.basePrice || prod.price || 0);
         }
 
-        // Молоко
         if(prod.hasMilk) {
             const el = document.querySelector('input[name="milk"]:checked');
             if(el && el.value === 'alt') p += PRICES.alt_milk;
         }
         
-        // Чекбоксы
         const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
         checkboxes.forEach(key => {
             const el = document.getElementById(`mod-${key}`);
             if (el && el.checked) p += prod.mods[key];
         });
         
-        // Соус
         if(document.getElementById('sauce-select')) {
              const val = document.getElementById('sauce-select').value;
              if (val && val !== "Нет") p += prod.mods['sauce'];
         }
 
-        // Сироп
         if(document.getElementById('syr')) {
             const val = document.getElementById('syr').value;
             if (val && val !== "Нет") p += prod.mods['syrup'];
@@ -628,13 +698,11 @@
         const opts = [];
         const prod = currentModalProduct;
 
-        // Порция
         if(prod.hasVolumes && prod.volumes.length > 0) {
             const v = document.querySelector('input[name="vol"]:checked').value;
             opts.push(`Порция: ${prod.volumes[v].n}`);
         }
 
-        // Основное молоко
         if(prod.hasMilk) {
             const m = document.querySelector('input[name="milk"]:checked').value;
             if(m==='lf') opts.push("Молоко: Безлакт.");
@@ -644,26 +712,22 @@
             }
         }
 
-        // Чекбоксы
         const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
         checkboxes.forEach(key => {
             const el = document.getElementById(`mod-${key}`);
             if (el && el.checked) opts.push(`Доп: ${MOD_LABELS[key]}`);
         });
 
-        // Соус
         if(document.getElementById('sauce-select')) {
              const val = document.getElementById('sauce-select').value;
              if (val && val !== "Нет") opts.push(`Соус: ${val}`);
         }
 
-        // Сахар
         if(document.getElementById('sug')) {
             const s = document.getElementById('sug').value;
             if (s) opts.push(`Сахар: ${s}`);
         }
 
-        // Сироп
         if(document.getElementById('syr')) {
             const val = document.getElementById('syr').value;
             if (val && val !== "Нет") opts.push(`Сироп: ${val}`);
@@ -687,47 +751,31 @@
     function calculateCheckoutTotal() { const t = cart.reduce((s, i) => s + i.price, 0); document.getElementById('checkout-total-sum').innerText = `Итого: ${t} ₸`; return t; }
     
     function submitOrder() { 
-        // 1. Скрываем клавиатуру
         if (document.activeElement) { document.activeElement.blur(); }
-
         const btn = document.getElementById('submit-btn'); 
         btn.disabled = true; btn.innerText = "Отправка..."; 
-        
         const name = document.getElementById('client-name').value.trim(); 
         const phone = document.getElementById('client-phone').value.trim(); 
         const address = document.getElementById('delivery-address').value.trim(); 
-        
         const delTypeEl = document.querySelector('input[name="deliveryType"]:checked');
         const delType = delTypeEl ? delTypeEl.value : 'pickup';
         let prettyDelivery = 'Самовывоз';
         if(delType==='delivery') prettyDelivery='Доставка';
         if(delType==='dinein') prettyDelivery='В зале';
-        
         const payTypeEl = document.querySelector('input[name="paymentType"]:checked');
         const payType = payTypeEl ? payTypeEl.value : 'Наличными';
-        
         const payPhone = document.getElementById('payment-phone').value.trim(); 
         const comment = document.getElementById('order-comment').value.trim(); 
-        
-        // Валидация
         if (!name || !phone) { alert("Заполните имя и телефон"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
         if (delType === 'delivery' && !address) { alert("Укажите адрес доставки"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
         if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) { alert("Укажите номер для счета"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
         
         saveUserData(name, phone, address); 
+        
         const total = calculateCheckoutTotal(); 
         const orderData = { cart: cart, total: total, info: { name, phone, deliveryType: prettyDelivery, address: (delType==='delivery'?address:''), paymentType: payType, paymentPhone: payPhone, comment } }; 
-        
-        // 2. Отправка данных с задержкой
         tg.sendData(JSON.stringify(orderData)); 
-        
-        // 3. Ждем немного, чтобы данные успели уйти, прежде чем закрывать
-        setTimeout(function() {
-            cart = []; 
-            updateCartButton(); 
-            closeCheckout(); 
-            tg.close();
-        }, 100);
+        setTimeout(function() { cart = []; updateCartButton(); closeCheckout(); tg.close(); }, 100);
     }
     
     function getImageByCategory(cat) { const map = { "Кофе": "https://cdn-icons-png.flaticon.com/512/751/751621.png", "Завтраки": "https://cdn-icons-png.flaticon.com/512/2771/2771406.png", "Круассаны": "https://cdn-icons-png.flaticon.com/512/3014/3014528.png", "Салаты": "https://cdn-icons-png.flaticon.com/512/2062/2062296.png", "Чай": "https://cdn-icons-png.flaticon.com/512/3054/3054889.png", "Лимонады": "https://cdn-icons-png.flaticon.com/512/2447/2447137.png", "Коктейли": "https://cdn-icons-png.flaticon.com/512/3081/3081986.png", "Хот-доги": "https://cdn-icons-png.flaticon.com/512/1980/1980788.png", "Пицца": "https://cdn-icons-png.flaticon.com/512/3132/3132693.png", "Закуски": "https://cdn-icons-png.flaticon.com/512/5787/5787016.png", "Сезонное": "https://cdn-icons-png.flaticon.com/512/4421/4421089.png", "Смузи": "https://cdn-icons-png.flaticon.com/512/1147/1147588.png", "Холодные напитки": "https://cdn-icons-png.flaticon.com/512/956/956850.png", "Пасты": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png" }; return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png"; }
