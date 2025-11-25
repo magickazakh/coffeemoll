@@ -44,8 +44,8 @@
         .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
         .price { font-weight: 700; font-size: 15px; color: #111; }
         .add-btn { background-color: #FFD54F; color: #3e2723; border: none; border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 12px; pointer-events: none; }
-        .add-btn:disabled { background-color: #e5e7eb; color: #9ca3af; }
-
+        .add-btn:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
+        
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction: column; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #FFD54F; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px;}
 
@@ -58,69 +58,75 @@
         .modal-desc { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.5; }
         .close-icon { font-size: 24px; cursor: pointer; color: #888; padding: 0 0 10px 10px; }
         
-        /* Изображение в модалке */
         .modal-img-wrapper { width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin-bottom: 15px; background: #f9fafb; display: flex; align-items: center; justify-content: center; }
         .modal-img { width: 100%; height: 100%; object-fit: contain; }
 
         .option-group { margin-bottom: 15px; position: relative; z-index: 1; }
         .option-label { font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px; color: #444; }
         
-        /* --- ФИНАЛЬНЫЙ СТИЛЬ РАДИО-КНОПОК --- */
-        .radio-group { 
+        /* --- СПЕЦИАЛЬНЫЕ СТИЛИ ДЛЯ КНОПОК В КОРЗИНЕ И ТОВАРАХ --- */
+        /* Сетка */
+        .radio-group, .checkout-radio-group { 
             display: grid; 
-            grid-template-columns: repeat(2, 1fr); /* Гарантированно 2 колонки */
-            gap: 8px; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
             width: 100%;
         }
         
-        .radio-label { 
+        /* Сама кнопка (Лейбл) */
+        .radio-label, .checkout-radio-label { 
             display: flex;
             align-items: center;
-            justify-content: flex-start;
-            padding: 8px 10px;
+            justify-content: flex-start; /* Текст слева */
+            padding: 8px 12px;
             background: #fff;
             border: 1px solid #e5e7eb; 
-            border-radius: 8px; 
+            border-radius: 10px; 
             cursor: pointer; 
             font-size: 13px; 
             font-weight: 500;
             color: #374151;
-            transition: all 0.15s ease;
-            min-height: 36px;
-            box-sizing: border-box;
+            transition: all 0.2s;
+            min-height: 42px; /* Чуть выше, чтобы не было тесно */
             width: 100%;
+            box-sizing: border-box;
+            position: relative;
         }
 
-        /* Кружочек */
-        .radio-label::before {
+        /* Кружочек внутри кнопки */
+        .radio-label::before, .checkout-radio-label::before {
             content: '';
             display: inline-block;
-            width: 14px;
-            height: 14px;
-            border: 2px solid #d1d5db;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #9ca3af;
             border-radius: 50%;
-            margin-right: 8px;
+            margin-right: 10px;
             box-sizing: border-box;
-            transition: 0.2s;
             flex-shrink: 0;
+            transition: 0.2s;
         }
         
-        .radio-input { display: none; }
+        /* Скрываем стандартный инпут */
+        .radio-input, .checkout-radio-input { display: none; }
         
-        /* Активное состояние */
-        .radio-input:checked + .radio-label { 
+        /* Активная кнопка */
+        .radio-input:checked + .radio-label, 
+        .checkout-radio-input:checked + .checkout-radio-label { 
             background-color: #FFF8E1; 
             border-color: #3e2723; 
             color: #111;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        /* Закрашенный кружочек */
-        .radio-input:checked + .radio-label::before {
+        /* Активный кружочек */
+        .radio-input:checked + .radio-label::before,
+        .checkout-radio-input:checked + .checkout-radio-label::before {
             border-color: #3e2723;
             background-color: #3e2723;
-            box-shadow: inset 0 0 0 2px #FFF8E1; 
+            box-shadow: inset 0 0 0 3px #FFF8E1; 
         }
-        /* ------------------------------------- */
+        /* ------------------------------------------------ */
 
         select, input[type="text"], input[type="number"], input[type="tel"], textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; -webkit-appearance: none; background: #fff; margin-bottom: 10px; font-family: inherit; }
         textarea { resize: none; height: 60px; }
@@ -134,6 +140,7 @@
         .modal-footer { margin-top: 20px; display: flex; gap: 10px; }
         .modal-add-btn { background: #2ecc71; color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         .modal-add-btn:disabled { background: #ccc; cursor: not-allowed; }
+        
         .main-btn { position: fixed; bottom: 15px; left: 15px; right: 15px; background: #2ecc71; color: white; padding: 16px; border-radius: 14px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); display: none; z-index: 900; }
         .cart-item { background: #f9fafb; border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .cart-item-info { flex: 1; }
@@ -144,12 +151,14 @@
         .checkout-total { font-size: 18px; font-weight: bold; margin-top: 15px; text-align: right; border-top: 2px solid #eee; padding-top: 10px; }
         .delivery-warning { font-size: 13px; color: #d97706; background: #fef3c7; padding: 8px; border-radius: 8px; margin-top: 5px; display: none; }
         .contact-note { font-size: 12px; color: #6b7280; margin-top: 15px; display: flex; gap: 5px; align-items: flex-start; }
+        
         .upsell-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1100; align-items: center; justify-content: center; }
         .upsell-content { background: white; width: 85%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; animation: popIn 0.3s; }
         .upsell-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
         .upsell-btn-row { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
         .upsell-yes { background: #FFD54F; color: #3e2723; padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; flex: 1;}
         .upsell-no { background: #f3f4f6; color: #666; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; flex: 1;}
+        
         @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
         @keyframes shimmer{0%{background-position:-468px 0}100%{background-position:468px 0}}
         @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
@@ -185,27 +194,58 @@
     <div class="checkout-total" id="checkout-total-sum">Итого: 0 ₸</div>
     <div style="margin-top: 20px; border-top: 5px solid #f3f4f6; margin-left: -20px; margin-right: -20px;"></div>
     <h3 style="margin: 15px 0 10px 0; font-size: 16px;">Оформление</h3>
-    <div class="option-group"><label class="option-label">Ваши контакты</label><input type="text" id="client-name" placeholder="Ваше имя"><input type="tel" id="client-phone" placeholder="Номер телефона (+7...)"></div>
+    
+    <div class="option-group"><label class="option-label">Ваши контакты</label>
+        <input type="text" id="client-name" placeholder="Ваше имя">
+        <input type="tel" id="client-phone" placeholder="Номер телефона (+7...)">
+    </div>
+    
     <div class="option-group">
         <label class="option-label">Способ получения</label>
-        <div class="radio-group">
-            <input type="radio" name="deliveryType" id="d-pickup" value="pickup" checked onchange="toggleDelivery()"><label for="d-pickup" class="radio-label">🚶 Самовывоз</label>
-            <input type="radio" name="deliveryType" id="d-dinein" value="dinein" onchange="toggleDelivery()"><label for="d-dinein" class="radio-label">🍽️ В зале</label>
-            <input type="radio" name="deliveryType" id="d-delivery" value="delivery" onchange="toggleDelivery()"><label for="d-delivery" class="radio-label">🚗 Доставка</label>
+        <div class="checkout-radio-group">
+            <input type="radio" name="deliveryType" id="d-pickup" value="pickup" class="checkout-radio-input" checked onchange="toggleDelivery()">
+            <label for="d-pickup" class="checkout-radio-label">🚶 Самовывоз</label>
+            
+            <input type="radio" name="deliveryType" id="d-dinein" value="dinein" class="checkout-radio-input" onchange="toggleDelivery()">
+            <label for="d-dinein" class="checkout-radio-label">🍽️ В зале</label>
+            
+            <input type="radio" name="deliveryType" id="d-delivery" value="delivery" class="checkout-radio-input" onchange="toggleDelivery()">
+            <label for="d-delivery" class="checkout-radio-label">🚗 Доставка</label>
         </div>
         <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸</b> (рассчитывается менеджером).</div>
     </div>
-    <div id="address-block" style="display: none;"><div class="option-group"><label class="option-label">Адрес доставки</label><textarea id="delivery-address" placeholder="Улица, дом, квартира..."></textarea></div></div>
-    <div class="option-group">
-        <label class="option-label">Способ оплаты</label>
-        <div class="radio-group">
-            <input type="radio" name="paymentType" id="p-cash" value="Наличными" checked onchange="togglePayment()"><label for="p-cash" class="radio-label">💵 Наличные</label>
-            <input type="radio" name="paymentType" id="p-card" value="Картой" onchange="togglePayment()"><label for="p-card" class="radio-label">💳 Картой</label>
-            <input type="radio" name="paymentType" id="p-kaspi" value="Kaspi" onchange="togglePayment()"><label for="p-kaspi" class="radio-label">🔴 Kaspi</label>
-            <input type="radio" name="paymentType" id="p-halyk" value="Halyk" onchange="togglePayment()"><label for="p-halyk" class="radio-label">🟢 Halyk</label>
+    
+    <div id="address-block" style="display: none;">
+        <div class="option-group">
+            <label class="option-label">Адрес доставки</label>
+            <textarea id="delivery-address" placeholder="Улица, дом, квартира..."></textarea>
         </div>
     </div>
-    <div id="payment-phone-block" style="display: none;"><div class="option-group"><label class="option-label">Номер для счета</label><input type="tel" id="payment-phone" placeholder="Номер привязанный к карте"></div></div>
+    
+    <div class="option-group">
+        <label class="option-label">Способ оплаты</label>
+        <div class="checkout-radio-group">
+            <input type="radio" name="paymentType" id="p-cash" value="Наличными" class="checkout-radio-input" checked onchange="togglePayment()">
+            <label for="p-cash" class="checkout-radio-label">💵 Наличные</label>
+            
+            <input type="radio" name="paymentType" id="p-card" value="Картой" class="checkout-radio-input" onchange="togglePayment()">
+            <label for="p-card" class="checkout-radio-label">💳 Картой</label>
+            
+            <input type="radio" name="paymentType" id="p-kaspi" value="Kaspi" class="checkout-radio-input" onchange="togglePayment()">
+            <label for="p-kaspi" class="checkout-radio-label">🔴 Kaspi</label>
+            
+            <input type="radio" name="paymentType" id="p-halyk" value="Halyk" class="checkout-radio-input" onchange="togglePayment()">
+            <label for="p-halyk" class="checkout-radio-label">🟢 Halyk</label>
+        </div>
+    </div>
+    
+    <div id="payment-phone-block" style="display: none;">
+        <div class="option-group">
+            <label class="option-label">Номер для счета</label>
+            <input type="tel" id="payment-phone" placeholder="Номер привязанный к карте">
+        </div>
+    </div>
+    
     <div class="option-group"><label class="option-label">Комментарий</label><textarea id="order-comment" placeholder="Пожелания..."></textarea></div>
     <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Согласен, что менеджер свяжется со мной.</span></div>
     <button class="modal-add-btn" id="submit-btn" onclick="submitOrder()">Подтвердить заказ</button>
@@ -535,7 +575,7 @@
         if(product.hasMilk) {
             html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group">
                 <input type="radio" name="milk" id="m1" value="std" class="radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label">Обычное</label>
-                <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label">Безлакт.<br>+0</label>
+                <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label">Безлакт.<br>+${PRICES.milk_lf_price || 0}</label>
                 <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label">Альтерн.<br>+${PRICES.alt_milk}</label>
             </div>
             <div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
@@ -720,7 +760,6 @@
         const payPhone = document.getElementById('payment-phone').value.trim(); 
         const comment = document.getElementById('order-comment').value.trim(); 
         
-        // Валидация
         if (!name || !phone) { alert("Заполните имя и телефон"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
         if (delType === 'delivery' && !address) { alert("Укажите адрес доставки"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
         if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) { alert("Укажите номер для счета"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
