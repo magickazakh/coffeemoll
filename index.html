@@ -143,8 +143,8 @@
     <div style="margin-top: 20px; border-top: 5px solid #f3f4f6; margin-left: -20px; margin-right: -20px;"></div>
     <h3 style="margin: 15px 0 10px 0; font-size: 16px;">Оформление</h3>
     <div class="option-group"><label class="option-label">Ваши контакты</label><input type="text" id="client-name" placeholder="Ваше имя"><input type="tel" id="client-phone" placeholder="Номер телефона (+7...)"></div>
-    <div class="option-group">
-        <label class="option-label">Способ получения</label>
+    <div class="radio-group">
+        <label class="radio-label">Способ получения</label>
         <div class="radio-group">
             <input type="radio" name="deliveryType" id="d-pickup" value="pickup" checked onchange="toggleDelivery()"><label for="d-pickup" class="radio-label">🚶 Самовывоз</label>
             <input type="radio" name="deliveryType" id="d-dinein" value="dinein" onchange="toggleDelivery()"><label for="d-dinein" class="radio-label">🍽️ В зале</label>
@@ -694,3 +694,4 @@
 </script>
 </body>
 </html>
+
