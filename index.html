@@ -31,14 +31,26 @@
         body { font-family: var(--font-body); margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
         
         .header-container { background: white; position: sticky; top: 0; z-index: 40; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        header { padding: 15px 15px 10px 15px; display: flex; justify-content: space-between; align-items: center;}
+        header { padding: 12px 15px 10px 15px; display: flex; justify-content: space-between; align-items: flex-start;}
         
-        /* ЛОГОТИП */
-        h1 { margin: 0; font-family: var(--font-brand); font-size: 24px; letter-spacing: 1px; text-transform: uppercase; }
+        .header-left { display: flex; flex-direction: column; }
+        
+        /* ЛОГОТИП (ЗАГЛАВНЫЕ) */
+        h1 { margin: 0; font-family: var(--font-brand); font-size: 24px; letter-spacing: 1px; text-transform: uppercase; line-height: 1; }
         .logo-coffee { color: #000000; }
         .logo-moll { color: #88d100; }
+        
+        .motto { 
+            font-size: 10px; 
+            color: var(--text-secondary); 
+            margin-top: 4px; 
+            font-weight: 500; 
+            letter-spacing: 0.3px;
+            max-width: 180px; 
+            line-height: 1.2;
+        }
 
-        .status-badge { font-family: var(--font-body); font-size: 12px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; transition: 0.3s; }
+        .status-badge { font-family: var(--font-body); font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; transition: 0.3s; white-space: nowrap; margin-left: 10px;}
         
         .search-wrapper { padding: 0 15px 10px 15px; }
         #search-input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid #eee; background: #fff; font-size: 14px; outline: none; transition: 0.2s; margin: 0; box-sizing: border-box; }
@@ -51,7 +63,7 @@
 
         .category-section { margin-bottom: 20px; scroll-margin-top: 140px; }
         
-        /* ЗАГОЛОВКИ КАТЕГОРИЙ */
+        /* ЗАГОЛОВКИ КАТЕГОРИЙ (ЗАГЛАВНЫЕ) */
         .category-title { padding: 15px 15px 5px 15px; font-family: var(--font-brand); font-size: 22px; color: var(--text-main); letter-spacing: 0.5px; text-transform: uppercase; }
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
@@ -65,7 +77,6 @@
         .card.unavailable { opacity: 0.6; background-color: #f9fafb; pointer-events: none; }
         .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
         
-        /* БЕЙДЖИ */
         .card-badge { position: absolute; top: 8px; right: 8px; background: var(--primary-color); color: var(--primary-text); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-transform: uppercase; }
         .badge-hot { background: #ef4444; color: white; }
         .badge-new { background: #3b82f6; color: white; }
@@ -74,19 +85,19 @@
         .badge-purple { background: #8b5cf6; color: white; }
         .badge-ice { background: #3b82f6; color: white; }
         
-        /* НАЗВАНИЕ ТОВАРА */
+        /* НАЗВАНИЕ ТОВАРА (ЗАГЛАВНЫЕ) */
         .card h3 { margin: 0 0 5px 0; font-family: var(--font-brand); font-size: 16px; font-weight: 400; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.5px; }
-        
         .card .desc { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
         .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
         .price { font-weight: 700; font-size: 15px; color: var(--text-main); }
-        
-        /* КНОПКИ */
         .add-btn { background-color: var(--primary-color); color: var(--primary-text); border: none; border-radius: 8px; padding: 6px 12px; font-weight: 700; font-size: 12px; pointer-events: none; }
         .add-btn:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
 
-        .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction: column; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px;}
+        /* ЗАГРУЗКА (ЗАГЛАВНЫЕ) */
+        .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction: column; text-align: center;}
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px;}
+        .loading-title { font-family: var(--font-brand); font-size: 22px; margin-bottom: 5px; text-transform: uppercase; }
+        .loading-motto { font-size: 12px; color: #666; font-style: italic;}
 
         /* Модалки */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: flex-end; justify-content: center; }
@@ -94,7 +105,7 @@
         .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .modal-title-block { flex: 1; }
         
-        /* ЗАГОЛОВОК МОДАЛКИ */
+        /* ЗАГОЛОВОК МОДАЛКИ (ЗАГЛАВНЫЕ) */
         .modal-title { font-family: var(--font-brand); font-size: 20px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px; }
         
         .modal-desc { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.5; }
@@ -106,7 +117,7 @@
         .option-group { margin-bottom: 15px; position: relative; z-index: 1; }
         .option-label { font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px; color: #444; }
         
-        /* Обычные радио кнопки (в товаре) */
+        /* Обычные радио кнопки */
         .radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
         .radio-label { display: flex; align-items: center; justify-content: flex-start; padding: 8px 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; color: #374151; transition: all 0.2s; min-height: 42px; width: 100%; box-sizing: border-box; position: relative; }
         .radio-label::before { content: ''; display: inline-block; width: 16px; height: 16px; border: 2px solid #d1d5db; border-radius: 50%; margin-right: 10px; box-sizing: border-box; flex-shrink: 0; transition: 0.2s; }
@@ -115,56 +126,12 @@
         .radio-input:checked + .radio-label::before { border-color: var(--primary-color); background-color: var(--primary-color); box-shadow: inset 0 0 0 3px #fff; }
 
         /* --- ИЗОЛИРОВАННЫЕ СТИЛИ ДЛЯ КОРЗИНЫ --- */
-        .checkout-radio-group { 
-            display: grid !important; 
-            grid-template-columns: 1fr 1fr !important; 
-            gap: 10px !important; 
-            width: 100% !important; 
-        }
-        .checkout-radio-label { 
-            display: flex !important;
-            align-items: center !important;
-            justify-content: flex-start !important;
-            padding: 10px 12px !important;
-            background: #fff !important;
-            border: 1px solid #e5e7eb !important; 
-            border-radius: 10px !important; 
-            cursor: pointer !important; 
-            font-size: 14px !important; 
-            font-weight: 500 !important;
-            color: #374151 !important;
-            transition: all 0.2s !important;
-            min-height: 44px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-            position: relative !important;
-        }
-        .checkout-radio-label::before {
-            content: '' !important;
-            display: inline-block !important;
-            width: 16px !important;
-            height: 16px !important;
-            border: 2px solid #9ca3af !important;
-            border-radius: 50% !important;
-            margin-right: 10px !important;
-            box-sizing: border-box !important;
-            flex-shrink: 0 !important;
-            transition: 0.2s !important;
-        }
+        .checkout-radio-group { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; width: 100% !important; }
+        .checkout-radio-label { display: flex !important; align-items: center !important; justify-content: flex-start !important; padding: 10px 12px !important; background: #fff !important; border: 1px solid #e5e7eb !important; border-radius: 10px !important; cursor: pointer !important; font-size: 14px !important; font-weight: 500 !important; color: #374151 !important; transition: all 0.2s !important; min-height: 44px !important; width: 100% !important; box-sizing: border-box !important; position: relative !important; }
+        .checkout-radio-label::before { content: '' !important; display: inline-block !important; width: 16px !important; height: 16px !important; border: 2px solid #9ca3af !important; border-radius: 50% !important; margin-right: 10px !important; box-sizing: border-box !important; flex-shrink: 0 !important; transition: 0.2s !important; }
         .checkout-radio-input { display: none !important; }
-        
-        .checkout-radio-input:checked + .checkout-radio-label { 
-            background-color: #f0fdf4 !important; 
-            border-color: var(--primary-color) !important; 
-            color: #000 !important;
-            box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15) !important;
-        }
-        .checkout-radio-input:checked + .checkout-radio-label::before {
-            border-color: var(--primary-color) !important;
-            background-color: var(--primary-color) !important;
-            box-shadow: inset 0 0 0 3px #fff !important; 
-        }
-        /* ---------------------------------------------------------- */
+        .checkout-radio-input:checked + .checkout-radio-label { background-color: #f0fdf4 !important; border-color: var(--primary-color) !important; color: #000 !important; box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15) !important; }
+        .checkout-radio-input:checked + .checkout-radio-label::before { border-color: var(--primary-color) !important; background-color: var(--primary-color) !important; box-shadow: inset 0 0 0 3px #fff !important; }
 
         select, input[type="text"], input[type="number"], input[type="tel"], textarea, input[type="time"] { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; -webkit-appearance: none; background: #fff; margin-bottom: 10px; font-family: inherit; }
         textarea { resize: none; height: 60px; }
@@ -181,7 +148,10 @@
         .main-btn { position: fixed; bottom: 15px; left: 15px; right: 15px; background: #000000; color: var(--primary-color); padding: 16px; border-radius: 14px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: none; z-index: 900; }
         .cart-item { background: #fff; border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .cart-item-info { flex: 1; }
+        
+        /* ТОВАР В КОРЗИНЕ (ЗАГЛАВНЫЕ) */
         .cart-item-title { font-family: var(--font-brand); font-size: 14px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+        
         .cart-item-opts { font-size: 11px; color: #666; }
         .cart-item-price { font-weight: bold; margin: 0 10px; font-size: 14px; }
         .cart-del-btn { color: #ef4444; padding: 5px 10px; cursor: pointer; font-size: 20px; }
@@ -191,22 +161,39 @@
         
         .warning-box { background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; display: none; border: 1px solid #fecaca; line-height: 1.4; }
         .info-box { background: #e0f2fe; color: #075985; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; display: none; border: 1px solid #bae6fd; line-height: 1.4; }
+        
+        /* UPSELL */
+        .upsell-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1100; align-items: center; justify-content: center; }
+        .upsell-content { background: white; width: 85%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; animation: popIn 0.3s; }
+        .upsell-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
+        .upsell-btn-row { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
+        .upsell-yes { background: #FFD54F; color: #3e2723; padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; flex: 1;}
+        .upsell-no { background: #f3f4f6; color: #666; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; flex: 1;}
+        
+        /* ЗАГОЛОВКИ UPSELL (ЗАГЛАВНЫЕ) */
+        .upsell-title { font-family: var(--font-brand); margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .upsell-product { font-family: var(--font-brand); font-weight: bold; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
 
         @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
         @keyframes shimmer{0%{background-position:-468px 0}100%{background-position:468px 0}}
         @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes popIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
     </style>
 </head>
 <body>
 
 <div class="loading-overlay" id="loading-screen">
     <div class="spinner"></div>
-    <div>Загрузка меню...</div>
+    <div class="loading-title"><span class="logo-coffee">Coffee</span><span class="logo-moll">Moll</span></div>
+    <div class="loading-motto">кофейня с неприлично вкусным кофе</div>
 </div>
 
 <div class="header-container">
     <header>
-        <h1><span class="logo-coffee">Coffee</span><span class="logo-moll">Moll</span></h1>
+        <div class="header-left">
+            <h1><span class="logo-coffee">Coffee</span><span class="logo-moll">Moll</span></h1>
+            <div class="motto">кофейня с неприлично вкусным кофе</div>
+        </div>
         <div id="work-status" class="status-badge">Checking...</div>
     </header>
     <div class="search-wrapper">
@@ -229,6 +216,7 @@
     <div id="cart-list-container"></div>
     <div class="checkout-total" id="checkout-total-sum">Итого: 0 ₸</div>
     <div style="margin-top: 20px; border-top: 5px solid #f3f4f6; margin-left: -20px; margin-right: -20px;"></div>
+    
     <h3 style="margin: 15px 0 10px 0; font-size: 16px; font-family: var(--font-brand); letter-spacing: 0.5px; text-transform: uppercase;">Оформление</h3>
     
     <div class="option-group"><label class="option-label">Ваши контакты</label>
@@ -302,9 +290,9 @@
 </div></div>
 
 <div class="upsell-overlay" id="upsell-modal"><div class="upsell-content">
-    <h3 style="margin:0 0 10px 0; font-family: var(--font-brand);">К кофе идеально подойдет!</h3>
+    <h3 class="upsell-title">К кофе идеально подойдет!</h3>
     <img src="https://i.ibb.co.com/DHKNkMvB/image.png" alt="Croissant" class="upsell-img">
-    <div style="font-weight: bold; margin-bottom: 5px; font-family: var(--font-brand);">Круассан с курицей</div>
+    <div class="upsell-product">Круассан с курицей</div>
     <div style="font-size: 14px; color: #666; margin-bottom: 15px;">1000 ₸</div>
     <div class="upsell-btn-row"><button class="upsell-no" onclick="closeUpsell()">Нет, спасибо</button><button class="upsell-yes" onclick="acceptUpsell()">Добавить</button></div>
 </div></div>
@@ -338,6 +326,7 @@
     let menuData = [];
     let cart = [];
     let currentModalProduct = null;
+    let upsellShown = false;
 
     function parsePrice(val) {
         if (!val) return 0;
@@ -814,6 +803,7 @@
         const hasPizza = cart.some(i => i.cat && i.cat.toLowerCase().includes('пицца'));
         const pizzaTime = isPizzaAvailable();
         
+        // Показываем предупреждения
         document.getElementById('closed-warning').style.display = isOpen ? 'none' : 'block';
         document.getElementById('pizza-warning').style.display = (hasPizza && !pizzaTime) ? 'block' : 'none';
     }
