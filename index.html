@@ -25,7 +25,7 @@
             
             /* ШРИФТЫ */
             --font-brand: 'Baron Neue', sans-serif; 
-            --font-body: 'Montserrat', sans-serif; /* Основной текст - Montserrat */
+            --font-body: 'Montserrat', sans-serif; 
         }
 
         /* --- БАЗОВЫЕ СТИЛИ --- */
@@ -36,8 +36,8 @@
         
         .header-left { display: flex; flex-direction: column; }
         
-        /* ЛОГОТИП (ЗАГЛАВНЫЕ ПРИНУДИТЕЛЬНО) */
-        h1 { margin: 0; font-family: var(--font-brand); font-size: 24px; letter-spacing: 1px; text-transform: uppercase !important; line-height: 1; }
+        /* ЛОГОТИП */
+        h1 { margin: 0; font-family: var(--font-brand); font-size: 24px; letter-spacing: 1px; line-height: 1; text-transform: uppercase; }
         .logo-coffee { color: #000000; }
         .logo-moll { color: #88d100; }
         
@@ -64,8 +64,8 @@
 
         .category-section { margin-bottom: 20px; scroll-margin-top: 140px; }
         
-        /* ЗАГОЛОВКИ КАТЕГОРИЙ (ЗАГЛАВНЫЕ ПРИНУДИТЕЛЬНО) */
-        .category-title { padding: 15px 15px 5px 15px; font-family: var(--font-brand); font-size: 22px; color: var(--text-main); letter-spacing: 0.5px; text-transform: uppercase !important; }
+        /* ЗАГОЛОВКИ КАТЕГОРИЙ */
+        .category-title { padding: 15px 15px 5px 15px; font-family: var(--font-brand); font-size: 22px; color: var(--text-main); letter-spacing: 0.5px; text-transform: uppercase; }
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         
@@ -87,18 +87,18 @@
         .badge-purple { background: #8b5cf6; color: white; }
         .badge-ice { background: #3b82f6; color: white; }
         
-        /* НАЗВАНИЕ ТОВАРА (ЗАГЛАВНЫЕ ПРИНУДИТЕЛЬНО) */
-        .card h3 { margin: 0 0 5px 0; font-family: var(--font-brand); font-size: 15px; font-weight: 400; line-height: 1.2; text-transform: uppercase !important; letter-spacing: 0.5px; }
+        /* НАЗВАНИЕ ТОВАРА */
+        .card h3 { margin: 0 0 5px 0; font-family: var(--font-brand); font-size: 15px; font-weight: 400; line-height: 1.2; letter-spacing: 0.5px; text-transform: uppercase; }
         .card .desc { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; font-family: var(--font-body); }
         .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
         .price { font-weight: 700; font-size: 15px; color: var(--text-main); font-family: var(--font-body); }
         .add-btn { background-color: var(--primary-color); color: var(--primary-text); border: none; border-radius: 8px; padding: 6px 12px; font-weight: 700; font-size: 12px; pointer-events: none; font-family: var(--font-body); }
         .add-btn:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
 
-        /* ЗАГРУЗКА (ЗАГЛАВНЫЕ) */
+        /* ЗАГРУЗКА */
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction: column; text-align: center;}
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px;}
-        .loading-title { font-family: var(--font-brand); font-size: 22px; margin-bottom: 5px; text-transform: uppercase !important; }
+        .loading-title { font-family: var(--font-brand); font-size: 22px; margin-bottom: 5px; text-transform: uppercase; }
         .loading-motto { font-size: 12px; color: #666; font-style: italic; font-family: var(--font-body);}
 
         /* Модалки */
@@ -107,8 +107,8 @@
         .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .modal-title-block { flex: 1; }
         
-        /* ЗАГОЛОВОК МОДАЛКИ (ЗАГЛАВНЫЕ) */
-        .modal-title { font-family: var(--font-brand); font-size: 18px; font-weight: 400; text-transform: uppercase !important; letter-spacing: 0.5px; line-height: 1.2;}
+        /* ЗАГОЛОВОК МОДАЛКИ */
+        .modal-title { font-family: var(--font-brand); font-size: 18px; font-weight: 400; letter-spacing: 0.5px; line-height: 1.2; text-transform: uppercase; }
         
         .modal-desc { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.5; font-family: var(--font-body); }
         .close-icon { font-size: 24px; cursor: pointer; color: #888; padding: 0 0 10px 10px; }
@@ -151,8 +151,8 @@
         .cart-item { background: #fff; border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .cart-item-info { flex: 1; }
         
-        /* ТОВАР В КОРЗИНЕ (ЗАГЛАВНЫЕ) */
-        .cart-item-title { font-family: var(--font-brand); font-size: 14px; margin-bottom: 2px; text-transform: uppercase !important; letter-spacing: 0.5px; }
+        /* ТОВАР В КОРЗИНЕ */
+        .cart-item-title { font-family: var(--font-brand); font-size: 14px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
         
         .cart-item-opts { font-size: 11px; color: #666; }
         .cart-item-price { font-weight: bold; margin: 0 10px; font-size: 14px; }
@@ -172,9 +172,9 @@
         .upsell-yes { background: #FFD54F; color: #3e2723; padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; flex: 1;}
         .upsell-no { background: #f3f4f6; color: #666; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; flex: 1;}
         
-        /* ЗАГОЛОВКИ UPSELL (ЗАГЛАВНЫЕ) */
-        .upsell-title { font-family: var(--font-brand); margin: 0 0 10px 0; text-transform: uppercase !important; letter-spacing: 0.5px; }
-        .upsell-product { font-family: var(--font-brand); font-weight: bold; margin-bottom: 5px; text-transform: uppercase !important; letter-spacing: 0.5px; }
+        /* ЗАГОЛОВКИ UPSELL */
+        .upsell-title { font-family: var(--font-brand); margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .upsell-product { font-family: var(--font-brand); font-weight: bold; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
 
         @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
         @keyframes shimmer{0%{background-position:-468px 0}100%{background-position:468px 0}}
@@ -186,14 +186,14 @@
 
 <div class="loading-overlay" id="loading-screen">
     <div class="spinner"></div>
-    <div class="loading-title"><span class="logo-coffee">Coffee</span><span class="logo-moll">Moll</span></div>
+    <div class="loading-title"><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></div>
     <div class="loading-motto">кофейня с неприлично вкусным кофе</div>
 </div>
 
 <div class="header-container">
     <header>
         <div class="header-left">
-            <h1><span class="logo-coffee">Coffee</span><span class="logo-moll">Moll</span></h1>
+            <h1><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></h1>
             <div class="motto">кофейня с неприлично вкусным кофе</div>
         </div>
         <div id="work-status" class="status-badge">Checking...</div>
@@ -210,7 +210,7 @@
 <div class="modal-overlay" id="product-modal" onclick="closeProductModal(event)"><div class="modal-content" id="product-modal-content"></div></div>
 
 <div class="modal-overlay" id="checkout-modal"><div class="modal-content" id="checkout-content">
-    <div class="modal-header"><div class="modal-title">Ваш заказ</div><div class="close-icon" onclick="closeCheckout()">✕</div></div>
+    <div class="modal-header"><div class="modal-title">ВАШ ЗАКАЗ</div><div class="close-icon" onclick="closeCheckout()">✕</div></div>
     
     <div id="closed-warning" class="warning-box">🌙 <b>Мы сейчас закрыты.</b><br>Приготовим ваш заказ в рабочее время (с 09:00).</div>
     <div id="pizza-warning" class="info-box">🍕 <b>Пицца доступна с 11:00.</b><br>Начнем готовить её после 11:00.</div>
@@ -218,7 +218,7 @@
     <div id="cart-list-container"></div>
     <div class="checkout-total" id="checkout-total-sum">Итого: 0 ₸</div>
     <div style="margin-top: 20px; border-top: 5px solid #f3f4f6; margin-left: -20px; margin-right: -20px;"></div>
-    <h3 style="margin: 15px 0 10px 0; font-size: 16px; font-family: var(--font-brand); letter-spacing: 0.5px; text-transform: uppercase !important;">Оформление</h3>
+    <h3 style="margin: 15px 0 10px 0; font-size: 16px; font-family: var(--font-brand); letter-spacing: 0.5px; text-transform: uppercase;">ОФОРМЛЕНИЕ</h3>
     
     <div class="option-group"><label class="option-label">Ваши контакты</label>
         <input type="text" id="client-name" placeholder="Ваше имя">
@@ -291,9 +291,9 @@
 </div></div>
 
 <div class="upsell-overlay" id="upsell-modal"><div class="upsell-content">
-    <h3 class="upsell-title">К кофе идеально подойдет!</h3>
+    <h3 class="upsell-title">К КОФЕ ИДЕАЛЬНО ПОДОЙДЕТ!</h3>
     <img src="https://i.ibb.co.com/DHKNkMvB/image.png" alt="Croissant" class="upsell-img">
-    <div class="upsell-product">Круассан с курицей</div>
+    <div class="upsell-product">КРУАССАН С КУРИЦЕЙ</div>
     <div style="font-size: 14px; color: #666; margin-bottom: 15px;">1000 ₸</div>
     <div class="upsell-btn-row"><button class="upsell-no" onclick="closeUpsell()">Нет, спасибо</button><button class="upsell-yes" onclick="acceptUpsell()">Добавить</button></div>
 </div></div>
@@ -316,7 +316,6 @@
     let SAUCES = ["Кетчуп"];
     let ALT_MILKS = ["Кокосовое"];
 
-    // Маппинг кодов модификаторов на названия
     const MOD_LABELS = {
         milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон",
         syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо",
@@ -359,7 +358,6 @@
                     alert("Ошибка: Таблица пустая."); loadingScreen.style.display = 'none'; return;
                 }
 
-                // 1. ПАРСИМ НАСТРОЙКИ
                 const settingsRow = results.data.find(row => {
                     const id = getVal(row, ['id', 'Идентификатор']);
                     return id && id.toUpperCase() === 'SETTINGS';
@@ -386,11 +384,9 @@
                     });
                 }
 
-                // Добавляем "Нет" в списки
                 if (SYRUPS[0] !== "Нет") SYRUPS.unshift("Нет");
                 if (SAUCES[0] !== "Нет") SAUCES.unshift("Нет");
 
-                // 2. ПАРСИМ ТОВАРЫ
                 let rawData = results.data.map(item => {
                     let pid = getVal(item, ['id', 'Идентификатор']).trim();
                     if (!pid || pid.toUpperCase() === 'SETTINGS') return null;
@@ -413,7 +409,6 @@
                     let isPopular = (String(popularVal).trim().toLowerCase() === 'true' || String(popularVal).trim().toLowerCase() === 'да');
                     let cleanPrice = parsePrice(priceVal);
                     
-                    // Парсим модификаторы
                     let mods = {};
                     if (modsStr) {
                         modsStr.split(/[,;]/).forEach(m => {
@@ -448,7 +443,6 @@
                         volumes: [], mods: mods
                     };
 
-                    // Объемы
                     if (volumeStr && volumeStr.includes('=')) {
                         product.type = 'complex';
                         product.hasVolumes = true;
@@ -517,7 +511,7 @@
         });
         navContainer.innerHTML = '';
         sortedCats.forEach(cat => {
-            const btn = document.createElement('a'); btn.className = 'nav-btn'; btn.innerText = cat; btn.href = `#cat-${cat.replace(/\s+/g, '-')}`;
+            const btn = document.createElement('a'); btn.className = 'nav-btn'; btn.innerText = cat.toUpperCase(); btn.href = `#cat-${cat.replace(/\s+/g, '-')}`;
             btn.onclick = (e) => { e.preventDefault(); const section = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`); if(section) { const y = section.getBoundingClientRect().top + window.scrollY - 140; window.scrollTo({top: y, behavior: 'smooth'}); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } };
             navContainer.appendChild(btn);
         });
@@ -536,7 +530,7 @@
         app.innerHTML = '';
 
         sortedCats.forEach(cat => {
-            const section = document.createElement('div'); section.className = 'category-section'; section.id = `cat-${cat.replace(/\s+/g, '-')}`; section.innerHTML = `<div class="category-title">${cat}</div>`;
+            const section = document.createElement('div'); section.className = 'category-section'; section.id = `cat-${cat.replace(/\s+/g, '-')}`; section.innerHTML = `<div class="category-title">${cat.toUpperCase()}</div>`;
             const grid = document.createElement('div'); grid.className = 'grid';
             
             menuData.filter(p => p.cat === cat).forEach((p, index) => {
@@ -551,7 +545,6 @@
                 const itemImage = p.img ? p.img : getImageByCategory(p.cat);
                 const badgeHtml = isOutOfStock ? `<div class="unavailable-badge">Закончилось</div>` : '';
                 
-                // --- ЛОГИКА БЕЙДЖЕЙ ---
                 let cardBadgeHtml = '';
                 if (p.badge && !isOutOfStock) {
                     let bClass = 'card-badge';
@@ -567,7 +560,7 @@
                 
                 card.onclick = () => handleItemClick(p.id);
                 
-                card.innerHTML = `<div class="card-img-container"><img src="${itemImage}" alt="${p.name}" loading="lazy" onload="this.classList.add('loaded')">${badgeHtml}${cardBadgeHtml}</div><h3>${p.name}</h3>${p.desc ? `<div class="desc">${p.desc}</div>` : ''}<div class="price-row"><div class="price">${displayPrice} ₸</div><button class="add-btn" ${isDisabled ? 'disabled' : ''}>${btnText}</button></div>`;
+                card.innerHTML = `<div class="card-img-container"><img src="${itemImage}" alt="${p.name}" loading="lazy" onload="this.classList.add('loaded')">${badgeHtml}${cardBadgeHtml}</div><h3>${p.name.toUpperCase()}</h3>${p.desc ? `<div class="desc">${p.desc}</div>` : ''}<div class="price-row"><div class="price">${displayPrice} ₸</div><button class="add-btn" ${isDisabled ? 'disabled' : ''}>${btnText}</button></div>`;
                 grid.appendChild(card);
             });
             section.appendChild(grid); app.appendChild(section);
@@ -630,7 +623,7 @@
         
         let html = `<div class="modal-header"><div class="modal-title-block">
                         ${imgHtml}
-                        <div class="modal-title">${product.name}</div>
+                        <div class="modal-title">${product.name.toUpperCase()}</div>
                         <div class="modal-desc">${product.fullDesc || product.desc || ""}</div>
                     </div><div class="close-icon" onclick="closeProductModal(true)">✕</div></div>`;
         
@@ -788,7 +781,7 @@
 
     function closeProductModal(force) { if (force === true) { document.getElementById('product-modal').style.display = 'none'; return; } const e = force; if (e && e.target.id === 'product-modal') document.getElementById('product-modal').style.display = 'none'; }
     function updateCartButton() { const btn = document.getElementById('cart-btn'); if (cart.length > 0) { const total = cart.reduce((s, i) => s + i.price, 0); btn.style.display = 'block'; btn.innerText = `Оформить заказ: ${total} ₸`; } else btn.style.display = 'none'; }
-    function renderCartItems() { const c = document.getElementById('cart-list-container'); c.innerHTML = ''; cart.forEach((item, i) => { const vOpts = item.options ? item.options.filter(o=>o&&o!=="Без сахара").join(', ') : ''; c.innerHTML += `<div class="cart-item"><div class="cart-item-info"><div class="cart-item-title">${item.name}</div><div class="cart-item-opts">${vOpts}</div></div><div class="cart-item-price">${item.price}</div><div class="cart-del-btn" onclick="removeFromCart(${i})">✕</div></div>`; }); }
+    function renderCartItems() { const c = document.getElementById('cart-list-container'); c.innerHTML = ''; cart.forEach((item, i) => { const vOpts = item.options ? item.options.filter(o=>o&&o!=="Без сахара").join(', ') : ''; c.innerHTML += `<div class="cart-item"><div class="cart-item-info"><div class="cart-item-title">${item.name.toUpperCase()}</div><div class="cart-item-opts">${vOpts}</div></div><div class="cart-item-price">${item.price}</div><div class="cart-del-btn" onclick="removeFromCart(${i})">✕</div></div>`; }); }
     function removeFromCart(i) { cart.splice(i, 1); renderCartItems(); updateCartButton(); calculateCheckoutTotal(); }
     
     // Открытие корзины + Проверка времени
@@ -804,7 +797,6 @@
         const hasPizza = cart.some(i => i.cat && i.cat.toLowerCase().includes('пицца'));
         const pizzaTime = isPizzaAvailable();
         
-        // Показываем предупреждения
         document.getElementById('closed-warning').style.display = isOpen ? 'none' : 'block';
         document.getElementById('pizza-warning').style.display = (hasPizza && !pizzaTime) ? 'block' : 'none';
     }
