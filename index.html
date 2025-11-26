@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Меню Кофейни</title>
+    <title>CoffeeMoll</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     
@@ -42,6 +42,14 @@
         h1 { margin: 0; font-family: var(--font-logo); font-size: 34px; letter-spacing: 1px; line-height: 1; text-transform: uppercase; }
         .logo-coffee { color: #000000; }
         .logo-moll { color: #88d100; }
+
+        .separator-line {
+            width: 40px;               /* Длина линии */
+            height: 3px;               /* Толщина линии */
+            background-color: var(--primary-color); /* Ваш зеленый цвет */
+            margin: 4px 0 4px 0;       /* Отступы сверху и снизу */
+            border-radius: 2px;        /* Скругленные края линии */
+        }
         
         .motto { 
             font-size: 11px; 
@@ -176,7 +184,7 @@
         .upsell-content { background: white; width: 85%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; animation: popIn 0.3s; }
         .upsell-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
         .upsell-btn-row { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
-        .upsell-yes { background: #FFD54F; color: #3e2723; padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; flex: 1;}
+        .upsell-yes { background: #88d100; color: #3e2723; padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; flex: 1;}
         .upsell-no { background: #f3f4f6; color: #666; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; flex: 1;}
         
         /* ЗАГОЛОВКИ UPSELL */
@@ -194,14 +202,14 @@
 <div class="loading-overlay" id="loading-screen">
     <div class="spinner"></div>
     <div class="loading-title"><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></div>
-    <div class="loading-motto">кофейня с неприлично вкусным кофе</div>
+    <div class="loading-motto">Кофейня с неприлично вкусным кофе</div>
 </div>
 
 <div class="header-container">
     <header>
         <div class="header-left">
             <h1><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></h1>
-            <div class="motto">кофейня с неприлично вкусным кофе</div>
+            <div class="motto">Кофейня с неприлично вкусным кофе</div>
         </div>
         <div id="work-status" class="status-badge">Checking...</div>
     </header>
@@ -258,7 +266,7 @@
             <input type="radio" name="deliveryType" id="d-delivery" value="delivery" class="checkout-radio-input" onchange="toggleDelivery()">
             <label for="d-delivery" class="checkout-radio-label">🚗 Доставка</label>
         </div>
-        <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸</b> (рассчитывается менеджером).</div>
+        <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸ (до двери от 800 ₸)</b> (оплачивается курьеру отдельно).</div>
     </div>
     
     <div id="address-block" style="display: none;">
@@ -287,19 +295,19 @@
     
     <div id="payment-phone-block" style="display: none;">
         <div class="option-group">
-            <label class="option-label">Номер для счета</label>
+            <label class="option-label">Номер для удаленного счета</label>
             <input type="tel" id="payment-phone" placeholder="Номер привязанный к карте">
         </div>
     </div>
     
     <div class="option-group"><label class="option-label">Комментарий</label><textarea id="order-comment" placeholder="Пожелания..."></textarea></div>
-    <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Согласен, что менеджер свяжется со мной.</span></div>
+    <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Согласен, что со мной свяжутся в случае каких-либо вопросов.</span></div>
     <button class="modal-add-btn" id="submit-btn" onclick="submitOrder()">ПОДТВЕРДИТЬ ЗАКАЗ</button>
 </div></div>
 
 <div class="upsell-overlay" id="upsell-modal"><div class="upsell-content">
     <h3 class="upsell-title">К КОФЕ ИДЕАЛЬНО ПОДОЙДЕТ!</h3>
-    <img src="https://i.ibb.co.com/DHKNkMvB/image.png" alt="Croissant" class="upsell-img">
+    <img src="https://file.garden/aSB7wx7270Kujihk/%D0%9A%D1%80%D1%83%D0%B0%D1%81%D1%81%D0%B0%D0%BD%20%D0%BA%D1%83%D1%80%D0%B8%D1%86%D0%B0.png" alt="Croissant" class="upsell-img">
     <div class="upsell-product">КРУАССАН С КУРИЦЕЙ</div>
     <div style="font-size: 14px; color: #666; margin-bottom: 15px;">1000 ₸</div>
     <div class="upsell-btn-row"><button class="upsell-no" onclick="closeUpsell()">Нет, спасибо</button><button class="upsell-yes" onclick="acceptUpsell()">Добавить</button></div>
@@ -551,7 +559,7 @@
             menuData.filter(p => p.cat === cat).forEach((p, index) => {
                 const card = document.createElement('div'); card.className = 'card'; card.style.animationDelay = `${index * 0.05}s`;
                 let isOutOfStock = !p.available; let isDisabled = isOutOfStock; let btnText = "ВЫБРАТЬ";
-                if (isOutOfStock) { btnText = "НЕТ В НАЛИЧИИ"; card.classList.add('unavailable'); }
+                if (isOutOfStock) { btnText = "Будет позже"; card.classList.add('unavailable'); }
                 
                 let displayPrice = 0;
                 if (p.hasVolumes && p.volumes.length > 0) displayPrice = `от ${p.volumes[0].p}`;
@@ -647,7 +655,7 @@
         // 1. Порция
         if (product.hasVolumes && product.volumes.length > 0) {
             html += `<div class="option-group"><label class="option-label">Порция</label><div class="radio-group">`;
-            product.volumes.forEach((v, i) => { html += `<input type="radio" name="vol" id="v${i}" value="${i}" class="radio-input" ${i===0?'checked':''} onchange="recalcPrice()"><label for="v${i}" class="radio-label">${v.n}<br>${v.p}₸</label>`; });
+            product.volumes.forEach((v, i) => { html += `<input type="radio" name="vol" id="v${i}" value="${i}" class="radio-input" ${i===0?'checked':''} onchange="recalcPrice()"><label for="v${i}" class="radio-label">${v.n}<br>${v.p} ₸</label>`; });
             html += `</div></div>`;
         } else if (product.fixedVolume) { html += `<div class="option-group"><label class="option-label">Объем: ${product.fixedVolume}</label></div>`; }
 
@@ -851,7 +859,7 @@
 
         if (!name || !phone) { alert("Заполните имя и телефон"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
         if (delType === 'delivery' && !address) { alert("Укажите адрес доставки"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
-        if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) { alert("Укажите номер для счета"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
+        if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) { alert("Укажите номер для удаленного счета"); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
         
         saveUserData(name, phone, address); 
         
