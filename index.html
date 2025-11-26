@@ -480,6 +480,7 @@ select:focus {
                     alert("Ошибка: Таблица пустая."); loadingScreen.style.display = 'none'; return;
                 }
 
+                // 1. ПАРСИМ НАСТРОЙКИ
                 const settingsRow = results.data.find(row => {
                     const id = getVal(row, ['id', 'Идентификатор']);
                     return id && id.toUpperCase() === 'SETTINGS';
@@ -506,13 +507,16 @@ select:focus {
                     });
                 }
 
+                // Добавляем "Нет" в списки
                 if (SYRUPS[0] !== "Нет") SYRUPS.unshift("Нет");
                 if (SAUCES[0] !== "Нет") SAUCES.unshift("Нет");
 
+                // 2. ПАРСИМ ТОВАРЫ
                 let rawData = results.data.map(item => {
                     let pid = getVal(item, ['id', 'Идентификатор']).trim();
                     if (!pid || pid.toUpperCase() === 'SETTINGS') return null;
                     
+                    // --- ПРИНУДИТЕЛЬНЫЙ ПЕРЕВОД В ЗАГЛАВНЫЕ БУКВЫ (JS) ---
                     let cat = (getVal(item, ['category', 'Категория']).trim() || "Прочее").toUpperCase();
                     let name = getVal(item, ['name', 'Название']).trim().toUpperCase();
                     
@@ -532,6 +536,7 @@ select:focus {
                     let isPopular = (String(popularVal).trim().toLowerCase() === 'true' || String(popularVal).trim().toLowerCase() === 'да');
                     let cleanPrice = parsePrice(priceVal);
                     
+                    // Парсим модификаторы
                     let mods = {};
                     if (modsStr) {
                         modsStr.split(/[,;]/).forEach(m => {
@@ -570,6 +575,7 @@ select:focus {
                         volumes: [], mods: mods
                     };
 
+                    // Объемы
                     if (volumeStr && volumeStr.includes('=')) {
                         product.type = 'complex';
                         product.hasVolumes = true;
@@ -633,6 +639,7 @@ select:focus {
         const navContainer = document.getElementById('nav-container');
         const uniqueCats = [...new Set(menuData.map(p => p.cat))];
         
+        // Сортировка по массиву, переведенному в UPPERCASE
         const CATEGORY_ORDER_UPPER = CATEGORY_ORDER.map(c => c.toUpperCase());
         
         const sortedCats = uniqueCats.sort((a, b) => {
@@ -642,7 +649,7 @@ select:focus {
         navContainer.innerHTML = '';
         sortedCats.forEach(cat => {
             const btn = document.createElement('a'); btn.className = 'nav-btn'; 
-            btn.innerText = cat; 
+            btn.innerText = cat; // УЖЕ В UPPERCASE (из данных)
             btn.href = `#cat-${cat.replace(/\s+/g, '-')}`;
             btn.onclick = (e) => { e.preventDefault(); const section = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`); if(section) { const y = section.getBoundingClientRect().top + window.scrollY - 140; window.scrollTo({top: y, behavior: 'smooth'}); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } };
             navContainer.appendChild(btn);
@@ -664,7 +671,7 @@ select:focus {
 
         sortedCats.forEach(cat => {
             const section = document.createElement('div'); section.className = 'category-section'; section.id = `cat-${cat.replace(/\s+/g, '-')}`; 
-            section.innerHTML = `<div class="category-title">${cat}</div>`; 
+            section.innerHTML = `<div class="category-title">${cat}</div>`; // УЖЕ В UPPERCASE
             const grid = document.createElement('div'); grid.className = 'grid';
             
             menuData.filter(p => p.cat === cat).forEach((p, index) => {
@@ -679,6 +686,7 @@ select:focus {
                 const itemImage = p.img ? p.img : getImageByCategory(p.cat);
                 const badgeHtml = isOutOfStock ? `<div class="unavailable-badge">Закончилось</div>` : '';
                 
+                // --- ЛОГИКА БЕЙДЖЕЙ (ЦВЕТНЫЕ) ---
                 let cardBadgeHtml = '';
                 if (p.badge && !isOutOfStock) {
                     let bClass = 'card-badge';
@@ -841,10 +849,10 @@ select:focus {
         if(prod.hasMilk) {
             const el = document.querySelector('input[name="milk"]:checked');
             if(el && el.value === 'alt') {
-                // --- ИСПРАВЛЕНА ЛОГИКА ДЛЯ МУЛЬТИ-ЦЕН (200|300) ---
+                // --- ИСПРАВЛЕНА ЛОГИКА ДЛЯ МУЛЬТИ-ЦЕН (200|300) И 0 ---
                 let milkPrice = PRICES.alt_milk; // По умолчанию
-                
-                if (prod.mods && prod.mods.alt_milk) {
+
+                if (prod.mods && prod.mods.alt_milk !== undefined) {
                     if (Array.isArray(prod.mods.alt_milk)) {
                         const volEl = document.querySelector('input[name="vol"]:checked');
                         const volIndex = volEl ? parseInt(volEl.value) : 0;
@@ -1000,11 +1008,3 @@ select:focus {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
