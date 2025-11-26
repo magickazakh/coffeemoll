@@ -66,7 +66,7 @@ def get_time_kb(user_id):
             InlineKeyboardButton(text="15 мин", callback_data=f"time_15_{user_id}")
         ],
         [
-            InlineKeyboardButton(text="20 мин", callback_data=f"time_20_{user_id}")
+            InlineKeyboardButton(text="20 мин", callback_data=f"time_20_{user_id}"),
             InlineKeyboardButton(text="30 мин", callback_data=f"time_30_{user_id}"),
             InlineKeyboardButton(text="✍️ Своё время", callback_data=f"time_custom_{user_id}")
         ],
@@ -223,3 +223,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Бот остановлен.")
+
