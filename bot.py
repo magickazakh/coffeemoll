@@ -15,7 +15,6 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 
 # --- НАСТРОЙКИ ---
-# Токен и ID берем из переменных окружения или вставляем вручную
 TOKEN = os.getenv("BOT_TOKEN", "8444027240:AAFEiACM5x-OPmR9CFgk1zyrmU24PgovyCY") 
 ADMIN_CHAT_ID = -1003356844624
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
@@ -23,15 +22,13 @@ WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
 
 logging.basicConfig(level=logging.INFO)
 
-# Инициализация
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=MemoryStorage())
 
-# FSM: Машина состояний для ввода времени
 class OrderState(StatesGroup):
     waiting_for_custom_time = State()
 
-# --- ВЕБ-СЕРВЕР ДЛЯ RENDER ---
+# --- ВЕБ-СЕРВЕР ---
 async def health_check(request):
     return web.Response(text="Bot is running OK!")
 
@@ -40,11 +37,9 @@ async def start_web_server():
     app = web.Application()
     app.router.add_get("/", health_check)
     app.router.add_get("/health", health_check)
-    
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)
-    
     await site.start()
     logging.info(f"✅ WEB SERVER STARTED ON PORT {port}")
 
@@ -78,7 +73,7 @@ def get_ready_kb(user_id):
         [InlineKeyboardButton(text="🏁 Готов к выдаче", callback_data=f"order_ready_{user_id}")]
     ])
 
-# --- ОБРАБОТЧИКИ КОМАНД ---
+# --- ОБРАБОТЧИКИ ---
 
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
@@ -87,8 +82,6 @@ async def cmd_start(message: types.Message):
         resize_keyboard=True
     )
     await message.answer("Добро пожаловать в CoffeeMoll! 🥐", reply_markup=markup)
-
-# --- ОБРАБОТКА ЗАКАЗА ---
 
 @dp.message(F.web_app_data)
 async def web_app_data_handler(message: types.Message):
@@ -111,13 +104,15 @@ async def web_app_data_handler(message: types.Message):
             text += f"📍 <b>Самовывоз</b>\n"
             
         text += f"💳 <b>Оплата:</b> {info.get('paymentType')}\n"
-        
         if info.get('paymentType') in ['Kaspi', 'Halyk']:
             text += f"📱 <b>Счет на:</b> <code>{info.get('paymentPhone')}</code>\n"
-        
         if info.get('comment'):
             text += f"💬 <b>Коммент:</b> <i>{info.get('comment')}</i>\n"
-            
+        
+        # Время (из комментария)
+        if "Ко времени" in str(info.get('comment')):
+             text += "⏰ <b>КО ВРЕМЕНИ!</b>\n"
+
         text += f"➖➖➖➖➖➖➖➖➖➖\n<b>📋 ЗАКАЗ:</b>\n"
         
         for i, item in enumerate(cart, 1):
@@ -136,18 +131,31 @@ async def web_app_data_handler(message: types.Message):
     except Exception as e:
         logging.error(f"Error: {e}")
 
-# --- ЛОГИКА СТАТУСОВ ---
+# --- ЛОГИКА СТАТУСОВ (ИСПРАВЛЕНО) ---
 
 @dp.callback_query(F.data.startswith("dec_"))
 async def decision_callback(callback: CallbackQuery):
     action, user_id = callback.data.split("_")[1], callback.data.split("_")[2]
+    
     if action == "accept":
         await callback.message.edit_reply_markup(reply_markup=get_time_kb(user_id))
+    
     elif action == "reject":
-        current_text = callback.message.html_text.split("\n\n")[0]
-        await callback.message.edit_text(text=f"{current_text}\n\n❌ <b>ОТКЛОНЕН</b>", reply_markup=None)
-        try: await bot.send_message(chat_id=user_id, text="❌ Заказ отклонен.") 
-        except: pass
+        # Исправление: берем .text, а не .html_text
+        old_text = callback.message.text 
+        # Чистим от старых статусов (если были), отрезаем по разделителю или просто берем весь текст
+        # Для простоты берем весь текст, но т.к. он теперь без HTML тегов (жирный пропадет в истории админа, но читаться будет)
+        # Это компромисс без базы данных.
+        
+        await callback.message.edit_text(
+            text=f"{old_text}\n\n❌ <b>ОТКЛОНЕН</b>", 
+            reply_markup=None
+        )
+        try: 
+            await bot.send_message(chat_id=user_id, text="❌ Заказ отклонен.") 
+        except: 
+            pass
+    
     await callback.answer()
 
 @dp.callback_query(F.data.startswith("time_"))
@@ -161,16 +169,29 @@ async def time_callback(callback: CallbackQuery, state: FSMContext):
 
     if action == "custom":
         await callback.message.answer("✍️ <b>Введите время</b> (например: '40 мин'):")
+        # Сохраняем ID сообщения, которое нужно будет обновить
         await state.update_data(order_msg_id=callback.message.message_id, client_id=user_id)
         await state.set_state(OrderState.waiting_for_custom_time)
         await callback.answer()
         return
     
     time_val = f"{action} минут"
-    original_text = callback.message.html_text.split("\n\n")[0]
-    await callback.message.edit_text(text=f"{original_text}\n\n✅ <b>ПРИНЯТ</b> ({time_val})", reply_markup=get_ready_kb(user_id))
-    try: await bot.send_message(chat_id=user_id, text=f"👨‍🍳 Заказ принят!\n⏳ Готовность: <b>{time_val}</b>.")
-    except: pass
+    
+    # ИСПРАВЛЕНИЕ: берем .text
+    old_text = callback.message.text
+    
+    # Убираем возможные предыдущие статусы, если бариста передумал и нажал кнопку снова
+    clean_text = old_text.split("\n\n✅")[0] 
+    
+    await callback.message.edit_text(
+        text=f"{clean_text}\n\n✅ <b>ПРИНЯТ</b> ({time_val})", 
+        reply_markup=get_ready_kb(user_id)
+    )
+    
+    try: 
+        await bot.send_message(chat_id=user_id, text=f"👨‍🍳 Заказ принят!\n⏳ Готовность: <b>{time_val}</b>.")
+    except: 
+        pass
     await callback.answer()
 
 @dp.message(OrderState.waiting_for_custom_time)
@@ -183,38 +204,56 @@ async def custom_time_handler(message: types.Message, state: FSMContext):
     try: await message.delete()
     except: pass
 
+    # Тут сложнее: мы не можем получить текст чужого сообщения по ID.
+    # Поэтому мы просто меняем клавиатуру на старом сообщении, 
+    # а статус отправляем НОВЫМ сообщением в чат (как ответ).
     try:
-        await bot.edit_message_reply_markup(chat_id=message.chat.id, message_id=order_msg_id, reply_markup=get_ready_kb(client_id))
-        await message.answer(f"✅ Время установлено: <b>{custom_time}</b>", reply_to_message_id=order_msg_id)
+        await bot.edit_message_reply_markup(
+            chat_id=message.chat.id, 
+            message_id=order_msg_id, 
+            reply_markup=get_ready_kb(client_id)
+        )
+        # Подтверждение в чат админов
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=f"✅ Время для заказа выше установлено: <b>{custom_time}</b>",
+            reply_to_message_id=order_msg_id
+        )
+        
         await bot.send_message(client_id, f"👨‍🍳 Заказ принят!\n⏳ Готовность: <b>{custom_time}</b>.")
-    except: pass
+    except Exception as e:
+        logging.error(f"Custom time error: {e}")
+    
     await state.clear()
 
 @dp.callback_query(F.data.startswith("order_ready_"))
 async def ready_callback(callback: CallbackQuery):
     user_id = callback.data.split("_")[2]
-    current_text = callback.message.html_text
     
-    if "ПРИНЯТ" in current_text:
-        final_text = current_text.replace("✅ <b>ПРИНЯТ", "🏁 <b>ГОТОВ / ВЫДАН").split("В РАБОТУ")[0] + "</b>"
-        if "ГОТОВ" not in final_text: final_text = current_text + "\n\n🏁 <b>ЗАКАЗ ГОТОВ!</b>"
+    # ИСПРАВЛЕНИЕ: берем .text
+    old_text = callback.message.text
+    
+    # Заменяем статус "ПРИНЯТ" на "ГОТОВ" или добавляем его
+    if "ПРИНЯТ" in old_text:
+        # Разделяем по статусу и берем первую часть (сам заказ)
+        clean_text = old_text.split("✅")[0].strip()
+        final_text = f"{clean_text}\n\n🏁 <b>ЗАКАЗ ГОТОВ / ВЫДАН</b>"
     else:
-        final_text = f"{current_text}\n\n🏁 <b>ЗАКАЗ ГОТОВ!</b>"
+        final_text = f"{old_text}\n\n🏁 <b>ЗАКАЗ ГОТОВ / ВЫДАН</b>"
 
     await callback.message.edit_text(text=final_text, reply_markup=None)
-    try: await bot.send_message(chat_id=user_id, text="🎉 <b>Заказ готов!</b>\nПриятного аппетита! ☕️")
-    except: pass
+    
+    try: 
+        await bot.send_message(chat_id=user_id, text="🎉 <b>Ваш заказ готов!</b>\nЖдем вас на выдаче. Приятного аппетита! ☕️")
+    except: 
+        pass
+        
     await callback.answer()
 
 # --- ЗАПУСК ---
 async def main():
-    # 1. СНАЧАЛА запускаем веб-сервер (чтобы Render увидел порт)
     await start_web_server()
-    
-    # 2. Чистим вебхуки
     await bot.delete_webhook(drop_pending_updates=True)
-    
-    # 3. Запускаем поллинг
     print("🤖 Bot started polling...")
     await dp.start_polling(bot)
 
@@ -223,5 +262,3 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Бот остановлен.")
-
-
