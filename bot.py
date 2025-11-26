@@ -86,7 +86,7 @@ async def cmd_start(message: types.Message):
         keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=WEB_APP_URL))]],
         resize_keyboard=True
     )
-    await message.answer("Добро пожаловать в Кофемолку! 🥐", reply_markup=markup)
+    await message.answer("Добро пожаловать в CoffeeMoll! 🥐", reply_markup=markup)
 
 # --- ОБРАБОТКА ЗАКАЗА ---
 
@@ -223,4 +223,5 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Бот остановлен.")
+
 
