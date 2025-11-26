@@ -152,7 +152,7 @@ async def decision_callback(callback: CallbackQuery):
             reply_markup=None
         )
         try: 
-            await bot.send_message(chat_id=user_id, text="❌ Заказ отклонен.") 
+            await bot.send_message(chat_id=user_id, text="❌ Заказ отклонен.\nСкоро свяжемся с вами для уточнения.") 
         except: 
             pass
     
@@ -189,7 +189,7 @@ async def time_callback(callback: CallbackQuery, state: FSMContext):
     )
     
     try: 
-        await bot.send_message(chat_id=user_id, text=f"👨‍🍳 Заказ принят!\n⏳ Готовность: <b>{time_val}</b>.")
+        await bot.send_message(chat_id=user_id, text=f"👨‍🍳 Заказ принят!\n⏳ Готовность: <b>{time_val}</b>.\n📞Телефон для связи: +77006437303")
     except: 
         pass
     await callback.answer()
@@ -220,7 +220,7 @@ async def custom_time_handler(message: types.Message, state: FSMContext):
             reply_to_message_id=order_msg_id
         )
         
-        await bot.send_message(client_id, f"👨‍🍳 Заказ принят!\n⏳ Готовность: <b>{custom_time}</b>.")
+        await bot.send_message(client_id, f"👨‍🍳 Заказ принят!\n⏳ Готовность: <b>{custom_time}</b>.\n📞Телефон для связи: +77006437303")
     except Exception as e:
         logging.error(f"Custom time error: {e}")
     
@@ -229,22 +229,32 @@ async def custom_time_handler(message: types.Message, state: FSMContext):
 @dp.callback_query(F.data.startswith("order_ready_"))
 async def ready_callback(callback: CallbackQuery):
     user_id = callback.data.split("_")[2]
+    old_text = callback.message.text or ""
     
-    # ИСПРАВЛЕНИЕ: берем .text
-    old_text = callback.message.text
+    # 1. Проверяем, доставка это или нет
+    is_delivery = "Доставка" in old_text
     
-    # Заменяем статус "ПРИНЯТ" на "ГОТОВ" или добавляем его
-    if "ПРИНЯТ" in old_text:
-        # Разделяем по статусу и берем первую часть (сам заказ)
-        clean_text = old_text.split("✅")[0].strip()
-        final_text = f"{clean_text}\n\n🏁 <b>ЗАКАЗ ГОТОВ / ВЫДАН</b>"
+    if is_delivery:
+        admin_status = "🏁 <b>ЗАКАЗ ПЕРЕДАН КУРЬЕРУ</b>"
+        client_msg = "📦 <b>Ваш заказ передан курьеру!</b>\nОжидайте доставку. Приятного аппетита!"
     else:
-        final_text = f"{old_text}\n\n🏁 <b>ЗАКАЗ ГОТОВ / ВЫДАН</b>"
+        admin_status = "🏁 <b>ЗАКАЗ ГОТОВ / ВЫДАН</b>"
+        client_msg = "🎉 <b>Ваш заказ готов!</b>\nЖдем вас на выдаче. Приятного аппетита! ☕️"
+
+    # 2. Обновляем сообщение у админа
+    # Удаляем старый статус "ПРИНЯТ", если он есть, и добавляем новый
+    if "ПРИНЯТ" in old_text:
+        # Разбиваем по статусу, берем первую часть (сам заказ) и добавляем новый статус
+        clean_text = old_text.split("✅")[0].strip()
+        final_text = f"{clean_text}\n\n{admin_status}"
+    else:
+        final_text = f"{old_text}\n\n{admin_status}"
 
     await callback.message.edit_text(text=final_text, reply_markup=None)
     
+    # 3. Уведомляем клиента
     try: 
-        await bot.send_message(chat_id=user_id, text="🎉 <b>Ваш заказ готов!</b>\nЖдем вас на выдаче. Приятного аппетита! ☕️")
+        await bot.send_message(chat_id=user_id, text=client_msg)
     except: 
         pass
         
@@ -262,3 +272,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Бот остановлен.")
+
