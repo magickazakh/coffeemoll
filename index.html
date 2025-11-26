@@ -7,29 +7,26 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/baron-neue" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
         window.onerror = function(msg, url, line) { return false; };
     </script>
 
     <style>
-        /* --- НАСТРОЙКИ ЦВЕТОВ И ШРИФТОВ --- */
+        /* --- НАСТРОЙКИ --- */
         :root {
-            --primary-color: #88d100;       /* Ваш фирменный лайм */
-            --primary-text: #000000;        /* Текст на кнопках */
-            --bg-color: #F7F8F5;            /* Фон */
-            --text-main: #111111;           /* Основной текст */
-            --text-secondary: #6b7280;      /* Серый текст */
+            --primary-color: #88d100;       
+            --primary-text: #000000;        
+            --bg-color: #F7F8F5;            
+            --text-main: #111111;           
+            --text-secondary: #6b7280;      
             
-            /* ШРИФТЫ */
-            --font-brand: 'Bebas Neue', sans-serif; /* ЗАГЛАВНЫЙ ШРИФТ */
-            --font-body: 'Montserrat', sans-serif;  /* Основной текст */
+            --font-brand: 'Baron Neue', sans-serif; 
+            --font-body: 'Montserrat', sans-serif; 
         }
 
-        /* --- БАЗОВЫЕ СТИЛИ --- */
         body { font-family: var(--font-body); margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); padding-bottom: 100px; -webkit-tap-highlight-color: transparent; font-weight: 500; }
         
         .header-container { background: white; position: sticky; top: 0; z-index: 40; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
@@ -37,8 +34,8 @@
         
         .header-left { display: flex; flex-direction: column; }
         
-        /* ЛОГОТИП */
-        h1 { margin: 0; font-family: var(--font-brand); font-size: 28px; letter-spacing: 1px; line-height: 1; }
+        /* ЛОГОТИП (Прописан капсом в HTML + шрифт) */
+        h1 { margin: 0; font-family: var(--font-brand); font-size: 26px; letter-spacing: 1px; line-height: 1; text-transform: uppercase; }
         .logo-coffee { color: #000000; }
         .logo-moll { color: #88d100; }
         
@@ -47,10 +44,10 @@
             color: var(--text-secondary); 
             margin-top: 4px; 
             font-weight: 600; 
-            letter-spacing: 0.3px;
+            letter-spacing: 0.5px;
             max-width: 180px; 
             line-height: 1.2;
-            text-transform: uppercase; /* Принудительно капсом */
+            text-transform: uppercase; /* Принудительный капс для слогана */
         }
 
         .status-badge { font-family: var(--font-body); font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; transition: 0.3s; white-space: nowrap; margin-left: 10px;}
@@ -61,13 +58,13 @@
         
         .nav-scroller { overflow-x: auto; white-space: nowrap; padding: 5px 15px 15px 15px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .nav-scroller::-webkit-scrollbar { display: none; }
-        .nav-btn { display: inline-block; padding: 8px 16px; margin-right: 8px; background: #fff; border-radius: 20px; font-size: 14px; font-weight: 500; color: var(--text-secondary); text-decoration: none; border: 1px solid #eee; transition: 0.2s; font-family: var(--font-brand); letter-spacing: 0.5px; }
+        
+        /* Кнопки навигации - шрифт бренда */
+        .nav-btn { display: inline-block; padding: 8px 16px; margin-right: 8px; background: #fff; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--text-secondary); text-decoration: none; border: 1px solid #eee; transition: 0.2s; font-family: var(--font-brand); letter-spacing: 0.5px; }
         .nav-btn.active { background: #000000; color: var(--primary-color); border-color: #000000; }
 
         .category-section { margin-bottom: 20px; scroll-margin-top: 140px; }
-        
-        /* ЗАГОЛОВКИ КАТЕГОРИЙ */
-        .category-title { padding: 15px 15px 5px 15px; font-family: var(--font-brand); font-size: 24px; color: var(--text-main); letter-spacing: 0.5px; }
+        .category-title { padding: 15px 15px 5px 15px; font-family: var(--font-brand); font-size: 24px; color: var(--text-main); letter-spacing: 0.5px; text-transform: uppercase; }
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         
@@ -80,8 +77,7 @@
         .card.unavailable { opacity: 0.6; background-color: #f9fafb; pointer-events: none; }
         .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
         
-        /* БЕЙДЖИ */
-        .card-badge { position: absolute; top: 8px; right: 8px; background: var(--primary-color); color: var(--primary-text); font-size: 12px; font-weight: 500; padding: 3px 8px; border-radius: 8px; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-family: var(--font-brand); letter-spacing: 0.5px; }
+        .card-badge { position: absolute; top: 8px; right: 8px; background: var(--primary-color); color: var(--primary-text); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-transform: uppercase; font-family: var(--font-brand); letter-spacing: 0.5px; }
         .badge-hot { background: #ef4444; color: white; }
         .badge-new { background: #3b82f6; color: white; }
         .badge-green { background: var(--primary-color); color: black; }
@@ -89,19 +85,22 @@
         .badge-purple { background: #8b5cf6; color: white; }
         .badge-ice { background: #3b82f6; color: white; }
         
-        /* НАЗВАНИЕ ТОВАРА */
-        .card h3 { margin: 0 0 5px 0; font-family: var(--font-brand); font-size: 18px; font-weight: 400; line-height: 1.1; letter-spacing: 0.3px; }
+        /* НАЗВАНИЕ ТОВАРА - ШРИФТ БРЕНДА */
+        .card h3 { margin: 0 0 5px 0; font-family: var(--font-brand); font-size: 16px; font-weight: 400; line-height: 1.2; letter-spacing: 0.5px; text-transform: uppercase; }
+        
         .card .desc { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; font-family: var(--font-body); }
         .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
-        .price { font-weight: 700; font-size: 16px; color: var(--text-main); font-family: var(--font-body); }
-        .add-btn { background-color: var(--primary-color); color: var(--primary-text); border: none; border-radius: 8px; padding: 6px 12px; font-weight: 500; font-size: 14px; pointer-events: none; font-family: var(--font-brand); letter-spacing: 0.5px; }
+        .price { font-weight: 700; font-size: 15px; color: var(--text-main); font-family: var(--font-body); }
+        
+        /* КНОПКА - ШРИФТ БРЕНДА */
+        .add-btn { background-color: var(--primary-color); color: var(--primary-text); border: none; border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 12px; pointer-events: none; font-family: var(--font-brand); letter-spacing: 0.5px; text-transform: uppercase; }
         .add-btn:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
 
         /* ЗАГРУЗКА */
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction: column; text-align: center;}
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px;}
-        .loading-title { font-family: var(--font-brand); font-size: 28px; margin-bottom: 5px; }
-        .loading-motto { font-size: 12px; color: #666; font-style: italic; font-family: var(--font-body); text-transform: uppercase;}
+        .loading-title { font-family: var(--font-brand); font-size: 24px; margin-bottom: 5px; text-transform: uppercase; }
+        .loading-motto { font-size: 12px; color: #666; font-style: italic; font-family: var(--font-body); text-transform: uppercase; }
 
         /* Модалки */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: flex-end; justify-content: center; }
@@ -109,8 +108,8 @@
         .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .modal-title-block { flex: 1; }
         
-        /* ЗАГОЛОВОК МОДАЛКИ */
-        .modal-title { font-family: var(--font-brand); font-size: 22px; font-weight: 400; letter-spacing: 0.5px; line-height: 1.1; }
+        /* ЗАГОЛОВОК МОДАЛКИ - БРЕНД */
+        .modal-title { font-family: var(--font-brand); font-size: 20px; font-weight: 400; letter-spacing: 0.5px; line-height: 1.2; text-transform: uppercase; }
         
         .modal-desc { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.5; font-family: var(--font-body); }
         .close-icon { font-size: 24px; cursor: pointer; color: #888; padding: 0 0 10px 10px; }
@@ -121,7 +120,7 @@
         .option-group { margin-bottom: 15px; position: relative; z-index: 1; }
         .option-label { font-weight: 700; margin-bottom: 8px; display: block; font-size: 14px; color: #444; font-family: var(--font-body); }
         
-        /* Обычные радио кнопки (в товаре) */
+        /* Радио кнопки */
         .radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
         .radio-label { display: flex; align-items: center; justify-content: flex-start; padding: 8px 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; color: #374151; transition: all 0.2s; min-height: 42px; width: 100%; box-sizing: border-box; position: relative; font-family: var(--font-body); }
         .radio-label::before { content: ''; display: inline-block; width: 16px; height: 16px; border: 2px solid #d1d5db; border-radius: 50%; margin-right: 10px; box-sizing: border-box; flex-shrink: 0; transition: 0.2s; }
@@ -129,7 +128,7 @@
         .radio-input:checked + .radio-label { background-color: #f0fdf4; border-color: var(--primary-color); color: #000; box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15); }
         .radio-input:checked + .radio-label::before { border-color: var(--primary-color); background-color: var(--primary-color); box-shadow: inset 0 0 0 3px #fff; }
 
-        /* --- ИЗОЛИРОВАННЫЕ СТИЛИ ДЛЯ КОРЗИНЫ --- */
+        /* КОРЗИНА СТИЛИ */
         .checkout-radio-group { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; width: 100% !important; }
         .checkout-radio-label { display: flex !important; align-items: center !important; justify-content: flex-start !important; padding: 10px 12px !important; background: #fff !important; border: 1px solid #e5e7eb !important; border-radius: 10px !important; cursor: pointer !important; font-size: 14px !important; font-weight: 500 !important; color: #374151 !important; transition: all 0.2s !important; min-height: 44px !important; width: 100% !important; box-sizing: border-box !important; position: relative !important; font-family: var(--font-body) !important; }
         .checkout-radio-label::before { content: '' !important; display: inline-block !important; width: 16px !important; height: 16px !important; border: 2px solid #9ca3af !important; border-radius: 50% !important; margin-right: 10px !important; box-sizing: border-box !important; flex-shrink: 0 !important; transition: 0.2s !important; }
@@ -149,12 +148,15 @@
         .modal-footer { margin-top: 20px; display: flex; gap: 10px; }
         .modal-add-btn { background: var(--primary-color); color: var(--primary-text); width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; font-family: var(--font-body); }
         .modal-add-btn:disabled { background: #ccc; cursor: not-allowed; }
-        .main-btn { position: fixed; bottom: 15px; left: 15px; right: 15px; background: #000000; color: var(--primary-color); padding: 16px; border-radius: 14px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: none; z-index: 900; font-family: var(--font-body); }
+        
+        /* КНОПКА КОРЗИНЫ - БРЕНД */
+        .main-btn { position: fixed; bottom: 15px; left: 15px; right: 15px; background: #000000; color: var(--primary-color); padding: 16px; border-radius: 14px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: none; z-index: 900; font-family: var(--font-brand); letter-spacing: 0.5px; text-transform: uppercase; }
+        
         .cart-item { background: #fff; border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .cart-item-info { flex: 1; }
         
-        /* ТОВАР В КОРЗИНЕ */
-        .cart-item-title { font-family: var(--font-brand); font-size: 14px; margin-bottom: 2px; letter-spacing: 0.5px; }
+        /* ТОВАР В КОРЗИНЕ - БРЕНД */
+        .cart-item-title { font-family: var(--font-brand); font-size: 14px; margin-bottom: 2px; text-transform: uppercase !important; letter-spacing: 0.5px; }
         
         .cart-item-opts { font-size: 11px; color: #666; }
         .cart-item-price { font-weight: bold; margin: 0 10px; font-size: 14px; }
@@ -174,9 +176,9 @@
         .upsell-yes { background: #FFD54F; color: #3e2723; padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; flex: 1;}
         .upsell-no { background: #f3f4f6; color: #666; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; flex: 1;}
         
-        /* ЗАГОЛОВКИ UPSELL */
-        .upsell-title { font-family: var(--font-brand); margin: 0 0 10px 0; letter-spacing: 0.5px; }
-        .upsell-product { font-family: var(--font-brand); font-weight: bold; margin-bottom: 5px; letter-spacing: 0.5px; }
+        /* ЗАГОЛОВКИ UPSELL - БРЕНД */
+        .upsell-title { font-family: var(--font-brand); margin: 0 0 10px 0; text-transform: uppercase !important; letter-spacing: 0.5px; }
+        .upsell-product { font-family: var(--font-brand); font-weight: bold; margin-bottom: 5px; text-transform: uppercase !important; letter-spacing: 0.5px; }
 
         @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
         @keyframes shimmer{0%{background-position:-468px 0}100%{background-position:468px 0}}
@@ -220,7 +222,8 @@
     <div id="cart-list-container"></div>
     <div class="checkout-total" id="checkout-total-sum">Итого: 0 ₸</div>
     <div style="margin-top: 20px; border-top: 5px solid #f3f4f6; margin-left: -20px; margin-right: -20px;"></div>
-    <h3 style="margin: 15px 0 10px 0; font-size: 16px; font-family: var(--font-brand); letter-spacing: 0.5px; ">ОФОРМЛЕНИЕ</h3>
+    
+    <h3 style="margin: 15px 0 10px 0; font-size: 16px; font-family: var(--font-brand); letter-spacing: 0.5px; text-transform: uppercase;">ОФОРМЛЕНИЕ</h3>
     
     <div class="option-group"><label class="option-label">Ваши контакты</label>
         <input type="text" id="client-name" placeholder="Ваше имя">
@@ -397,7 +400,7 @@
                     let pid = getVal(item, ['id', 'Идентификатор']).trim();
                     if (!pid || pid.toUpperCase() === 'SETTINGS') return null;
                     
-                    // ЖЕСТКО ПЕРЕВОДИМ В ВЕРХНИЙ РЕГИСТР ПРЯМО ЗДЕСЬ
+                    // --- ПРИНУДИТЕЛЬНЫЙ ПЕРЕВОД В ЗАГЛАВНЫЕ БУКВЫ (JS) ---
                     let cat = (getVal(item, ['category', 'Категория']).trim() || "Прочее").toUpperCase();
                     let name = getVal(item, ['name', 'Название']).trim().toUpperCase();
                     
@@ -515,7 +518,8 @@
     function renderNav() {
         const navContainer = document.getElementById('nav-container');
         const uniqueCats = [...new Set(menuData.map(p => p.cat))];
-        // Сортировка по оригинальному массиву, приведенному к upperCase
+        
+        // Сортировка по массиву, переведенному в UPPERCASE
         const CATEGORY_ORDER_UPPER = CATEGORY_ORDER.map(c => c.toUpperCase());
         
         const sortedCats = uniqueCats.sort((a, b) => {
@@ -525,7 +529,7 @@
         navContainer.innerHTML = '';
         sortedCats.forEach(cat => {
             const btn = document.createElement('a'); btn.className = 'nav-btn'; 
-            btn.innerText = cat; // УЖЕ В UPPERCASE
+            btn.innerText = cat; // УЖЕ UPPERCASE
             btn.href = `#cat-${cat.replace(/\s+/g, '-')}`;
             btn.onclick = (e) => { e.preventDefault(); const section = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`); if(section) { const y = section.getBoundingClientRect().top + window.scrollY - 140; window.scrollTo({top: y, behavior: 'smooth'}); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } };
             navContainer.appendChild(btn);
@@ -562,7 +566,7 @@
                 const itemImage = p.img ? p.img : getImageByCategory(p.cat);
                 const badgeHtml = isOutOfStock ? `<div class="unavailable-badge">Закончилось</div>` : '';
                 
-                // --- ЛОГИКА БЕЙДЖЕЙ (ЦВЕТНЫЕ) ---
+                // --- ЛОГИКА БЕЙДЖЕЙ ---
                 let cardBadgeHtml = '';
                 if (p.badge && !isOutOfStock) {
                     let bClass = 'card-badge';
@@ -594,7 +598,7 @@
     function goToCategory(catName) {
         const navBtns = document.querySelectorAll('.nav-btn');
         for (let btn of navBtns) {
-            if (btn.innerText.includes(catName)) { btn.click(); return; }
+            if (btn.innerText.includes(catName.toUpperCase())) { btn.click(); return; }
         }
     }
 
