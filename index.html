@@ -480,7 +480,6 @@ select:focus {
                     alert("Ошибка: Таблица пустая."); loadingScreen.style.display = 'none'; return;
                 }
 
-                // 1. ПАРСИМ НАСТРОЙКИ
                 const settingsRow = results.data.find(row => {
                     const id = getVal(row, ['id', 'Идентификатор']);
                     return id && id.toUpperCase() === 'SETTINGS';
@@ -507,18 +506,15 @@ select:focus {
                     });
                 }
 
-                // Добавляем "Нет" в списки
                 if (SYRUPS[0] !== "Нет") SYRUPS.unshift("Нет");
                 if (SAUCES[0] !== "Нет") SAUCES.unshift("Нет");
 
-                // 2. ПАРСИМ ТОВАРЫ
                 let rawData = results.data.map(item => {
                     let pid = getVal(item, ['id', 'Идентификатор']).trim();
                     if (!pid || pid.toUpperCase() === 'SETTINGS') return null;
                     
-                    // УБРАЛИ ПРИНУДИТЕЛЬНЫЙ UPPERCASE В JS, ТЕПЕРЬ КАК В ТАБЛИЦЕ
-                    let cat = getVal(item, ['category', 'Категория']).trim() || "Прочее";
-                    let name = getVal(item, ['name', 'Название']).trim();
+                    let cat = (getVal(item, ['category', 'Категория']).trim() || "Прочее").toUpperCase();
+                    let name = getVal(item, ['name', 'Название']).trim().toUpperCase();
                     
                     let priceVal = getVal(item, ['price', 'Цена']);
                     let desc = getVal(item, ['description', 'Короткое описание']).trim();
@@ -536,31 +532,34 @@ select:focus {
                     let isPopular = (String(popularVal).trim().toLowerCase() === 'true' || String(popularVal).trim().toLowerCase() === 'да');
                     let cleanPrice = parsePrice(priceVal);
                     
-                    // Парсим модификаторы
                     let mods = {};
                     if (modsStr) {
                         modsStr.split(/[,;]/).forEach(m => {
                             let [k, p] = m.split('=');
                             if (k) {
                                 k = k.trim();
-                                let val = p ? parsePrice(p) : (PRICES[k] || PRICES['add_'+k] || 0);
-                                if (!p && k==='alt_milk') val = PRICES.alt_milk;
-                                if (!p && k==='shot') val = PRICES.shot;
-                                if (!p && k==='syrup') val = PRICES.syrup;
-                                if (!p && k==='sauce') val = PRICES.sauce_paid;
-                                if (!p && k==='egg') val = PRICES.breakfast_add_egg;
-                                if (!p && k==='milk') val = PRICES.add_milk;
-                                if (!p && k==='cream') val = PRICES.add_cream;
-                                if (!p && k==='honey') val = PRICES.add_honey;
-                                if (!p && k==='lemon') val = PRICES.add_lemon;
-                                if (!p && k==='cinnamon') val = PRICES.cinnamon;
-                                
-                                mods[k] = val;
+                                // ОБРАБОТКА МУЛЬТИ-ЦЕН (200|300)
+                                if (k === 'alt_milk' && p && p.includes('|')) {
+                                    mods[k] = p.split('|').map(val => parsePrice(val));
+                                } else {
+                                    let val = p ? parsePrice(p) : (PRICES[k] || PRICES['add_'+k] || 0);
+                                    if (!p && k==='alt_milk') val = PRICES.alt_milk;
+                                    if (!p && k==='shot') val = PRICES.shot;
+                                    if (!p && k==='syrup') val = PRICES.syrup;
+                                    if (!p && k==='sauce') val = PRICES.sauce_paid;
+                                    if (!p && k==='egg') val = PRICES.breakfast_add_egg;
+                                    if (!p && k==='milk') val = PRICES.add_milk;
+                                    if (!p && k==='cream') val = PRICES.add_cream;
+                                    if (!p && k==='honey') val = PRICES.add_honey;
+                                    if (!p && k==='lemon') val = PRICES.add_lemon;
+                                    if (!p && k==='cinnamon') val = PRICES.cinnamon;
+                                    mods[k] = val;
+                                }
                             }
                         });
                     }
 
-                    if (cat.toLowerCase().includes('лимонад')) cat = 'Холодные напитки';
+                    if (cat.toLowerCase().includes('лимонад')) cat = 'ХОЛОДНЫЕ НАПИТКИ';
                     
                     let product = {
                         id: pid, cat: cat, name: name, desc: desc, fullDesc: fullDesc, 
@@ -571,7 +570,6 @@ select:focus {
                         volumes: [], mods: mods
                     };
 
-                    // Объемы
                     if (volumeStr && volumeStr.includes('=')) {
                         product.type = 'complex';
                         product.hasVolumes = true;
@@ -588,7 +586,7 @@ select:focus {
 
                 let popularItems = [];
                 rawData.forEach(p => {
-                    if (p.popular) { let clone = {...p}; clone.cat = "Популярное"; popularItems.push(clone); }
+                    if (p.popular) { let clone = {...p}; clone.cat = "ПОПУЛЯРНОЕ"; popularItems.push(clone); }
                 });
                 menuData = [...popularItems, ...rawData];
 
@@ -603,7 +601,7 @@ select:focus {
     function checkWorkingHours() {
         const now = new Date();
         const hour = now.getHours();
-        const isOpen = hour >= 9 && hour < 23; // с 9:00 до 23:00
+        const isOpen = hour >= 9 && hour < 23;
         
         const badge = document.getElementById('work-status');
         if(isOpen) {
@@ -619,7 +617,7 @@ select:focus {
     }
     function isPizzaAvailable() { 
         const hour = new Date().getHours();
-        return hour >= 11; // Пицца доступна с 11
+        return hour >= 11; 
     }
 
     function filterMenu() {
@@ -634,13 +632,18 @@ select:focus {
     function renderNav() {
         const navContainer = document.getElementById('nav-container');
         const uniqueCats = [...new Set(menuData.map(p => p.cat))];
+        
+        const CATEGORY_ORDER_UPPER = CATEGORY_ORDER.map(c => c.toUpperCase());
+        
         const sortedCats = uniqueCats.sort((a, b) => {
-            const idxA = CATEGORY_ORDER.indexOf(a); const idxB = CATEGORY_ORDER.indexOf(b);
+            const idxA = CATEGORY_ORDER_UPPER.indexOf(a); const idxB = CATEGORY_ORDER_UPPER.indexOf(b);
             return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
         });
         navContainer.innerHTML = '';
         sortedCats.forEach(cat => {
-            const btn = document.createElement('a'); btn.className = 'nav-btn'; btn.innerText = cat; btn.href = `#cat-${cat.replace(/\s+/g, '-')}`;
+            const btn = document.createElement('a'); btn.className = 'nav-btn'; 
+            btn.innerText = cat; 
+            btn.href = `#cat-${cat.replace(/\s+/g, '-')}`;
             btn.onclick = (e) => { e.preventDefault(); const section = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`); if(section) { const y = section.getBoundingClientRect().top + window.scrollY - 140; window.scrollTo({top: y, behavior: 'smooth'}); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } };
             navContainer.appendChild(btn);
         });
@@ -652,20 +655,22 @@ select:focus {
         renderNav(); checkWorkingHours();
         
         const uniqueCats = [...new Set(menuData.map(p => p.cat))];
+        const CATEGORY_ORDER_UPPER = CATEGORY_ORDER.map(c => c.toUpperCase());
         const sortedCats = uniqueCats.sort((a, b) => {
-            const idxA = CATEGORY_ORDER.indexOf(a); const idxB = CATEGORY_ORDER.indexOf(b);
+            const idxA = CATEGORY_ORDER_UPPER.indexOf(a); const idxB = CATEGORY_ORDER_UPPER.indexOf(b);
             return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
         });
         app.innerHTML = '';
 
         sortedCats.forEach(cat => {
-            const section = document.createElement('div'); section.className = 'category-section'; section.id = `cat-${cat.replace(/\s+/g, '-')}`; section.innerHTML = `<div class="category-title">${cat}</div>`;
+            const section = document.createElement('div'); section.className = 'category-section'; section.id = `cat-${cat.replace(/\s+/g, '-')}`; 
+            section.innerHTML = `<div class="category-title">${cat}</div>`; 
             const grid = document.createElement('div'); grid.className = 'grid';
             
             menuData.filter(p => p.cat === cat).forEach((p, index) => {
                 const card = document.createElement('div'); card.className = 'card'; card.style.animationDelay = `${index * 0.05}s`;
                 let isOutOfStock = !p.available; let isDisabled = isOutOfStock; let btnText = "ВЫБРАТЬ";
-                if (isOutOfStock) { btnText = "Будет позже"; card.classList.add('unavailable'); }
+                if (isOutOfStock) { btnText = "НЕТ В НАЛИЧИИ"; card.classList.add('unavailable'); }
                 
                 let displayPrice = 0;
                 if (p.hasVolumes && p.volumes.length > 0) displayPrice = `от ${p.volumes[0].p}`;
@@ -674,7 +679,6 @@ select:focus {
                 const itemImage = p.img ? p.img : getImageByCategory(p.cat);
                 const badgeHtml = isOutOfStock ? `<div class="unavailable-badge">Закончилось</div>` : '';
                 
-                // --- ЛОГИКА БЕЙДЖЕЙ (ЦВЕТНЫЕ) ---
                 let cardBadgeHtml = '';
                 if (p.badge && !isOutOfStock) {
                     let bClass = 'card-badge';
@@ -688,7 +692,6 @@ select:focus {
                     cardBadgeHtml = `<div class="${bClass}">${p.badge}</div>`;
                 }
                 
-                // ВАЖНО: onclick теперь на самой карточке
                 card.onclick = () => handleItemClick(p.id);
                 
                 card.innerHTML = `<div class="card-img-container"><img src="${itemImage}" alt="${p.name}" loading="lazy" onload="this.classList.add('loaded')">${badgeHtml}${cardBadgeHtml}</div><h3>${p.name}</h3>${p.desc ? `<div class="desc">${p.desc}</div>` : ''}<div class="price-row"><div class="price">${displayPrice} ₸</div><button class="add-btn" ${isDisabled ? 'disabled' : ''}>${btnText}</button></div>`;
@@ -707,7 +710,7 @@ select:focus {
     function goToCategory(catName) {
         const navBtns = document.querySelectorAll('.nav-btn');
         for (let btn of navBtns) {
-            if (btn.innerText.includes(catName)) { btn.click(); return; }
+            if (btn.innerText.includes(catName.toUpperCase())) { btn.click(); return; }
         }
     }
 
@@ -754,14 +757,13 @@ select:focus {
         
         let html = `<div class="modal-header"><div class="modal-title-block">
                         ${imgHtml}
-                        <div class="modal-title">${product.name}</div>
-                        <div class="modal-desc">${product.fullDesc || product.desc || ""}</div>
+                        <div class="modal-title">${product.name}</div> <div class="modal-desc">${product.fullDesc || product.desc || ""}</div>
                     </div><div class="close-icon" onclick="closeProductModal(true)">✕</div></div>`;
         
         // 1. Порция
         if (product.hasVolumes && product.volumes.length > 0) {
             html += `<div class="option-group"><label class="option-label">Порция</label><div class="radio-group">`;
-            product.volumes.forEach((v, i) => { html += `<input type="radio" name="vol" id="v${i}" value="${i}" class="radio-input" ${i===0?'checked':''} onchange="recalcPrice()"><label for="v${i}" class="radio-label">${v.n}<br>${v.p} ₸</label>`; });
+            product.volumes.forEach((v, i) => { html += `<input type="radio" name="vol" id="v${i}" value="${i}" class="radio-input" ${i===0?'checked':''} onchange="recalcPrice()"><label for="v${i}" class="radio-label">${v.n}<br>${v.p}₸</label>`; });
             html += `</div></div>`;
         } else if (product.fixedVolume) { html += `<div class="option-group"><label class="option-label">Объем: ${product.fixedVolume}</label></div>`; }
 
@@ -770,7 +772,7 @@ select:focus {
             html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group">
                 <input type="radio" name="milk" id="m1" value="std" class="radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label">Обычное</label>
                 <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label">Безлакт.<br>+${PRICES.milk_lf_price || 0}</label>
-                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label">Альтерн.<br>+${PRICES.alt_milk}</label>
+                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label">Альтерн.</label>
             </div>
             <div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
             ALT_MILKS.forEach(m => html += `<option value="${m}">${m}</option>`);
@@ -838,7 +840,21 @@ select:focus {
 
         if(prod.hasMilk) {
             const el = document.querySelector('input[name="milk"]:checked');
-            if(el && el.value === 'alt') p += PRICES.alt_milk;
+            if(el && el.value === 'alt') {
+                // --- ИСПРАВЛЕНА ЛОГИКА ДЛЯ МУЛЬТИ-ЦЕН (200|300) ---
+                let milkPrice = PRICES.alt_milk; // По умолчанию
+                
+                if (prod.mods && prod.mods.alt_milk) {
+                    if (Array.isArray(prod.mods.alt_milk)) {
+                        const volEl = document.querySelector('input[name="vol"]:checked');
+                        const volIndex = volEl ? parseInt(volEl.value) : 0;
+                        milkPrice = prod.mods.alt_milk[volIndex] !== undefined ? prod.mods.alt_milk[volIndex] : prod.mods.alt_milk[0];
+                    } else {
+                        milkPrice = prod.mods.alt_milk;
+                    }
+                }
+                p += milkPrice;
+            }
         }
         
         const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
@@ -912,7 +928,7 @@ select:focus {
 
     function closeProductModal(force) { if (force === true) { document.getElementById('product-modal').style.display = 'none'; return; } const e = force; if (e && e.target.id === 'product-modal') document.getElementById('product-modal').style.display = 'none'; }
     function updateCartButton() { const btn = document.getElementById('cart-btn'); if (cart.length > 0) { const total = cart.reduce((s, i) => s + i.price, 0); btn.style.display = 'block'; btn.innerText = `Оформить заказ: ${total} ₸`; } else btn.style.display = 'none'; }
-    function renderCartItems() { const c = document.getElementById('cart-list-container'); c.innerHTML = ''; cart.forEach((item, i) => { const vOpts = item.options ? item.options.filter(o=>o&&o!=="Без сахара").join(', ') : ''; c.innerHTML += `<div class="cart-item"><div class="cart-item-info"><div class="cart-item-title">${item.name}</div><div class="cart-item-opts">${vOpts}</div></div><div class="cart-item-price">${item.price}</div><div class="cart-del-btn" onclick="removeFromCart(${i})">✕</div></div>`; }); }
+    function renderCartItems() { const c = document.getElementById('cart-list-container'); c.innerHTML = ''; cart.forEach((item, i) => { const vOpts = item.options ? item.options.filter(o=>o&&o!=="Без сахара").join(', ') : ''; c.innerHTML += `<div class="cart-item"><div class="cart-item-info"><div class="cart-item-title">${item.name.toUpperCase()}</div><div class="cart-item-opts">${vOpts}</div></div><div class="cart-item-price">${item.price}</div><div class="cart-del-btn" onclick="removeFromCart(${i})">✕</div></div>`; }); }
     function removeFromCart(i) { cart.splice(i, 1); renderCartItems(); updateCartButton(); calculateCheckoutTotal(); }
     
     // Открытие корзины + Проверка времени
@@ -984,6 +1000,7 @@ select:focus {
 </script>
 </body>
 </html>
+
 
 
 
