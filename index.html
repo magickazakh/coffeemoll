@@ -104,24 +104,29 @@
         
         .card .desc { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; font-family: var(--font-body); }
         .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
-        .price { font-weight: 700; font-size: 16px; color: var(--text-main); font-family: var(--font-body); }
+        .price { 
+    font-weight: 700; 
+    font-size: 14px; /* Чуть уменьшили шрифт (было 15-16px) */
+    color: var(--text-main); 
+    font-family: var(--font-body); 
+    white-space: nowrap; /* ВАЖНО: Запрещает перенос на вторую строку */
+}
         
         /* КНОПКА */
         .add-btn { 
-            background-color: var(--primary-color); 
-            color: var(--primary-text); 
-            border: none; 
-            border-radius: 8px; 
-            padding: 5px 8px; /* Уменьшены отступы */
-            font-weight: 500; 
-            font-size: 11px;  /* Уменьшен шрифт */
-            pointer-events: none; 
-            font-family: var(--font-brand); 
-            letter-spacing: 1px; 
-            text-transform: uppercase;
-            min-width: 60px; /* Мин ширина для красоты */
-            text-align: center;
-        }
+    background-color: var(--primary-color); 
+    color: var(--primary-text); 
+    border: none; 
+    border-radius: 6px; /* Чуть меньше радиус */
+    padding: 4px 8px;   /* Уменьшили внутренние отступы */
+    font-weight: 600; 
+    font-size: 10px;    /* Уменьшили шрифт */
+    pointer-events: none; 
+    font-family: var(--font-brand); 
+    letter-spacing: 0.5px; 
+    text-transform: uppercase !important; 
+    min-width: auto;    /* Убираем лишнюю ширину */
+}
         .add-btn:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
 
         /* ЗАГРУЗКА */
@@ -158,7 +163,7 @@
         }
         
         .modal-img-wrapper { width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin-bottom: 15px; background: #f9fafb; display: flex; align-items: center; justify-content: center; }
-        .modal-img { width: 100%; height: 100%; object-fit: cover; }
+        .modal-img { width: 100%; height: 100%; object-fit: contain; }
 
         .option-group { margin-bottom: 15px; position: relative; z-index: 1; }
         .option-label { font-weight: 700; margin-bottom: 8px; display: block; font-size: 14px; color: #444; font-family: var(--font-body); }
@@ -909,6 +914,7 @@
 </script>
 </body>
 </html>
+
 
 
 
