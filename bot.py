@@ -187,8 +187,9 @@ async def web_app_data_handler(message: types.Message):
             if promo_status == "OK":
                 # ВСЁ ОТЛИЧНО
                 try:
-                    original_price = int(total / (1 - discount_rate))
-                    discount_amount = original_price - total
+                    # ИСПОЛЬЗУЕМ ROUND ВМЕСТО INT ДЛЯ ОКРУГЛЕНИЯ
+                    original_price = round(total / (1 - discount_rate))
+                    discount_amount = int(original_price - total)
                     discount_text_for_admin = f"\n🎁 <b>Промокод:</b> {promo_code} (-{discount_amount} ₸)"
                 except:
                     discount_text_for_admin = f"\n🎁 <b>Промокод:</b> {promo_code}"
@@ -389,5 +390,6 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Бот остановлен.")
+
 
 
