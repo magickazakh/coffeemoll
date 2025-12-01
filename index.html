@@ -55,6 +55,7 @@
             .repeat-card { background: #333 !important; border-color: #444 !important; }
             /* Стиль кнопки "Нет, спасибо" в upsell для темной темы */
             .upsell-no { background: #444 !important; color: #ccc !important; }
+            .reviews-btn { background: #333 !important; border-color: #444 !important; color: #fff !important; }
         }
 
         /* --- БАЗОВЫЕ СТИЛИ --- */
@@ -72,13 +73,54 @@
         .motto { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-weight: 600; max-width: 180px; line-height: 1.2; }
 
         .status-badge { font-family: var(--font-body); font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; transition: 0.3s; white-space: nowrap; margin-left: 10px;}
+
+        /* КНОПКА ОТЗЫВОВ */
+        .reviews-btn { 
+            width: 32px; height: 32px; 
+            border-radius: 50%; 
+            background: white; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 16px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            cursor: pointer; 
+            border: 1px solid var(--border-color);
+            margin-left: 8px;
+        }
         
-        .search-wrapper { padding: 0 15px 10px 15px; }
+        /* ЗВЕЗДЫ РЕЙТИНГА */
+        .star-rating { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
+        .star { font-size: 36px; color: #ddd; cursor: pointer; transition: 0.2s; }
+        .star.active { color: #FFC107; transform: scale(1.1); }
+        
+        /* ПОИСК И ПОВТОР ЗАКАЗА (АНИМАЦИЯ СКРЫТИЯ) */
+        .search-wrapper { 
+            padding: 0 15px 10px 15px; 
+            transition: all 0.3s ease-in-out;
+            max-height: 60px;
+            opacity: 1;
+        }
+        #repeat-order-container { 
+            padding: 0 15px 10px 15px; 
+            display: none; 
+            transition: all 0.3s ease-in-out;
+            max-height: 100px;
+            opacity: 1;
+        }
+
+        /* КЛАСС ДЛЯ СКРЫТИЯ ЭЛЕМЕНТОВ ПРИ СКРОЛЛЕ */
+        .header-container.mini-header .search-wrapper,
+        .header-container.mini-header #repeat-order-container {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+
         #search-input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; transition: 0.2s; margin: 0; box-sizing: border-box; font-family: var(--font-body); }
         #search-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(136, 209, 0, 0.1); }
         
-        /* 2. СТИЛИ ДЛЯ КНОПКИ ПОВТОРА */
-        #repeat-order-container { padding: 0 15px 10px 15px; display: none; }
         .repeat-card {
             background: #fff;
             border: 1px solid var(--primary-color);
@@ -139,7 +181,24 @@
         .card.unavailable { opacity: 0.6; pointer-events: none; }
         .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
         
-        .fav-btn { position: absolute; top: 8px; left: 8px; z-index: 25; font-size: 18px; color: #ccc; transition: 0.2s; background: rgba(255,255,255,0.8); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+        /* 9. ИЗБРАННОЕ - ИКОНКА (УЛУЧШЕННЫЙ КОНТРАСТ) */
+        .fav-btn { 
+            position: absolute; 
+            top: 8px; 
+            left: 8px; 
+            z-index: 25; 
+            font-size: 18px; 
+            color: #9ca3af; /* Серый цвет */
+            transition: 0.2s; 
+            background: rgba(255,255,255,0.95); /* Более непрозрачный фон */
+            border-radius: 50%; 
+            width: 28px; /* Чуть больше */
+            height: 28px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2); /* Тень для контраста */
+        }
         .fav-btn.active { color: #ef4444; }
 
         .card-badge { position: absolute; top: 8px; right: 8px; background: var(--primary-color); color: var(--primary-text); font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-family: var(--font-title); letter-spacing: 0.5px; }
@@ -285,7 +344,10 @@
             <div class="separator-line"></div>
             <div class="motto">Кофейня с неприлично вкусным кофе</div>
         </div>
-        <div id="work-status" class="status-badge">Checking...</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div id="work-status" class="status-badge">Checking...</div>
+            <div class="reviews-btn" onclick="openReviewModal()">💬</div>
+        </div>
     </header>
     <div class="search-wrapper">
         <input type="text" id="search-input" placeholder="🔍 Найти..." oninput="filterMenu()">
@@ -324,6 +386,27 @@
 </div>
 
 <div class="modal-overlay" id="product-modal" onclick="closeProductModal(event)"><div class="modal-content" id="product-modal-content"></div></div>
+
+<!-- МОДАЛКА ОТЗЫВОВ -->
+<div class="modal-overlay" id="review-modal" onclick="closeReviewModal(event)">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <div class="modal-title">ОТЗЫВ</div>
+            <div class="close-icon" onclick="closeReviewModal(true)">✕</div>
+        </div>
+        <div style="padding: 20px 0; text-align: center;">
+            <div class="star-rating">
+                <span class="star" onclick="setRate(1)">★</span>
+                <span class="star" onclick="setRate(2)">★</span>
+                <span class="star" onclick="setRate(3)">★</span>
+                <span class="star" onclick="setRate(4)">★</span>
+                <span class="star" onclick="setRate(5)">★</span>
+            </div>
+            <textarea id="review-text" placeholder="Напишите что-нибудь хорошее..." style="height: 100px; margin-bottom: 20px;"></textarea>
+            <button class="modal-add-btn" onclick="sendReview()">ОТПРАВИТЬ</button>
+        </div>
+    </div>
+</div>
 
 <div class="modal-overlay" id="checkout-modal"><div class="modal-content" id="checkout-content">
     <div class="modal-header"><div class="modal-title">ВАШ ЗАКАЗ</div><div class="close-icon" onclick="closeCheckout()">✕</div></div>
@@ -436,7 +519,8 @@
     const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL + "&t=" + cacheBuster);
     const GOOGLE_PROMO_URL = "https://corsproxy.io/?" + encodeURIComponent(PROMO_SHEET_URL + "&t=" + cacheBuster);
     
-    const CATEGORY_ORDER = ["Популярное", "Сезонное", "Кофе", "Чай", "Холодные напитки", "Молочные коктейли", "Завтраки", "Круассаны", "Хот-доги", "Салаты", "Пицца", "Пасты", "Закуски"];
+    // ИЗБРАННОЕ ТЕПЕРЬ ПЕРВЫМ В СПИСКЕ (ВИРТУАЛЬНАЯ КАТЕГОРИЯ)
+    const CATEGORY_ORDER = ["ИЗБРАННОЕ", "Популярное", "Сезонное", "Кофе", "Чай", "Холодные напитки", "Молочные коктейли", "Завтраки", "Круассаны", "Хот-доги", "Салаты", "Пицца", "Пасты", "Закуски"];
 
     let PRICES = { alt_milk: 400, add_milk: 50, add_cream: 50, add_honey: 100, add_lemon: 50, syrup: 0, shot: 300, hd_cheese: 150, hd_jalapeno: 150, hd_onion: 150, egg: 70, sauce: 150, cinnamon: 0 };
     let SYRUPS = ["Карамель", "Ваниль", "Орех"];
@@ -469,6 +553,7 @@
     let appliedPromoCode = ""; 
 
     let favorites = JSON.parse(localStorage.getItem('coffee_favorites')) || [];
+    let currentRating = 0;
 
     function toggleFavorite(e, id) {
         e.stopPropagation(); 
@@ -478,12 +563,49 @@
         else favorites.push(id);
         localStorage.setItem('coffee_favorites', JSON.stringify(favorites));
         
-        const btn = document.querySelector(`.fav-btn[data-id="${id}"]`);
-        if(btn) {
-            btn.classList.toggle('active');
-            btn.innerHTML = favorites.includes(id) ? '♥' : '♡';
-        }
+        // Re-render menu to update favorites section
+        renderMenu();
+        
         tg.HapticFeedback.impactOccurred('light');
+    }
+
+    // ФУНКЦИИ ОТЗЫВОВ
+    function openReviewModal() {
+        document.getElementById('review-modal').style.display = 'flex';
+        currentRating = 0;
+        setRate(0);
+        document.getElementById('review-text').value = '';
+    }
+    
+    function closeReviewModal(force) { 
+        if (force === true || (force && force.target.id === 'review-modal')) {
+            document.getElementById('review-modal').style.display = 'none'; 
+        }
+    }
+    
+    function setRate(n) {
+        currentRating = n;
+        const stars = document.querySelectorAll('.star');
+        stars.forEach((s, i) => {
+            if (i < n) s.classList.add('active');
+            else s.classList.remove('active');
+        });
+    }
+    
+    function sendReview() {
+        if (currentRating === 0) { alert("Пожалуйста, поставьте оценку"); return; }
+        const text = document.getElementById('review-text').value.trim();
+        
+        const data = {
+            type: 'review', // ВАЖНО: этот флаг ловит бот
+            rating: currentRating,
+            text: text,
+            name: tg.initDataUnsafe?.user?.first_name || "Аноним"
+        };
+        
+        tg.sendData(JSON.stringify(data));
+        closeReviewModal(true);
+        tg.close();
     }
 
     function applyPromo() {
@@ -537,15 +659,47 @@
 
     // Функция обновления высоты хедера для sticky элементов
     function updateHeaderHeight() {
-        const header = document.querySelector('.header-container');
-        if(header) {
-            document.documentElement.style.setProperty('--header-height', header.offsetHeight + 'px');
-        }
+        // Scroll hide logic:
+        let lastScrollTop = 0;
+        const headerEl = document.querySelector('.header-container');
+
+        window.addEventListener('scroll', () => {
+            const st = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (st > lastScrollTop && st > 50) {
+                 // Scroll Down
+                 headerEl.classList.add('mini-header');
+            } else if (st < lastScrollTop) {
+                 // Scroll Up
+                 headerEl.classList.remove('mini-header');
+            }
+            lastScrollTop = st <= 0 ? 0 : st;
+        });
+        
+        headerEl.addEventListener('transitionend', () => {
+             document.documentElement.style.setProperty('--header-height', headerEl.offsetHeight + 'px');
+        });
+        
+        // Initial set
+        document.documentElement.style.setProperty('--header-height', headerEl.offsetHeight + 'px');
+    }
+
+    // 2. ФУНКЦИЯ ПОДГОТОВКИ ДАННЫХ ДЛЯ ОТОБРАЖЕНИЯ (С ИЗБРАННЫМ)
+    function getDisplayData() {
+        const favIds = favorites;
+        // Создаем копии избранных товаров, меняя им категорию
+        const favItems = menuData
+            .filter(p => favIds.includes(String(p.id)))
+            .map(p => ({...p, cat: "ИЗБРАННОЕ"})); 
+        
+        // Возвращаем массив: Избранное + Все остальное
+        return [...favItems, ...menuData];
     }
 
     function initMenu() {
         // Проверяем сохраненный заказ при запуске
         checkRepeatOrder();
+        updateHeaderHeight();
 
         if (PROMO_SHEET_URL.includes("ИД_ЛИСТА")) {
              console.warn("Ссылка на промокоды не настроена");
@@ -662,7 +816,12 @@
 
                 document.getElementById('loading-screen').style.display = 'none';
                 renderMenu();
-                updateHeaderHeight(); // Обновляем высоту хедера после рендеринга
+                
+                // Force update header height after loading
+                setTimeout(() => {
+                     const headerEl = document.querySelector('.header-container');
+                     document.documentElement.style.setProperty('--header-height', headerEl.offsetHeight + 'px');
+                }, 100);
             },
             error: function(err) { console.error("CSV Error:", err); showErrorScreen(); }
         });
@@ -725,7 +884,11 @@
     function renderNav() {
         const navContainer = document.getElementById('nav-container');
         const dotsContainer = document.getElementById('nav-dots');
-        const uniqueCats = [...new Set(menuData.map(p => p.cat))];
+        
+        // ИСПОЛЬЗУЕМ ПОДГОТОВЛЕННЫЕ ДАННЫЕ (С ИЗБРАННЫМ)
+        const displayData = getDisplayData();
+        const uniqueCats = [...new Set(displayData.map(p => p.cat))];
+        
         const CATEGORY_ORDER_UPPER = CATEGORY_ORDER.map(c => c.toUpperCase());
         const sortedCats = uniqueCats.sort((a, b) => {
             const idxA = CATEGORY_ORDER_UPPER.indexOf(a); const idxB = CATEGORY_ORDER_UPPER.indexOf(b);
@@ -761,7 +924,9 @@
         const app = document.getElementById('app'); if (!app) return;
         renderNav(); checkWorkingHours();
         
-        const uniqueCats = [...new Set(menuData.map(p => p.cat))];
+        // ИСПОЛЬЗУЕМ ПОДГОТОВЛЕННЫЕ ДАННЫЕ (С ИЗБРАННЫМ)
+        const displayData = getDisplayData();
+        const uniqueCats = [...new Set(displayData.map(p => p.cat))];
         const CATEGORY_ORDER_UPPER = CATEGORY_ORDER.map(c => c.toUpperCase());
         const sortedCats = uniqueCats.sort((a, b) => {
             const idxA = CATEGORY_ORDER_UPPER.indexOf(a); const idxB = CATEGORY_ORDER_UPPER.indexOf(b);
@@ -774,7 +939,8 @@
             section.innerHTML = `<div class="category-title">${cat}</div>`;
             const grid = document.createElement('div'); grid.className = 'grid';
             
-            menuData.filter(p => p.cat === cat).forEach((p, index) => {
+            // Фильтруем из displayData, а не menuData
+            displayData.filter(p => p.cat === cat).forEach((p, index) => {
                 const card = document.createElement('div'); card.className = 'card'; card.style.animationDelay = `${index * 0.05}s`;
                 let isOutOfStock = !p.available; let isDisabled = isOutOfStock; let btnText = "ВЫБРАТЬ";
                 if (isOutOfStock) { btnText = "НЕТ В НАЛИЧИИ"; card.classList.add('unavailable'); }
@@ -783,7 +949,13 @@
                 if (p.hasVolumes && p.volumes.length > 0) displayPrice = `от ${p.volumes[0].p}`;
                 else displayPrice = p.price || p.basePrice;
                 
-                const itemImage = p.img ? p.img : getImageByCategory(p.cat);
+                // Картинка для Избранного (сердечко/звезда) или стандартная
+                let itemImage = p.img;
+                if (!itemImage) {
+                    if (cat === "ИЗБРАННОЕ") itemImage = "https://cdn-icons-png.flaticon.com/512/210/210545.png"; // Иконка избранного
+                    else itemImage = getImageByCategory(p.cat);
+                }
+                
                 const badgeHtml = isOutOfStock ? `<div class="unavailable-badge">Закончилось</div>` : '';
                 
                 let cardBadgeHtml = '';
