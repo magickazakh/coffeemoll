@@ -906,10 +906,11 @@
     function togglePayment() { const isCash = document.getElementById('p-cash').checked || document.getElementById('p-card').checked; document.getElementById('payment-phone-block').style.display = isCash ? 'none' : 'block'; }
     function toggleTimePicker() { const isTime = document.getElementById('t-time').checked; document.getElementById('time-picker-container').style.display = isTime ? 'block' : 'none'; }
     
-    function calculateCheckoutTotal() { 
+function calculateCheckoutTotal() { 
         let t = cart.reduce((s, i) => s + i.price, 0); 
         if(appliedDiscount > 0) {
-            const discountAmount = Math.floor(t * appliedDiscount);
+            // ИСПОЛЬЗУЕМ Math.round ВМЕСТО Math.floor
+            const discountAmount = Math.round(t * appliedDiscount);
             t = t - discountAmount;
             document.getElementById('checkout-total-sum').innerText = `Итого: ${t} ₸ (Скидка -${discountAmount})`;
         } else {
@@ -980,3 +981,4 @@
 </script>
 </body>
 </html>
+
