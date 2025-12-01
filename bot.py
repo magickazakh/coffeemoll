@@ -5,6 +5,11 @@ import sys
 import os
 from aiohttp import web
 
+# --- БИБЛИОТЕКИ ДЛЯ GOOGLE SHEETS ---
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+# ------------------------------------
+
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
@@ -18,6 +23,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 TOKEN = os.getenv("BOT_TOKEN", "8444027240:AAFEiACM5x-OPmR9CFgk1zyrmU24PgovyCY") 
 ADMIN_CHAT_ID = -1003356844624
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
+SHEET_NAME = "COFFEEMOLL TELEGRAM" # <--- УКАЖИТЕ ТОЧНОЕ НАЗВАНИЕ ВАШЕЙ ТАБЛИЦЫ В GOOGLE
 # -----------------
 
 logging.basicConfig(level=logging.INFO)
@@ -27,6 +33,60 @@ dp = Dispatcher(storage=MemoryStorage())
 
 class OrderState(StatesGroup):
     waiting_for_custom_time = State()
+
+# --- ЛОГИКА GOOGLE SHEETS И PROMO ---
+
+def get_creds_path():
+    """Определяет, где лежит файл ключей (Локально или на Render)"""
+    if os.path.exists("creds.json"):
+        return "creds.json"
+    elif os.path.exists("/etc/secrets/creds.json"):
+        return "/etc/secrets/creds.json"
+    return None
+
+def process_promo_code(code):
+    """
+    Ищет промокод в таблице, проверяет лимит.
+    Если ок -> уменьшает лимит на 1.
+    """
+    if not code: return False
+    
+    creds_file = get_creds_path()
+    if not creds_file:
+        logging.error("❌ Файл creds.json не найден!")
+        return True # Если ошибка на нашей стороне, лучше простить клиенту скидку
+
+    try:
+        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
+        client = gspread.authorize(creds)
+        
+        # Открываем таблицу и лист Promocodes
+        sheet = client.open(SHEET_NAME).worksheet("Promocodes")
+        
+        # Ищем ячейку с кодом
+        try:
+            cell = sheet.find(code)
+        except gspread.exceptions.CellNotFound:
+            logging.warning(f"Промокод {code} не найден в таблице")
+            return False 
+
+        # Лимит находится в колонке 3 (C) той же строки
+        limit_cell_val = sheet.cell(cell.row, 3).value
+        limit = int(limit_cell_val) if limit_cell_val else 0
+        
+        if limit > 0:
+            # Уменьшаем лимит на 1
+            sheet.update_cell(cell.row, 3, limit - 1)
+            logging.info(f"Промокод {code} применен. Осталось: {limit - 1}")
+            return True
+        else:
+            logging.warning(f"Лимит промокода {code} исчерпан")
+            return False
+
+    except Exception as e:
+        logging.error(f"Ошибка API Google Sheets: {e}")
+        return True # В случае ошибки API сохраняем скидку
 
 # --- ВЕБ-СЕРВЕР ---
 async def health_check(request):
@@ -91,6 +151,32 @@ async def web_app_data_handler(message: types.Message):
         total = data.get('total', 0)
         info = data.get('info', {})
 
+        # --- ОБРАБОТКА ПРОМОКОДА ---
+        promo_code = info.get('promoCode', '')
+        discount_rate = info.get('discount', 0)
+        discount_text_for_admin = ""
+        
+        # Если есть код, пытаемся списать его в базе
+        if promo_code and discount_rate > 0:
+            # Запускаем в отдельном потоке, чтобы не блокировать бота
+            loop = asyncio.get_running_loop()
+            promo_success = await loop.run_in_executor(None, process_promo_code, promo_code)
+            
+            if promo_success:
+                # Рассчитываем сумму скидки для красоты чека
+                try:
+                    # total - это уже цена со скидкой. Восстанавливаем полную цену.
+                    # Формула: Total = Original * (1 - rate)  => Original = Total / (1 - rate)
+                    original_price = int(total / (1 - discount_rate))
+                    discount_amount = original_price - total
+                    discount_text_for_admin = f"\n🎁 <b>Промокод:</b> {promo_code} (-{discount_amount} ₸)"
+                except:
+                    discount_text_for_admin = f"\n🎁 <b>Промокод:</b> {promo_code}"
+            else:
+                # Если код не списался (лимит кончился прямо сейчас), можно уведомить админа
+                discount_text_for_admin = f"\n⚠️ <b>Промокод:</b> {promo_code} (Ошибка списания/Лимит)"
+        # ---------------------------
+
         is_delivery = (info.get('deliveryType') == 'Доставка')
         order_icon = "🚗" if is_delivery else "🏃"
         
@@ -122,6 +208,9 @@ async def web_app_data_handler(message: types.Message):
             opts_str = f" ({', '.join(opts)})" if opts else ""
             text += f"{i}. <b>{name}</b>{opts_str}\n"
             
+        # Добавляем строку про скидку, если есть
+        text += discount_text_for_admin
+        
         text += f"\n💰 <b>ИТОГО: {total} ₸</b>"
         if is_delivery: text += "\n⚠️ <i>+ Доставка</i>"
 
@@ -131,7 +220,7 @@ async def web_app_data_handler(message: types.Message):
     except Exception as e:
         logging.error(f"Error: {e}")
 
-# --- ЛОГИКА СТАТУСОВ (ИСПРАВЛЕНО) ---
+# --- ЛОГИКА СТАТУСОВ ---
 
 @dp.callback_query(F.data.startswith("dec_"))
 async def decision_callback(callback: CallbackQuery):
@@ -141,11 +230,7 @@ async def decision_callback(callback: CallbackQuery):
         await callback.message.edit_reply_markup(reply_markup=get_time_kb(user_id))
     
     elif action == "reject":
-        # Исправление: берем .text, а не .html_text
         old_text = callback.message.text 
-        # Чистим от старых статусов (если были), отрезаем по разделителю или просто берем весь текст
-        # Для простоты берем весь текст, но т.к. он теперь без HTML тегов (жирный пропадет в истории админа, но читаться будет)
-        # Это компромисс без базы данных.
         
         await callback.message.edit_text(
             text=f"{old_text}\n\n❌ <b>ОТКЛОНЕН</b>", 
@@ -169,7 +254,6 @@ async def time_callback(callback: CallbackQuery, state: FSMContext):
 
     if action == "custom":
         await callback.message.answer("✍️ <b>Введите время</b> (например: '40 мин'):")
-        # Сохраняем ID сообщения, которое нужно будет обновить
         await state.update_data(order_msg_id=callback.message.message_id, client_id=user_id)
         await state.set_state(OrderState.waiting_for_custom_time)
         await callback.answer()
@@ -177,10 +261,7 @@ async def time_callback(callback: CallbackQuery, state: FSMContext):
     
     time_val = f"{action} минут"
     
-    # ИСПРАВЛЕНИЕ: берем .text
     old_text = callback.message.text
-    
-    # Убираем возможные предыдущие статусы, если бариста передумал и нажал кнопку снова
     clean_text = old_text.split("\n\n✅")[0] 
     
     await callback.message.edit_text(
@@ -204,16 +285,12 @@ async def custom_time_handler(message: types.Message, state: FSMContext):
     try: await message.delete()
     except: pass
 
-    # Тут сложнее: мы не можем получить текст чужого сообщения по ID.
-    # Поэтому мы просто меняем клавиатуру на старом сообщении, 
-    # а статус отправляем НОВЫМ сообщением в чат (как ответ).
     try:
         await bot.edit_message_reply_markup(
             chat_id=message.chat.id, 
             message_id=order_msg_id, 
             reply_markup=get_ready_kb(client_id)
         )
-        # Подтверждение в чат админов
         await bot.send_message(
             chat_id=message.chat.id,
             text=f"✅ Время для заказа выше установлено: <b>{custom_time}</b>",
@@ -231,7 +308,6 @@ async def ready_callback(callback: CallbackQuery):
     user_id = callback.data.split("_")[2]
     old_text = callback.message.text or ""
     
-    # 1. Проверяем, доставка это или нет
     is_delivery = "Доставка" in old_text
     
     if is_delivery:
@@ -241,10 +317,7 @@ async def ready_callback(callback: CallbackQuery):
         admin_status = "🏁 <b>ЗАКАЗ ГОТОВ / ВЫДАН</b>"
         client_msg = "🎉 <b>Ваш заказ готов!</b>\nЖдем вас на выдаче. Приятного аппетита! ☕️"
 
-    # 2. Обновляем сообщение у админа
-    # Удаляем старый статус "ПРИНЯТ", если он есть, и добавляем новый
     if "ПРИНЯТ" in old_text:
-        # Разбиваем по статусу, берем первую часть (сам заказ) и добавляем новый статус
         clean_text = old_text.split("✅")[0].strip()
         final_text = f"{clean_text}\n\n{admin_status}"
     else:
@@ -252,7 +325,6 @@ async def ready_callback(callback: CallbackQuery):
 
     await callback.message.edit_text(text=final_text, reply_markup=None)
     
-    # 3. Уведомляем клиента
     try: 
         await bot.send_message(chat_id=user_id, text=client_msg)
     except: 
@@ -272,4 +344,3 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Бот остановлен.")
-
