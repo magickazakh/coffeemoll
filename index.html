@@ -77,7 +77,17 @@
             transform: translateY(-75px); /* Сдвигаем вверх на высоту лого и поиска */
         }
 
-        header { padding: 12px 15px 10px 15px; display: flex; justify-content: space-between; align-items: flex-start; height: 60px; box-sizing: border-box;}
+        /* ИСПРАВЛЕНО: убрана фиксированная высота height: 60px, теперь она автоматическая */
+        header { 
+            padding: 12px 15px 10px 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            height: auto; 
+            min-height: 60px;
+            box-sizing: border-box;
+        }
+        
         .header-left { display: flex; flex-direction: column; }
         
         h1 { margin: 0; font-family: var(--font-logo); font-size: 34px; letter-spacing: 1px; line-height: 1; text-transform: uppercase; }
@@ -425,6 +435,7 @@
 
     // === ВАЖНО: ВСТАВЬТЕ СЮДА ВАШИ ССЫЛКИ ===
     const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv"; 
+    // !!! ЗАМЕНИТЕ ССЫЛКУ НИЖЕ НА ВАШУ НОВУЮ ССЫЛКУ PROMOCODES !!!
     const PROMO_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=19369806&single=true&output=csv";
     
     // Cache Busting
@@ -1183,7 +1194,7 @@
                 paymentType: payType, 
                 paymentPhone: payPhone, 
                 comment, 
-                discount: appliedDiscount,
+                discount: appliedDiscount, 
                 promoCode: appliedPromoCode 
             } 
         }; 
