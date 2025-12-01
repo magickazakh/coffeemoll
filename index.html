@@ -20,7 +20,7 @@
     <script>window.onerror = function(msg, url, line) { return false; };</script>
 
     <style>
-        /* --- 3. CSS ПЕРЕМЕННЫЕ И ТЕМЫ --- */
+        /* --- CSS ПЕРЕМЕННЫЕ И ТЕМЫ --- */
         :root {
             --primary-color: #88d100;       
             --primary-text: #000000;        
@@ -36,7 +36,6 @@
             --font-body: 'Montserrat', sans-serif;
         }
 
-        /* 8. ТЕМНАЯ ТЕМА */
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg-color: #1a1a1a;
@@ -51,6 +50,9 @@
             .status-badge { background: #064e3b !important; color: #a7f3d0 !important; }
             .radio-label, .checkout-radio-label { background: #333 !important; border-color: #444 !important; color: #fff !important; }
             .radio-input:checked + .radio-label, .checkout-radio-input:checked + .checkout-radio-label { background: #064e3b !important; border-color: var(--primary-color) !important; }
+            /* Для липкого заголовка в темной теме */
+            .category-title { background: #1a1a1a !important; border-bottom: 1px solid #333 !important; }
+            .accordion-header { background: #333 !important; color: #fff !important; }
         }
 
         /* --- БАЗОВЫЕ СТИЛИ --- */
@@ -75,8 +77,6 @@
         
         .nav-scroller { overflow-x: auto; white-space: nowrap; padding: 5px 15px 5px 15px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .nav-scroller::-webkit-scrollbar { display: none; }
-        
-        /* 4. ИНДИКАТОРЫ НАВИГАЦИИ */
         .nav-indicator { display: flex; justify-content: center; gap: 6px; padding-bottom: 10px; }
         .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: #ddd; transition: 0.3s; }
         .nav-dot.active { background: var(--primary-color); width: 20px; border-radius: 3px; }
@@ -85,7 +85,22 @@
         .nav-btn.active { background: #000000; color: var(--primary-color); border-color: #000000; }
 
         .category-section { margin-bottom: 20px; scroll-margin-top: 150px; }
-        .category-title { padding: 15px 15px 5px 15px; font-family: var(--font-title); font-size: 24px; color: var(--text-main); letter-spacing: 0.5px; font-weight: 700; }
+        
+        /* В. ЛИПКИЕ ЗАГОЛОВКИ */
+        .category-title { 
+            position: sticky; 
+            top: 135px; /* Высота вашей шапки (примерно) */
+            background: var(--bg-color); /* Чтобы текст не просвечивал */
+            z-index: 30; 
+            padding: 10px 15px; 
+            font-family: var(--font-title); 
+            font-size: 24px; 
+            color: var(--text-main); 
+            letter-spacing: 0.5px; 
+            font-weight: 700; 
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: background 0.3s;
+        }
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         
@@ -94,22 +109,14 @@
         
         .card-img-container { width: 100%; height: 100px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; overflow: hidden; position: relative; background: #f3f4f6; }
         
-        /* 7. SKELETON LOADING */
-        .card-skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
-        @media (prefers-color-scheme: dark) {
-            .card-skeleton { background: linear-gradient(90deg, #333 25%, #444 50%, #333 75%); }
-        }
+        .card-skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        @media (prefers-color-scheme: dark) { .card-skeleton { background: linear-gradient(90deg, #333 25%, #444 50%, #333 75%); } }
 
         .card img { width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 0.3s ease-in; }
         .card img.loaded { opacity: 1; }
         .card.unavailable { opacity: 0.6; pointer-events: none; }
         .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
         
-        /* 9. ИЗБРАННОЕ - ИКОНКА */
         .fav-btn { position: absolute; top: 8px; left: 8px; z-index: 25; font-size: 18px; color: #ccc; transition: 0.2s; background: rgba(255,255,255,0.8); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
         .fav-btn.active { color: #ef4444; }
 
@@ -133,8 +140,14 @@
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px;}
         .loading-title { font-family: var(--font-logo); font-size: 36px; margin-bottom: 5px; }
         .loading-motto { font-size: 13px; color: #666; font-style: italic; font-family: var(--font-body); }
+        
+        /* З. ОШИБКА ЗАГРУЗКИ */
+        .error-btn { background: var(--text-main); color: var(--bg-color); border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; }
 
-        /* Модалки */
+        /* Г. НИЧЕГО НЕ НАЙДЕНО */
+        #no-results { display: none; text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+        .no-res-icon { font-size: 48px; margin-bottom: 10px; display: block; }
+
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: flex-end; justify-content: center; backdrop-filter: blur(2px); }
         .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease-out; position: relative; }
         .modal-header { margin-bottom: 15px; border-bottom: none; padding-bottom: 0; display: block; text-align: center;}
@@ -144,6 +157,14 @@
         .close-icon { position: absolute; top: 15px; right: 15px; width: 32px; height: 32px; background: #f3f4f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #333; font-size: 18px; z-index: 50; }
         .modal-img-wrapper { width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin-bottom: 15px; background: #f9fafb; display: flex; align-items: center; justify-content: center; }
         .modal-img { width: 100%; height: 100%; object-fit: contain; background-color: #fff; }
+
+        /* И. АККОРДЕОН */
+        .accordion { margin-bottom: 15px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
+        .accordion-header { background: #f9fafb; padding: 12px 15px; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-main); font-family: var(--font-body); }
+        .accordion-content { display: none; padding: 15px; border-top: 1px solid var(--border-color); background: var(--card-bg); }
+        .accordion-arrow { transition: transform 0.2s; }
+        .accordion.open .accordion-content { display: block; }
+        .accordion.open .accordion-arrow { transform: rotate(180deg); }
 
         .option-group { margin-bottom: 15px; position: relative; z-index: 1; }
         .option-label { font-weight: 700; margin-bottom: 8px; display: block; font-size: 14px; color: var(--text-main); font-family: var(--font-body); }
@@ -155,7 +176,6 @@
         .radio-input:checked + .radio-label { background-color: #f0fdf4; border-color: var(--primary-color); color: #000; box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15); }
         .radio-input:checked + .radio-label::before { border-color: var(--primary-color); background-color: var(--primary-color); box-shadow: inset 0 0 0 3px #fff; }
 
-        /* КОРЗИНА */
         .checkout-radio-group { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; width: 100% !important; }
         .checkout-radio-label { display: flex !important; align-items: center !important; justify-content: flex-start !important; padding: 10px 12px !important; background: #fff !important; border: 1px solid #e5e7eb !important; border-radius: 10px !important; cursor: pointer !important; font-size: 14px !important; font-weight: 500 !important; color: #374151 !important; transition: all 0.2s !important; min-height: 44px !important; width: 100% !important; box-sizing: border-box !important; position: relative !important; font-family: var(--font-body) !important; }
         .checkout-radio-label::before { content: '' !important; display: inline-block !important; width: 16px !important; height: 16px !important; border: 2px solid #9ca3af !important; border-radius: 50% !important; margin-right: 10px !important; box-sizing: border-box !important; flex-shrink: 0 !important; transition: 0.2s !important; }
@@ -183,7 +203,6 @@
         
         .main-btn { position: fixed; bottom: 15px; left: 15px; right: 15px; background: #000000; color: var(--primary-color); padding: 16px; border-radius: 14px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: none; z-index: 900; font-family: var(--font-title); letter-spacing: 1px; }
         
-        /* 6. АНИМИРОВАННЫЙ СЧЕТЧИК КОРЗИНЫ */
         .cart-counter { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 11px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: pop 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-family: var(--font-body); }
 
         .cart-item { background: var(--input-bg); border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
@@ -200,11 +219,9 @@
         .warning-box { background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; display: none; border: 1px solid #fecaca; line-height: 1.4; font-family: var(--font-body); }
         .info-box { background: #e0f2fe; color: #075985; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; display: none; border: 1px solid #bae6fd; line-height: 1.4; font-family: var(--font-body); }
         
-        /* 10. ПРОМОКОДЫ */
         .promo-section { margin: 15px 0; display: flex; gap: 8px; }
         .promo-btn { background: #f0f0f0; border: none; padding: 0 15px; border-radius: 12px; cursor: pointer; font-weight: 600; color: #333; }
         
-        /* 5. КНОПКА НАВЕРХ */
         .scroll-top-btn { position: fixed; bottom: 80px; right: 15px; width: 40px; height: 40px; background: rgba(0,0,0,0.6); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 800; opacity: 0; pointer-events: none; transition: opacity 0.3s; font-size: 20px; }
         .scroll-top-btn.visible { opacity: 1; pointer-events: auto; }
 
@@ -234,6 +251,13 @@
     <div class="loading-motto">Кофейня с неприлично вкусным кофе</div>
 </div>
 
+<div class="loading-overlay" id="error-screen" style="display: none;">
+    <div style="font-size: 50px; margin-bottom: 10px;">📡</div>
+    <div class="loading-title" style="font-size: 24px;">Ошибка связи</div>
+    <div class="loading-motto">Не удалось загрузить меню. Проверьте интернет.</div>
+    <button class="error-btn" onclick="location.reload()">Повторить</button>
+</div>
+
 <div class="header-container">
     <header>
         <div class="header-left">
@@ -251,6 +275,12 @@
 </div>
 
 <div id="app"></div>
+
+<div id="no-results">
+    <span class="no-res-icon">🔍</span>
+    <h3>Ничего не найдено</h3>
+    <p>Попробуйте изменить запрос</p>
+</div>
 
 <div class="scroll-top-btn" id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
 
@@ -376,21 +406,18 @@
     let cart = [];
     let currentModalProduct = null;
     let upsellShown = false;
-    let appliedDiscount = 0; // Для промокодов
+    let appliedDiscount = 0; 
 
-    // 9. ИЗБРАННОЕ (Local Storage)
     let favorites = JSON.parse(localStorage.getItem('coffee_favorites')) || [];
 
     function toggleFavorite(e, id) {
-        e.stopPropagation(); // Чтобы не открывалась модалка товара
+        e.stopPropagation(); 
         id = String(id);
         const idx = favorites.indexOf(id);
         if(idx > -1) favorites.splice(idx, 1);
         else favorites.push(id);
-        
         localStorage.setItem('coffee_favorites', JSON.stringify(favorites));
         
-        // Обновляем вид сердечка
         const btn = document.querySelector(`.fav-btn[data-id="${id}"]`);
         if(btn) {
             btn.classList.toggle('active');
@@ -399,9 +426,7 @@
         tg.HapticFeedback.impactOccurred('light');
     }
 
-    // 10. ПРОМОКОДЫ
-    const PROMO_CODES = { "COFFEE10": 0.10, "SALE20": 0.20 }; // Код: Скидка (0.10 = 10%)
-    
+    const PROMO_CODES = { "COFFEE10": 0.10, "SALE20": 0.20 };
     function applyPromo() {
         const codeInput = document.getElementById('promo-code');
         const code = codeInput.value.trim().toUpperCase();
@@ -433,11 +458,17 @@
         return "";
     }
 
+    // З. ОБРАБОТКА ОШИБОК
+    function showErrorScreen() {
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('error-screen').style.display = 'flex';
+    }
+
     function initMenu() {
         Papa.parse(GOOGLE_SHEET_URL, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
-                if (!results.data || results.data.length === 0) { alert("Ошибка: Таблица пустая."); document.getElementById('loading-screen').style.display = 'none'; return; }
+                if (!results.data || results.data.length === 0) { showErrorScreen(); return; }
 
                 const settingsRow = results.data.find(row => { const id = getVal(row, ['id', 'Идентификатор']); return id && id.toUpperCase() === 'SETTINGS'; });
                 if (settingsRow) {
@@ -527,7 +558,7 @@
                 document.getElementById('loading-screen').style.display = 'none';
                 renderMenu();
             },
-            error: function(err) { console.error("CSV Error:", err); alert("Не удалось загрузить меню."); document.getElementById('loading-screen').style.display = 'none'; }
+            error: function(err) { console.error("CSV Error:", err); showErrorScreen(); }
         });
     }
 
@@ -544,13 +575,34 @@
     function filterMenu() {
         const query = document.getElementById('search-input').value.toLowerCase();
         const cards = document.querySelectorAll('.card');
+        let visibleCount = 0;
         cards.forEach(card => {
             const name = card.querySelector('h3').innerText.toLowerCase();
-            if (name.includes(query)) card.style.display = 'flex'; else card.style.display = 'none';
+            if (name.includes(query)) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
         });
+
+        // Г. НИЧЕГО НЕ НАЙДЕНО - ЛОГИКА
+        const noRes = document.getElementById('no-results');
+        const sections = document.querySelectorAll('.category-section');
+        
+        if (visibleCount === 0) {
+            noRes.style.display = 'block';
+            sections.forEach(s => s.style.display = 'none');
+        } else {
+            noRes.style.display = 'none';
+            // Показываем только секции, где есть видимые товары
+            sections.forEach(section => {
+               const visibleInSec = [...section.querySelectorAll('.card')].filter(c => c.style.display !== 'none').length;
+               section.style.display = visibleInSec > 0 ? 'block' : 'none';
+            });
+        }
     }
 
-    // 4. НАВИГАЦИЯ + ИНДИКАТОРЫ
     function renderNav() {
         const navContainer = document.getElementById('nav-container');
         const dotsContainer = document.getElementById('nav-dots');
@@ -562,23 +614,21 @@
         });
         
         navContainer.innerHTML = '';
-        dotsContainer.innerHTML = ''; // Очистка точек
+        dotsContainer.innerHTML = ''; 
 
         sortedCats.forEach((cat, index) => {
             const btn = document.createElement('a'); btn.className = 'nav-btn'; 
             btn.innerText = cat; btn.href = `#cat-${cat.replace(/\s+/g, '-')}`;
-            btn.onclick = (e) => { e.preventDefault(); const section = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`); if(section) { const y = section.getBoundingClientRect().top + window.scrollY - 150; window.scrollTo({top: y, behavior: 'smooth'}); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } };
+            btn.onclick = (e) => { e.preventDefault(); const section = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`); if(section) { const y = section.getBoundingClientRect().top + window.scrollY - 180; window.scrollTo({top: y, behavior: 'smooth'}); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); } };
             navContainer.appendChild(btn);
 
-            // Создаем точки
-            if (index < 5) { // Ограничим 5 точками чтобы не спамить
+            if (index < 5) {
                 const dot = document.createElement('div');
                 dot.className = index === 0 ? 'nav-dot active' : 'nav-dot';
                 dotsContainer.appendChild(dot);
             }
         });
 
-        // Слушатель скролла для обновления точек
         navContainer.addEventListener('scroll', () => {
             const scrollPercentage = navContainer.scrollLeft / (navContainer.scrollWidth - navContainer.clientWidth);
             const dots = document.querySelectorAll('.nav-dot');
@@ -629,14 +679,11 @@
                     cardBadgeHtml = `<div class="${bClass}">${p.badge}</div>`;
                 }
 
-                // 9. КНОПКА ИЗБРАННОГО
                 const isFav = favorites.includes(String(p.id));
                 const favHtml = `<div class="fav-btn ${isFav ? 'active' : ''}" data-id="${p.id}" onclick="toggleFavorite(event, '${p.id}')">${isFav ? '♥' : '♡'}</div>`;
                 
                 card.onclick = () => handleItemClick(p.id);
                 
-                // 2. & 7. LAZY LOADING + SKELETON
-                // Добавлен класс card-skeleton в контейнер и loading="lazy"
                 card.innerHTML = `
                 <div class="card-img-container card-skeleton">
                     <img src="${itemImage}" alt="${p.name}" loading="lazy" decoding="async" onload="this.classList.add('loaded'); this.parentElement.classList.remove('card-skeleton')">
@@ -679,6 +726,12 @@
         selector.style.display = (altRadio && altRadio.checked) ? 'block' : 'none';
         recalcPrice();
     }
+    
+    // И. ЛОГИКА АККОРДЕОНА
+    function toggleAccordion() {
+        const acc = document.getElementById('extras-accordion');
+        acc.classList.toggle('open');
+    }
 
     function openComplexModal(product) {
         currentModalProduct = product;
@@ -687,6 +740,7 @@
         let imgHtml = ''; if (product.img) { imgHtml = `<div class="modal-img-wrapper"><img src="${product.img}" class="modal-img"></div>`; }
         let html = `<div class="modal-header"><div class="modal-title-block">${imgHtml}<div class="modal-title">${product.name}</div> <div class="modal-desc">${product.fullDesc || product.desc || ""}</div></div><div class="close-icon" onclick="closeProductModal(true)">✕</div></div>`;
         
+        // Основные опции (Порция и Молоко) - ВСЕГДА ВИДИМЫ
         if (product.hasVolumes && product.volumes.length > 0) {
             html += `<div class="option-group"><label class="option-label">Порция</label><div class="radio-group">`;
             product.volumes.forEach((v, i) => { html += `<input type="radio" name="vol" id="v${i}" value="${i}" class="radio-input" ${i===0?'checked':''} onchange="recalcPrice()"><label for="v${i}" class="radio-label">${v.n}<br>${v.p}₸</label>`; });
@@ -703,27 +757,43 @@
             html += `</select></div></div>`;
         }
 
-        let hasExtras = false; let checkboxHtml = '';
+        // Собираем второстепенные добавки для АККОРДЕОНА
+        let extrasHtml = '';
+        let hasExtras = false;
         const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
         checkboxes.forEach(key => {
              if (key in product.mods) {
                  hasExtras = true; let price = product.mods[key];
-                 checkboxHtml += `<div class="checkbox-row"><span>${MOD_LABELS[key]} (+${price})</span><label class="toggle-switch"><input type="checkbox" id="mod-${key}" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
+                 extrasHtml += `<div class="checkbox-row"><span>${MOD_LABELS[key]} (+${price})</span><label class="toggle-switch"><input type="checkbox" id="mod-${key}" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
              }
         });
-        if (hasExtras) html += `<div class="option-group"><label class="option-label">Добавки</label>${checkboxHtml}</div>`;
 
         if ('sauce' in product.mods) {
+             hasExtras = true;
              let price = product.mods['sauce']; let displayPrice = price > 0 ? `+${price}` : 'Бесплатно';
-             html += `<div class="option-group"><label class="option-label">Соус (${displayPrice})</label><select id="sauce-select" onchange="recalcPrice()">`;
-             SAUCES.forEach(s => html += `<option value="${s}">${s}</option>`);
-             html += `</select></div>`;
+             extrasHtml += `<div style="margin-top:10px"><label class="option-label">Соус (${displayPrice})</label><select id="sauce-select" onchange="recalcPrice()">`;
+             SAUCES.forEach(s => extrasHtml += `<option value="${s}">${s}</option>`);
+             extrasHtml += `</select></div>`;
         }
-        if ('sugar' in product.mods) html += `<div class="option-group"><label class="option-label">Сахар</label><input type="number" id="sug" placeholder="0" min="0"></div>`;
+        if ('sugar' in product.mods) {
+            hasExtras = true;
+            extrasHtml += `<div style="margin-top:10px"><label class="option-label">Сахар</label><input type="number" id="sug" placeholder="0" min="0"></div>`;
+        }
         if ('syrup' in product.mods) {
+             hasExtras = true;
              let price = product.mods['syrup']; let displayPrice = price > 0 ? `+${price}` : 'Бесплатно';
              let sOpts = SYRUPS.map(s=>`<option value="${s}">${s}</option>`).join('');
-             html += `<div class="option-group"><label class="option-label">Сироп (${displayPrice})</label><select id="syr" onchange="recalcPrice()">${sOpts}</select></div>`;
+             extrasHtml += `<div style="margin-top:10px"><label class="option-label">Сироп (${displayPrice})</label><select id="syr" onchange="recalcPrice()">${sOpts}</select></div>`;
+        }
+
+        // Если есть добавки, засовываем их в аккордеон
+        if (hasExtras) {
+            html += `<div class="accordion" id="extras-accordion">
+                <div class="accordion-header" onclick="toggleAccordion()">
+                    <span>Дополнительно</span> <span class="accordion-arrow">▼</span>
+                </div>
+                <div class="accordion-content">${extrasHtml}</div>
+            </div>`;
         }
 
         html += `<div class="modal-footer"><button class="modal-add-btn" id="modal-btn" onclick="addComplexToCart()">Добавить</button></div>`;
@@ -788,7 +858,6 @@
 
     function closeProductModal(force) { if (force === true) { document.getElementById('product-modal').style.display = 'none'; return; } const e = force; if (e && e.target.id === 'product-modal') document.getElementById('product-modal').style.display = 'none'; }
     
-    // 6. ОБНОВЛЕНИЕ КНОПКИ С АНИМАЦИЕЙ
     function updateCartButton() { 
         const btn = document.getElementById('cart-btn'); 
         const counter = document.getElementById('cart-count');
@@ -799,10 +868,8 @@
             btn.style.display = 'block'; 
             txt.innerText = `Оформить: ${total} ₸`;
             counter.innerText = cart.length;
-            
-            // Сброс и запуск анимации
             counter.style.animation = 'none';
-            counter.offsetHeight; /* trigger reflow */
+            counter.offsetHeight; 
             counter.style.animation = 'pop 0.3s';
         } else { 
             btn.style.display = 'none'; 
@@ -818,7 +885,7 @@
         loadUserData(); 
         if(tg.initDataUnsafe?.user && !document.getElementById('client-name').value) document.getElementById('client-name').value = tg.initDataUnsafe.user.first_name; 
         renderCartItems(); 
-        appliedDiscount = 0; // Сброс промокода при новом открытии
+        appliedDiscount = 0; 
         calculateCheckoutTotal(); 
         
         const isOpen = checkWorkingHours();
@@ -832,7 +899,6 @@
     function togglePayment() { const isCash = document.getElementById('p-cash').checked || document.getElementById('p-card').checked; document.getElementById('payment-phone-block').style.display = isCash ? 'none' : 'block'; }
     function toggleTimePicker() { const isTime = document.getElementById('t-time').checked; document.getElementById('time-picker-container').style.display = isTime ? 'block' : 'none'; }
     
-    // Пересчет с учетом скидки
     function calculateCheckoutTotal() { 
         let t = cart.reduce((s, i) => s + i.price, 0); 
         if(appliedDiscount > 0) {
@@ -887,7 +953,11 @@
         else btn.classList.remove('visible');
     });
 
-    try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { alert(e); }
+    // Обработка оффлайн режима браузера
+    window.addEventListener('offline', () => { showErrorScreen(); });
+    window.addEventListener('online', () => { location.reload(); });
+
+    try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e); showErrorScreen(); }
 </script>
 </body>
 </html>
