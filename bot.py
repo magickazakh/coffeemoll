@@ -27,7 +27,7 @@ WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
 SHEET_NAME = "CoffeeMoll Menu"
 
 # --- НАСТРОЙКИ ТЕМ (TOPICS) ---
-TOPIC_ID_ORDERS = 1
+TOPIC_ID_ORDERS = 20
 TOPIC_ID_REVIEWS = 3
 # ------------------------------
 
@@ -517,3 +517,4 @@ async def main():
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
