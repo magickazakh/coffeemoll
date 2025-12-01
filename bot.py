@@ -1,9 +1,9 @@
-from datetime import datetime
 import asyncio
 import json
 import logging
 import sys
 import os
+from datetime import datetime
 from aiohttp import web
 
 # --- БИБЛИОТЕКИ ДЛЯ GOOGLE SHEETS ---
@@ -12,7 +12,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 # ------------------------------------
 
 from aiogram import Bot, Dispatcher, F, types
-from aiogram.filters import Command, CommandStart, StateFilter
+from aiogram.filters import Command, CommandStart
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -24,7 +24,16 @@ from aiogram.fsm.storage.memory import MemoryStorage
 TOKEN = os.getenv("BOT_TOKEN", "8444027240:AAFEiACM5x-OPmR9CFgk1zyrmU24PgovyCY") 
 ADMIN_CHAT_ID = 1054308942
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
-SHEET_NAME = "COFFEEMOLL TELEGRAM" # <--- УКАЖИТЕ ТОЧНОЕ НАЗВАНИЕ ВАШЕЙ ТАБЛИЦЫ В GOOGLE
+SHEET_NAME = "COFFEEMOLL TELEGRAM"
+
+# --- НАСТРОЙКА БАРИСТА ---
+# ID - это внутренний ключ (1, 2, 3). 
+# Впишите сюда реальные имена и номера Kaspi
+BARISTAS = {
+    "1": {"name": "Павел", "phone": "+7 771 904 44 55"},
+    "2": {"name": "Карина", "phone": "+7 700 000 00 02"},
+    "3": {"name": "Анара", "phone": "+7 700 000 00 03"}
+}
 # -----------------
 
 logging.basicConfig(level=logging.INFO)
@@ -32,84 +41,78 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=MemoryStorage())
 
+# --- СОСТОЯНИЯ (FSM) ---
 class OrderState(StatesGroup):
     waiting_for_custom_time = State()
 
-# --- ЛОГИКА GOOGLE SHEETS И PROMO ---
+class ReviewState(StatesGroup):
+    waiting_for_service_rate = State()
+    waiting_for_food_rate = State()
+    waiting_for_tips_decision = State() # Да/Нет
+    waiting_for_barista_choice = State() # Выбор бариста
+    waiting_for_comment = State() # Текст
+
+# --- GOOGLE SHEETS ---
 
 def get_creds_path():
-    """Определяет, где лежит файл ключей (Локально или на Render)"""
-    if os.path.exists("creds.json"):
-        return "creds.json"
-    elif os.path.exists("/etc/secrets/creds.json"):
-        return "/etc/secrets/creds.json"
+    if os.path.exists("creds.json"): return "creds.json"
+    elif os.path.exists("/etc/secrets/creds.json"): return "/etc/secrets/creds.json"
     return None
 
+def get_gspread_client():
+    path = get_creds_path()
+    if not path: return None
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_name(path, scope)
+    return gspread.authorize(creds)
+
 def process_promo_code(code, user_id):
-    """
-    1. Проверяет, использовал ли user_id этот код (PromoHistory).
-    2. Проверяет глобальный лимит (Promocodes).
-    3. Если все ок -> списывает лимит и записывает в историю.
-    
-    Возвращает: "OK", "USED" (уже юзал), "LIMIT" (кончился), "NOT_FOUND", "ERROR"
-    """
     if not code: return "NOT_FOUND"
+    client = get_gspread_client()
+    if not client: return "ERROR"
     
-    creds_file = get_creds_path()
-    if not creds_file:
-        logging.error("❌ Файл creds.json не найден!")
-        return "ERROR"
-
     try:
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
-        client = gspread.authorize(creds)
+        sheet = client.open(SHEET_NAME)
+        sheet_promo = sheet.worksheet("Promocodes")
+        sheet_history = sheet.worksheet("PromoHistory")
         
-        # Открываем таблицу
-        spreadsheet = client.open(SHEET_NAME)
-        sheet_promo = spreadsheet.worksheet("Promocodes")
-        sheet_history = spreadsheet.worksheet("PromoHistory")
-        
-        # --- ШАГ 1: ПРОВЕРКА ИСТОРИИ (Личная) ---
-        # Получаем все записи истории (это может быть медленно, если записей 10000+, но для кофейни ок)
-        history_data = sheet_history.get_all_values()
-        
-        # Проходимся по строкам и ищем совпадение ID и Кода
-        # row[0] = UserID, row[1] = PromoCode
-        for row in history_data:
+        history = sheet_history.get_all_values()
+        for row in history:
             if str(row[0]) == str(user_id) and str(row[1]).upper() == code.upper():
-                return "USED" # Пользователь уже брал этот код
+                return "USED"
 
-        # --- ШАГ 2: ПРОВЕРКА ЛИМИТА (Глобальная) ---
-        try:
-            cell = sheet_promo.find(code)
-        except gspread.exceptions.CellNotFound:
-            return "NOT_FOUND"
+        try: cell = sheet_promo.find(code)
+        except: return "NOT_FOUND"
 
-        limit_cell_val = sheet_promo.cell(cell.row, 3).value
-        limit = int(limit_cell_val) if limit_cell_val else 0
-        
+        limit = int(sheet_promo.cell(cell.row, 3).value or 0)
         if limit > 0:
-            # --- ШАГ 3: СПИСАНИЕ ---
-            # 1. Уменьшаем глобальный лимит
             sheet_promo.update_cell(cell.row, 3, limit - 1)
-            
-            # 2. Добавляем запись в историю: ID, Код, Дата
-            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            sheet_history.append_row([str(user_id), code, current_time])
-            
-            logging.info(f"Промокод {code} успешно применен пользователем {user_id}")
+            sheet_history.append_row([str(user_id), code, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
             return "OK"
-        else:
-            return "LIMIT"
-
+        else: return "LIMIT"
     except Exception as e:
-        logging.error(f"Ошибка API Google Sheets: {e}")
+        logging.error(f"Sheets Error: {e}")
         return "ERROR"
-# --- ВЕБ-СЕРВЕР ---
-async def health_check(request):
-    return web.Response(text="Bot is running OK!")
 
+def save_review(user_id, name, service_rate, food_rate, tips, comment):
+    client = get_gspread_client()
+    if not client: return
+    try:
+        sheet = client.open(SHEET_NAME).worksheet("Reviews")
+        sheet.append_row([
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            str(user_id),
+            name,
+            service_rate,
+            food_rate,
+            tips,
+            comment
+        ])
+    except Exception as e:
+        logging.error(f"Save Review Error: {e}")
+
+# --- ВЕБ-СЕРВЕР ---
+async def health_check(request): return web.Response(text="OK")
 async def start_web_server():
     port = int(os.environ.get("PORT", 10000))
     app = web.Application()
@@ -119,277 +122,319 @@ async def start_web_server():
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
-    logging.info(f"✅ WEB SERVER STARTED ON PORT {port}")
 
 # --- КЛАВИАТУРЫ ---
 
 def get_decision_kb(user_id):
     return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="✅ Принять", callback_data=f"dec_accept_{user_id}"),
-            InlineKeyboardButton(text="❌ Отклонить", callback_data=f"dec_reject_{user_id}")
-        ]
+        [InlineKeyboardButton(text="✅ Принять", callback_data=f"dec_accept_{user_id}"),
+         InlineKeyboardButton(text="❌ Отклонить", callback_data=f"dec_reject_{user_id}")]
     ])
 
 def get_time_kb(user_id):
     return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="5 мин", callback_data=f"time_5_{user_id}"),
-            InlineKeyboardButton(text="10 мин", callback_data=f"time_10_{user_id}"),
-            InlineKeyboardButton(text="15 мин", callback_data=f"time_15_{user_id}")
-        ],
-        [
-            InlineKeyboardButton(text="20 мин", callback_data=f"time_20_{user_id}"),
-            InlineKeyboardButton(text="30 мин", callback_data=f"time_30_{user_id}"),
-            InlineKeyboardButton(text="✍️ Своё время", callback_data=f"time_custom_{user_id}")
-        ],
+        [InlineKeyboardButton(text="5 мин", callback_data=f"time_5_{user_id}"),
+         InlineKeyboardButton(text="10 мин", callback_data=f"time_10_{user_id}"),
+         InlineKeyboardButton(text="15 мин", callback_data=f"time_15_{user_id}")],
+        [InlineKeyboardButton(text="20 мин", callback_data=f"time_20_{user_id}"),
+         InlineKeyboardButton(text="30 мин", callback_data=f"time_30_{user_id}"),
+         InlineKeyboardButton(text="✍️ Своё", callback_data=f"time_custom_{user_id}")],
         [InlineKeyboardButton(text="🔙 Назад", callback_data=f"time_back_{user_id}")]
     ])
 
 def get_ready_kb(user_id):
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🏁 Готов к выдаче", callback_data=f"order_ready_{user_id}")]
+        [InlineKeyboardButton(text="🏁 Готов (Позвать клиента)", callback_data=f"ord_ready_{user_id}")]
     ])
 
-# --- ОБРАБОТЧИКИ ---
+def get_given_kb(user_id):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Выдан (Запросить отзыв)", callback_data=f"ord_given_{user_id}")]
+    ])
+
+# Клавиатуры для отзывов
+def get_stars_kb(category):
+    buttons = []
+    for i in range(1, 6):
+        buttons.append(InlineKeyboardButton(text=f"{i} ⭐", callback_data=f"rate_{category}_{i}"))
+    return InlineKeyboardMarkup(inline_keyboard=[buttons])
+
+def get_yes_no_kb():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Да 👍", callback_data="tips_yes"),
+         InlineKeyboardButton(text="Нет 🙅‍♂️", callback_data="tips_no")]
+    ])
+
+def get_baristas_kb():
+    buttons = []
+    # Генерируем кнопки на основе словаря BARISTAS
+    for b_id, data in BARISTAS.items():
+        buttons.append([InlineKeyboardButton(text=data['name'], callback_data=f"barista_{b_id}")])
+    # Добавляем кнопку отмены на всякий случай
+    buttons.append([InlineKeyboardButton(text="Передумал", callback_data="tips_no")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+def get_skip_comment_kb():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="⏩ Пропустить", callback_data="skip_comment")]
+    ])
+
+# --- ОБРАБОТЧИКИ ЗАКАЗА ---
 
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
-    markup = ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=WEB_APP_URL))]],
-        resize_keyboard=True
-    )
+    markup = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=WEB_APP_URL))]], resize_keyboard=True)
     await message.answer("Добро пожаловать в CoffeeMoll! 🥐", reply_markup=markup)
 
 @dp.message(F.web_app_data)
 async def web_app_data_handler(message: types.Message):
     try:
-        # ... (начало функции без изменений) ...
         data = json.loads(message.web_app_data.data)
+        
+        if data.get('type') == 'review': return
+
         cart = data.get('cart', [])
         total = data.get('total', 0)
         info = data.get('info', {})
 
-        # --- НОВАЯ ЛОГИКА ОБРАБОТКИ ПРОМОКОДА ---
         promo_code = info.get('promoCode', '')
         discount_rate = info.get('discount', 0)
-        discount_text_for_admin = ""
-        user_id = message.from_user.id # Получаем ID пользователя
+        discount_text = ""
         
-        warning_msg = "" # Сообщение для пользователя, если что-то пошло не так
-
-        # Если в заказе есть промокод
         if promo_code and discount_rate > 0:
-            # Запускаем проверку
             loop = asyncio.get_running_loop()
-            promo_status = await loop.run_in_executor(None, process_promo_code, promo_code, user_id)
-            
-            if promo_status == "OK":
-                # ВСЁ ОТЛИЧНО
+            res = await loop.run_in_executor(None, process_promo_code, promo_code, message.from_user.id)
+            if res == "OK":
                 try:
-                    # ИСПОЛЬЗУЕМ ROUND ВМЕСТО INT ДЛЯ ОКРУГЛЕНИЯ
-                    original_price = round(total / (1 - discount_rate))
-                    discount_amount = int(original_price - total)
-                    discount_text_for_admin = f"\n🎁 <b>Промокод:</b> {promo_code} (-{discount_amount} ₸)"
-                except:
-                    discount_text_for_admin = f"\n🎁 <b>Промокод:</b> {promo_code}"
-            
+                    orig = round(total / (1 - discount_rate))
+                    discount_text = f"\n🎁 <b>Промокод:</b> {promo_code} (-{int(orig - total)} ₸)"
+                except: discount_text = f"\n🎁 <b>Промокод:</b> {promo_code}"
             else:
-                # ПРОБЛЕМА С КОДОМ -> ОТМЕНЯЕМ СКИДКУ
-                # Восстанавливаем цену без скидки
-                try:
-                    original_price = int(total / (1 - discount_rate))
-                    total = original_price # Возвращаем полную цену
-                except:
-                    pass # Если ошибка математики, оставляем как есть (редкий кейс)
-                
-                discount_rate = 0 # Обнуляем ставку
-                
-                if promo_status == "USED":
-                    warning_msg = f"⚠️ Промокод <b>{promo_code}</b> уже был использован вами ранее. Скидка отменена."
-                    discount_text_for_admin = f"\n❌ <b>Промокод:</b> {promo_code} (Повторное использование)"
-                elif promo_status == "LIMIT":
-                    warning_msg = f"⚠️ Лимит промокода <b>{promo_code}</b> исчерпан. Скидка отменена."
-                    discount_text_for_admin = f"\n❌ <b>Промокод:</b> {promo_code} (Лимит исчерпан)"
-                else:
-                    warning_msg = f"⚠️ Ошибка применения промокода <b>{promo_code}</b>. Скидка отменена."
-                    discount_text_for_admin = f"\n❌ <b>Промокод:</b> {promo_code} (Ошибка)"
-        # ---------------------------
+                try: total = int(round(total / (1 - discount_rate)))
+                except: pass
+                discount_text = f"\n❌ <b>Промокод:</b> {promo_code} (Ошибка/Лимит)"
 
-        is_delivery = (info.get('deliveryType') == 'Доставка')
-        order_icon = "🚗" if is_delivery else "🏃"
+        is_del = (info.get('deliveryType') == 'Доставка')
+        text = f"{'🚗' if is_del else '🏃'} <b>НОВЫЙ ЗАКАЗ</b>\n➖➖➖➖➖➖➖➖➖➖\n"
+        text += f"👤 {info.get('name')} (<a href='tel:{info.get('phone')}'>{info.get('phone')}</a>)\n"
+        text += f"📍 {info.get('address') if is_del else 'Самовывоз'}\n"
+        text += f"💳 {info.get('paymentType')}\n"
+        if info.get('comment'): text += f"💬 <i>{info.get('comment')}</i>\n"
         
-        text = f"{order_icon} <b>НОВЫЙ ЗАКАЗ</b>\n➖➖➖➖➖➖➖➖➖➖\n"
-        text += f"👤 <b>Имя:</b> {info.get('name')}\n"
-        text += f"📞 <b>Тел:</b> <a href='tel:{info.get('phone')}'>{info.get('phone')}</a>\n"
-        
-        if is_delivery:
-            text += f"📍 <b>Адрес:</b> {info.get('address')}\n"
-        else:
-            text += f"📍 <b>Самовывоз</b>\n"
-            
-        text += f"💳 <b>Оплата:</b> {info.get('paymentType')}\n"
-        if info.get('paymentType') in ['Kaspi', 'Halyk']:
-            text += f"📱 <b>Счет на:</b> <code>{info.get('paymentPhone')}</code>\n"
-        if info.get('comment'):
-            text += f"💬 <b>Коммент:</b> <i>{info.get('comment')}</i>\n"
-        
-        # Время (из комментария)
-        if "Ко времени" in str(info.get('comment')):
-             text += "⏰ <b>КО ВРЕМЕНИ!</b>\n"
-
-        text += f"➖➖➖➖➖➖➖➖➖➖\n<b>📋 ЗАКАЗ:</b>\n"
-        
+        text += f"➖➖➖➖➖➖➖➖➖➖\n"
         for i, item in enumerate(cart, 1):
-            options = item.get('options', [])
-            name = item.get('name', 'Товар')
-            opts = [o for o in options if o and o != "Без сахара"]
-            opts_str = f" ({', '.join(opts)})" if opts else ""
-            text += f"{i}. <b>{name}</b>{opts_str}\n"
+            opts = [o for o in item.get('options', []) if o and o != "Без сахара"]
+            text += f"{i}. <b>{item.get('name')}</b> {'('+ ', '.join(opts) +')' if opts else ''}\n"
             
-        # Добавляем строку про скидку, если есть
-        text += discount_text_for_admin
-        
+        text += discount_text
         text += f"\n💰 <b>ИТОГО: {total} ₸</b>"
-        if is_delivery: text += "\n⚠️ <i>+ Доставка</i>"
+        if is_del: text += "\n⚠️ <i>+ Доставка</i>"
 
-        await bot.send_message(chat_id=ADMIN_CHAT_ID, text=text, reply_markup=get_decision_kb(message.chat.id))
-        
-        # Формируем ответ клиенту
-        client_response = f"✅ Заказ принят!\nСумма: {total} ₸"
-        if warning_msg:
-            client_response += f"\n\n{warning_msg}" # Добавляем предупреждение, если скидка слетела
-        client_response += "\nЖдите подтверждения времени."
-        
-        await message.answer(client_response)
+        await bot.send_message(ADMIN_CHAT_ID, text, reply_markup=get_decision_kb(message.chat.id))
+        await message.answer(f"✅ Заказ принят!\nСумма: {total} ₸\nЖдите подтверждения времени.")
 
-    except Exception as e:
-        logging.error(f"Error: {e}")
+    except Exception as e: logging.error(f"Order Error: {e}")
 
-# --- ЛОГИКА СТАТУСОВ ---
+# --- ЛОГИКА СТАТУСОВ (ADMIN) ---
 
 @dp.callback_query(F.data.startswith("dec_"))
-async def decision_callback(callback: CallbackQuery):
-    action, user_id = callback.data.split("_")[1], callback.data.split("_")[2]
-    
-    if action == "accept":
-        await callback.message.edit_reply_markup(reply_markup=get_time_kb(user_id))
-    
-    elif action == "reject":
-        old_text = callback.message.text 
-        
-        await callback.message.edit_text(
-            text=f"{old_text}\n\n❌ <b>ОТКЛОНЕН</b>", 
-            reply_markup=None
-        )
-        try: 
-            await bot.send_message(chat_id=user_id, text="❌ Заказ отклонен.\nСкоро свяжемся с вами для уточнения.") 
-        except: 
-            pass
-    
-    await callback.answer()
+async def decision(c: CallbackQuery):
+    act, uid = c.data.split("_")[1], c.data.split("_")[2]
+    if act == "accept": await c.message.edit_reply_markup(reply_markup=get_time_kb(uid))
+    else:
+        await c.message.edit_text(f"{c.message.text}\n\n❌ <b>ОТКЛОНЕН</b>")
+        try: await bot.send_message(uid, "❌ Заказ отклонен.")
+        except: pass
+    await c.answer()
 
 @dp.callback_query(F.data.startswith("time_"))
-async def time_callback(callback: CallbackQuery, state: FSMContext):
-    parts = callback.data.split("_")
-    action, user_id = parts[1], parts[2]
-    
-    if action == "back":
-        await callback.message.edit_reply_markup(reply_markup=get_decision_kb(user_id))
+async def set_time(c: CallbackQuery, state: FSMContext):
+    act, uid = c.data.split("_")[1], c.data.split("_")[2]
+    if act == "back": 
+        await c.message.edit_reply_markup(reply_markup=get_decision_kb(uid))
         return
-
-    if action == "custom":
-        await callback.message.answer("✍️ <b>Введите время</b> (например: '40 мин'):")
-        await state.update_data(order_msg_id=callback.message.message_id, client_id=user_id)
+    if act == "custom":
+        await c.message.answer("Введите время (напр. '40 мин'):")
+        await state.update_data(msg_id=c.message.message_id, uid=uid)
         await state.set_state(OrderState.waiting_for_custom_time)
-        await callback.answer()
+        await c.answer()
         return
     
-    time_val = f"{action} минут"
-    
-    old_text = callback.message.text
-    clean_text = old_text.split("\n\n✅")[0] 
-    
-    await callback.message.edit_text(
-        text=f"{clean_text}\n\n✅ <b>ПРИНЯТ</b> ({time_val})", 
-        reply_markup=get_ready_kb(user_id)
-    )
-    
-    try: 
-        await bot.send_message(chat_id=user_id, text=f"👨‍🍳 Заказ принят!\n⏳ Готовность: <b>{time_val}</b>.\n📞Телефон для связи: +77006437303")
-    except: 
-        pass
-    await callback.answer()
+    t_val = f"{act} мин"
+    clean_text = c.message.text.split("\n\n✅")[0]
+    await c.message.edit_text(f"{clean_text}\n\n✅ <b>ПРИНЯТ</b> ({t_val})", reply_markup=get_ready_kb(uid))
+    try: await bot.send_message(uid, f"👨‍🍳 Принят! Готовность: <b>{t_val}</b>.")
+    except: pass
+    await c.answer()
 
 @dp.message(OrderState.waiting_for_custom_time)
-async def custom_time_handler(message: types.Message, state: FSMContext):
-    user_data = await state.get_data()
-    order_msg_id = user_data['order_msg_id']
-    client_id = user_data['client_id']
-    custom_time = message.text
-    
-    try: await message.delete()
+async def custom_time(m: types.Message, state: FSMContext):
+    d = await state.get_data()
+    try: await m.delete()
     except: pass
-
     try:
-        await bot.edit_message_reply_markup(
-            chat_id=message.chat.id, 
-            message_id=order_msg_id, 
-            reply_markup=get_ready_kb(client_id)
-        )
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=f"✅ Время для заказа выше установлено: <b>{custom_time}</b>",
-            reply_to_message_id=order_msg_id
-        )
-        
-        await bot.send_message(client_id, f"👨‍🍳 Заказ принят!\n⏳ Готовность: <b>{custom_time}</b>.\n📞Телефон для связи: +77006437303")
-    except Exception as e:
-        logging.error(f"Custom time error: {e}")
-    
+        await bot.edit_message_reply_markup(m.chat.id, d['msg_id'], reply_markup=get_ready_kb(d['uid']))
+        await bot.send_message(m.chat.id, f"Время установлено: {m.text}", reply_to_message_id=d['msg_id'])
+        await bot.send_message(d['uid'], f"👨‍🍳 Принят! Готовность: <b>{m.text}</b>.")
+    except: pass
     await state.clear()
 
-@dp.callback_query(F.data.startswith("order_ready_"))
-async def ready_callback(callback: CallbackQuery):
-    user_id = callback.data.split("_")[2]
-    old_text = callback.message.text or ""
+@dp.callback_query(F.data.startswith("ord_ready_"))
+async def ready(c: CallbackQuery):
+    uid = c.data.split("_")[2]
+    old = c.message.text
+    clean = old.split("\n\n")[0] if "ПРИНЯТ" in old else old
     
-    is_delivery = "Доставка" in old_text
-    
-    if is_delivery:
-        admin_status = "🏁 <b>ЗАКАЗ ПЕРЕДАН КУРЬЕРУ</b>"
-        client_msg = "📦 <b>Ваш заказ передан курьеру!</b>\nОжидайте доставку. Приятного аппетита!"
-    else:
-        admin_status = "🏁 <b>ЗАКАЗ ГОТОВ / ВЫДАН</b>"
-        client_msg = "🎉 <b>Ваш заказ готов!</b>\nЖдем вас на выдаче. Приятного аппетита! ☕️"
+    await c.message.edit_text(f"{clean}\n\n🏁 <b>ГОТОВ К ВЫДАЧЕ</b>", reply_markup=get_given_kb(uid))
+    try: await bot.send_message(uid, "🎉 <b>Ваш заказ готов!</b>\nЖдем вас на выдаче ☕️")
+    except: pass
+    await c.answer()
 
-    if "ПРИНЯТ" in old_text:
-        clean_text = old_text.split("✅")[0].strip()
-        final_text = f"{clean_text}\n\n{admin_status}"
-    else:
-        final_text = f"{old_text}\n\n{admin_status}"
-
-    await callback.message.edit_text(text=final_text, reply_markup=None)
+@dp.callback_query(F.data.startswith("ord_given_"))
+async def given(c: CallbackQuery, state: FSMContext):
+    uid = int(c.data.split("_")[2])
+    old = c.message.text
+    clean = old.split("\n\n")[0]
     
-    try: 
-        await bot.send_message(chat_id=user_id, text=client_msg)
-    except: 
-        pass
+    await c.message.edit_text(f"{clean}\n\n🤝 <b>ВЫДАН / ЗАВЕРШЕН</b>")
+    
+    # --- НАЧИНАЕМ СБОР ОТЗЫВА ---
+    try:
+        # 1. Сервис
+        await bot.send_message(
+            uid, 
+            "Спасибо за заказ! 👋\nКак вам наше <b>обслуживание</b>?", 
+            reply_markup=get_stars_kb("service")
+        )
+        # Мы не можем установить стейт пользователю из чужого обработчика так просто.
+        # Но так как мы отправили сообщение с кнопкой, следующее действие юзера (нажатие)
+        # будет обработано callback-ом, который и поставит стейт.
+    except Exception as e:
+        logging.error(f"Err review req: {e}")
         
-    await callback.answer()
+    await c.answer()
+
+# --- ЛОГИКА ОТЗЫВОВ (КЛИЕНТ) ---
+
+# 1. Оценка Сервиса
+@dp.callback_query(F.data.startswith("rate_service_"))
+async def rate_service(c: CallbackQuery, state: FSMContext):
+    rating = int(c.data.split("_")[2])
+    await state.update_data(service_rate=rating)
+    
+    await c.message.edit_text(
+        f"Обслуживание: {rating} ⭐\n\nКак оцените <b>еду и напитки</b>?", 
+        reply_markup=get_stars_kb("food")
+    )
+    await state.set_state(ReviewState.waiting_for_food_rate)
+
+# 2. Оценка Еды -> Решение о чаевых
+@dp.callback_query(F.data.startswith("rate_food_"), ReviewState.waiting_for_food_rate)
+async def rate_food(c: CallbackQuery, state: FSMContext):
+    rating = int(c.data.split("_")[2])
+    await state.update_data(food_rate=rating)
+    
+    # Проверяем оценку за сервис
+    data = await state.get_data()
+    service_rate = data.get('service_rate', 0)
+    
+    if service_rate >= 4:
+        # Если сервис хороший -> Предлагаем чаевые
+        await c.message.edit_text(
+            f"Еда: {rating} ⭐\n\nЖелаете оставить <b>чаевые</b> бариста?", 
+            reply_markup=get_yes_no_kb()
+        )
+        await state.set_state(ReviewState.waiting_for_tips_decision)
+    else:
+        # Если сервис плохой -> Сразу к комментарию
+        await state.update_data(tips="Нет (Низкая оценка)")
+        await c.message.edit_text(f"Еда: {rating} ⭐\n\nПожалуйста, напишите ваш отзыв или предложение:", reply_markup=get_skip_comment_kb())
+        await state.set_state(ReviewState.waiting_for_comment)
+
+# 3. Решение о чаевых (Да/Нет)
+@dp.callback_query(F.data.startswith("tips_"), ReviewState.waiting_for_tips_decision)
+async def tips_decision(c: CallbackQuery, state: FSMContext):
+    choice = c.data.split("_")[1] # yes или no
+    
+    if choice == "yes":
+        # Показываем список бариста
+        await c.message.edit_text("Кому вы хотите оставить чаевые?", reply_markup=get_baristas_kb())
+        await state.set_state(ReviewState.waiting_for_barista_choice)
+    else:
+        # Отказ от чаевых -> К комментарию
+        await state.update_data(tips="Нет")
+        await c.message.edit_text("Поняли! 👌\nНапишите ваш отзыв (или нажмите пропустить):", reply_markup=get_skip_comment_kb())
+        await state.set_state(ReviewState.waiting_for_comment)
+
+# 4. Выбор бариста -> Показ номера -> Переход к отзыву
+@dp.callback_query(F.data.startswith("barista_"), ReviewState.waiting_for_barista_choice)
+async def barista_choice(c: CallbackQuery, state: FSMContext):
+    b_id = c.data.split("_")[1]
+    barista = BARISTAS.get(b_id)
+    
+    if barista:
+        tips_info = f"Выбрано: {barista['name']}"
+        await state.update_data(tips=tips_info)
+        
+        # Показываем номер и сразу просим отзыв
+        await c.message.edit_text(
+            f"💳 Kaspi/Halyk ({barista['name']}):\n<code>{barista['phone']}</code>\n\nСпасибо за поддержку! ❤️\n\nНапишите ваш отзыв:", 
+            reply_markup=get_skip_comment_kb()
+        )
+    else:
+        await c.message.edit_text("Ошибка выбора. Напишите отзыв:", reply_markup=get_skip_comment_kb())
+        
+    await state.set_state(ReviewState.waiting_for_comment)
+
+# 5. Текст отзыва (или Пропуск)
+@dp.callback_query(F.data == "skip_comment", ReviewState.waiting_for_comment)
+async def skip_comment(c: CallbackQuery, state: FSMContext):
+    # Вызываем функцию завершения, передавая пустой текст
+    await finalize_review(c.message, state, "Без текста", c.from_user)
+    await c.answer()
+
+@dp.message(ReviewState.waiting_for_comment)
+async def comment_text(m: types.Message, state: FSMContext):
+    await finalize_review(m, state, m.text, m.from_user)
+
+async def finalize_review(message, state, comment_text, user):
+    data = await state.get_data()
+    
+    # Сохраняем
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, save_review, 
+                               user.id, 
+                               user.first_name,
+                               data.get('service_rate'),
+                               data.get('food_rate'),
+                               data.get('tips', 'Нет'),
+                               comment_text)
+    
+    # Админу
+    msg = f"⭐ <b>НОВЫЙ ОТЗЫВ</b>\n"
+    msg += f"👤 {user.first_name}\n"
+    msg += f"💁‍♂️ Сервис: {data.get('service_rate')} ⭐\n"
+    msg += f"🍔 Еда: {data.get('food_rate')} ⭐\n"
+    msg += f"💰 Чаевые: {data.get('tips')}\n"
+    msg += f"💬 <i>{comment_text}</i>"
+    
+    await bot.send_message(ADMIN_CHAT_ID, msg)
+    
+    # Клиенту (если это callback, message.edit_text может быть недоступен, используем answer)
+    if isinstance(message, types.Message):
+        await message.answer("Спасибо за отзыв! Ждем вас снова! ❤️")
+    else:
+        await message.edit_text("Спасибо за отзыв! Ждем вас снова! ❤️")
+        
+    await state.clear()
 
 # --- ЗАПУСК ---
 async def main():
     await start_web_server()
     await bot.delete_webhook(drop_pending_updates=True)
-    print("🤖 Bot started polling...")
+    print("🤖 Bot started...")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("Бот остановлен.")
-
-
-
+    try: asyncio.run(main())
+    except KeyboardInterrupt: pass
