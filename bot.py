@@ -22,18 +22,22 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 # --- НАСТРОЙКИ ---
 TOKEN = os.getenv("BOT_TOKEN", "8444027240:AAFEiACM5x-OPmR9CFgk1zyrmU24PgovyCY") 
-ADMIN_CHAT_ID = 1054308942
+ADMIN_CHAT_ID = -1003472248648
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
-SHEET_NAME = "COFFEEMOLL TELEGRAM"
+SHEET_NAME = "CoffeeMoll Menu"
 
-# Номер для ОБЩИХ чаевых (если вдруг понадобится)
+# --- НАСТРОЙКИ ТЕМ (TOPICS) ---
+TOPIC_ID_ORDERS = 1
+TOPIC_ID_REVIEWS = 3
+# ------------------------------
+
 KASPI_NUMBER = "+7 700 643 73 03" 
 
 # --- НАСТРОЙКА БАРИСТА ---
 BARISTAS = {
-    "1": {"name": "Павел", "phone": "+7 771 904 44 55"},
-    "2": {"name": "Карина", "phone": "+7 700 000 00 02"},
-    "3": {"name": "Анара", "phone": "+7 700 000 00 03"}
+    "1": {"name": "Имя Бариста 1", "phone": "+7 700 000 00 01"},
+    "2": {"name": "Имя Бариста 2", "phone": "+7 700 000 00 02"},
+    "3": {"name": "Имя Бариста 3", "phone": "+7 700 000 00 03"}
 }
 # -----------------
 
@@ -216,10 +220,22 @@ async def web_app_data_handler(message: types.Message):
                 except: pass
                 discount_text = f"\n❌ <b>Промокод:</b> {promo_code} (Ошибка/Лимит)"
 
-        is_del = (info.get('deliveryType') == 'Доставка')
-        text = f"{'🚗' if is_del else '🏃'} <b>НОВЫЙ ЗАКАЗ</b>\n➖➖➖➖➖➖➖➖➖➖\n"
+        # Определение типа заказа для чека
+        delivery_type = info.get('deliveryType') # "Доставка", "В зале", "Самовывоз"
+        is_del = (delivery_type == 'Доставка')
+        
+        order_icon = "🚗" if is_del else "🏃"
+        
+        text = f"{order_icon} <b>НОВЫЙ ЗАКАЗ</b>\n➖➖➖➖➖➖➖➖➖➖\n"
         text += f"👤 {info.get('name')} (<a href='tel:{info.get('phone')}'>{info.get('phone')}</a>)\n"
-        text += f"📍 {info.get('address') if is_del else 'Самовывоз'}\n"
+        
+        # 1. ИСПРАВЛЕНИЕ: Четкое отображение типа заказа
+        if is_del:
+            text += f"📍 <b>Адрес:</b> {info.get('address')}\n"
+        else:
+            # Пишем "В зале" или "Самовывоз"
+            text += f"📍 <b>{delivery_type}</b>\n"
+            
         text += f"💳 {info.get('paymentType')}\n"
         if info.get('comment'): text += f"💬 <i>{info.get('comment')}</i>\n"
         
@@ -232,7 +248,12 @@ async def web_app_data_handler(message: types.Message):
         text += f"\n💰 <b>ИТОГО: {total} ₸</b>"
         if is_del: text += "\n⚠️ <i>+ Доставка</i>"
 
-        await bot.send_message(ADMIN_CHAT_ID, text, reply_markup=get_decision_kb(message.chat.id))
+        await bot.send_message(
+            chat_id=ADMIN_CHAT_ID, 
+            text=text, 
+            reply_markup=get_decision_kb(message.chat.id),
+            message_thread_id=TOPIC_ID_ORDERS
+        )
         await message.answer(f"✅ Заказ принят!\nСумма: {total} ₸\nЖдите подтверждения времени.")
 
     except Exception as e: logging.error(f"Order Error: {e}")
@@ -263,9 +284,18 @@ async def set_time(c: CallbackQuery, state: FSMContext):
         return
     
     t_val = f"{act} мин"
-    clean_text = c.message.text.split("\n\n✅")[0]
+    old_text = c.message.text
+    is_delivery = "🚗" in old_text # Проверяем, доставка ли это по иконке
+    
+    clean_text = old_text.split("\n\n✅")[0]
     await c.message.edit_text(f"{clean_text}\n\n✅ <b>ПРИНЯТ</b> ({t_val})", reply_markup=get_ready_kb(uid))
-    try: await bot.send_message(uid, f"👨‍🍳 Принят! Готовность: <b>{t_val}</b>.")
+    
+    # 2. ИСПРАВЛЕНИЕ: Уточнение для доставки
+    msg_client = f"👨‍🍳 Принят! Готовность: <b>{t_val}</b>."
+    if is_delivery:
+        msg_client += "\n<i>(Время приготовления, без учета доставки)</i>"
+        
+    try: await bot.send_message(uid, msg_client)
     except: pass
     await c.answer()
 
@@ -276,8 +306,23 @@ async def custom_time(m: types.Message, state: FSMContext):
     except: pass
     try:
         await bot.edit_message_reply_markup(m.chat.id, d['msg_id'], reply_markup=get_ready_kb(d['uid']))
-        await bot.send_message(m.chat.id, f"Время установлено: {m.text}", reply_to_message_id=d['msg_id'])
-        await bot.send_message(d['uid'], f"👨‍🍳 Принят! Готовность: <b>{m.text}</b>.")
+        
+        # Получаем текст старого сообщения, чтобы проверить на доставку (через reply)
+        reply_msg = m.reply_to_message # Это работает, если reply_to_message_id был передан, но тут мы просто шлем новое
+        
+        # При ручном вводе сложно проверить текст старого сообщения без лишних запросов.
+        # Будем считать, что уведомление стандартное, или можно сохранить is_del в state.
+        # Для простоты добавим универсальную приписку.
+        
+        await bot.send_message(
+            chat_id=m.chat.id, 
+            text=f"Время установлено: {m.text}", 
+            reply_to_message_id=d['msg_id'],
+            message_thread_id=TOPIC_ID_ORDERS
+        )
+        
+        # Отправляем клиенту
+        await bot.send_message(d['uid'], f"👨‍🍳 Принят! Готовность: <b>{m.text}</b>.\n<i>(Если это доставка, время пути не учтено)</i>")
     except: pass
     await state.clear()
 
@@ -292,7 +337,9 @@ async def ready(c: CallbackQuery):
     # Меняем статус админа на "ГОТОВ"
     await c.message.edit_text(f"{clean}\n\n🏁 <b>ГОТОВ</b>", reply_markup=get_given_kb(uid))
     
-    client_msg = "📦 <b>Ваш заказ передан курьеру!</b>" if is_del else "🎉 <b>Ваш заказ готов!</b>\nЖдем вас на выдаче ☕️"
+    # 3. ИСПРАВЛЕНИЕ: Не пишем "Передан курьеру" раньше времени
+    client_msg = "📦 <b>Заказ готов и упакован!</b>\nОжидаем курьера." if is_del else "🎉 <b>Ваш заказ готов!</b>\nЖдем вас на выдаче ☕️"
+    
     try: await bot.send_message(uid, client_msg)
     except: pass
     await c.answer()
@@ -306,9 +353,9 @@ async def given(c: CallbackQuery, state: FSMContext):
     is_del = "🚗" in clean or "Доставка" in clean
     
     # Финальный статус у админа
-    await c.message.edit_text(f"{clean}\n\n🤝 <b>ВЫДАН / ЗАВЕРШЕН</b>")
+    status_text = "🚗 <b>КУРЬЕР ВЫЕХАЛ</b>" if is_del else "🤝 <b>ВЫДАН / ЗАВЕРШЕН</b>"
+    await c.message.edit_text(f"{clean}\n\n{status_text}")
     
-    # --- ЛОГИКА ЗАПРОСА ОТЗЫВА ---
     try:
         if is_del:
             # Если доставка - отправляем кнопку "Я получил"
@@ -328,17 +375,14 @@ async def given(c: CallbackQuery, state: FSMContext):
 
 @dp.callback_query(F.data == "ord_received")
 async def delivery_received(c: CallbackQuery, state: FSMContext):
-    # Клиент нажал "Я получил"
-    await c.message.edit_reply_markup(reply_markup=None) # Убираем кнопку
+    await c.message.edit_reply_markup(reply_markup=None) 
     await c.message.answer("Приятного аппетита! 😋")
     
-    # Запоминаем, что это была доставка (для отключения чаевых)
     await state.update_data(is_delivery=True)
     await start_review_process(c.from_user.id, state)
     await c.answer()
 
 async def start_review_process(user_id, state):
-    # Старт опроса
     await bot.send_message(
         user_id, 
         "Как вам наше <b>обслуживание</b>?", 
@@ -365,12 +409,9 @@ async def rate_food(c: CallbackQuery, state: FSMContext):
     
     data = await state.get_data()
     service_rate = data.get('service_rate', 0)
-    is_delivery = data.get('is_delivery', False) # Проверяем, была ли доставка
+    is_delivery = data.get('is_delivery', False) 
     
-    # Логика показа чаевых:
-    # 1. Сервис должен быть >= 4
-    # 2. Это НЕ должна быть доставка (на доставке чаевые отключаем)
-    
+    # Чаевые ТОЛЬКО если: Самовывоз И Сервис >= 4
     if service_rate >= 4 and not is_delivery:
         await c.message.edit_text(
             f"Еда: {rating} ⭐\n\nЖелаете оставить <b>чаевые</b> бариста?", 
@@ -378,7 +419,7 @@ async def rate_food(c: CallbackQuery, state: FSMContext):
         )
         await state.set_state(ReviewState.waiting_for_tips_decision)
     else:
-        # Пропускаем чаевые
+        # Доставка или плохая оценка -> Сразу отзыв
         tips_reason = "Нет (Доставка)" if is_delivery else "Нет (Низкая оценка)"
         await state.update_data(tips=tips_reason)
         
@@ -388,14 +429,12 @@ async def rate_food(c: CallbackQuery, state: FSMContext):
 
 @dp.callback_query(F.data.startswith("tips_"), ReviewState.waiting_for_tips_decision)
 async def tips_decision(c: CallbackQuery, state: FSMContext):
-    choice = c.data.split("_")[1] # yes / no
+    choice = c.data.split("_")[1]
     
     if choice == "yes":
-        # Показываем список бариста (только для самовывоза, т.к. доставка сюда не попадает)
         await c.message.edit_text("Кому вы хотите оставить чаевые?", reply_markup=get_baristas_kb())
         await state.set_state(ReviewState.waiting_for_barista_choice)
     else:
-        # Отказ
         await state.update_data(tips="Нет")
         await c.message.edit_text("Поняли! 👌\nНапишите ваш отзыв (или нажмите пропустить):", reply_markup=get_skip_comment_kb())
         await state.set_state(ReviewState.waiting_for_comment)
@@ -410,7 +449,7 @@ async def barista_choice(c: CallbackQuery, state: FSMContext):
         await state.update_data(tips=tips_info)
         
         await c.message.edit_text(
-            f"💳 Kaspi/Halyk ({barista['name']}):\n<code>{barista['phone']}</code>\n\nСпасибо за поддержку! ❤️\n\nНапишите ваш отзыв:", 
+            f"💳 Kaspi Gold ({barista['name']}):\n<code>{barista['phone']}</code>\n\nСпасибо за поддержку! ❤️\n\nНапишите ваш отзыв:", 
             reply_markup=get_skip_comment_kb()
         )
     else:
@@ -430,7 +469,6 @@ async def comment_text(m: types.Message, state: FSMContext):
 async def finalize_review(message, state, comment_text, user):
     data = await state.get_data()
     
-    # Сохраняем
     loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, save_review, 
                                user.id, 
@@ -440,7 +478,6 @@ async def finalize_review(message, state, comment_text, user):
                                data.get('tips', 'Нет'),
                                comment_text)
     
-    # Админу
     msg = f"⭐ <b>НОВЫЙ ОТЗЫВ</b>\n"
     msg += f"👤 {user.first_name}\n"
     msg += f"💁‍♂️ Сервис: {data.get('service_rate')} ⭐\n"
@@ -448,9 +485,12 @@ async def finalize_review(message, state, comment_text, user):
     msg += f"💰 Чаевые: {data.get('tips')}\n"
     msg += f"💬 <i>{comment_text}</i>"
     
-    await bot.send_message(ADMIN_CHAT_ID, msg)
+    await bot.send_message(
+        chat_id=ADMIN_CHAT_ID, 
+        text=msg,
+        message_thread_id=TOPIC_ID_REVIEWS
+    )
     
-    # Кастомный ответ клиенту
     avg_rate = (int(data.get('service_rate', 5)) + int(data.get('food_rate', 5))) / 2
     
     if avg_rate == 5:
@@ -477,4 +517,3 @@ async def main():
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
-
