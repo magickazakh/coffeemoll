@@ -229,6 +229,7 @@
     <div class="loading-motto">Кофейня с неприлично вкусным кофе</div>
 </div>
 
+<!-- ЭКРАН ОШИБКИ -->
 <div class="loading-overlay" id="error-screen" style="display: none;">
     <div style="font-size: 50px; margin-bottom: 10px;">📡</div>
     <div class="loading-title" style="font-size: 24px;">Ошибка связи</div>
@@ -254,6 +255,7 @@
 
 <div id="app"></div>
 
+<!-- НИЧЕГО НЕ НАЙДЕНО -->
 <div id="no-results">
     <span class="no-res-icon">🔍</span>
     <h3>Ничего не найдено</h3>
@@ -277,7 +279,8 @@
 
     <div id="cart-list-container"></div>
     
-    <div class="promo-section">
+    <!-- ID ДОБАВЛЕН ЗДЕСЬ -->
+    <div class="promo-section" id="promo-container">
         <input type="text" id="promo-code" placeholder="Промокод" style="margin-bottom: 0;">
         <button class="promo-btn" onclick="applyPromo()">OK</button>
     </div>
@@ -374,12 +377,8 @@
     // !!! ЗАМЕНИТЕ ССЫЛКУ НИЖЕ НА ВАШУ НОВУЮ ССЫЛКУ PROMOCODES !!!
     const PROMO_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=19369806&single=true&output=csv";
     
-    // --- ИСПРАВЛЕНИЕ КЕШИРОВАНИЯ ---
-    // Создаем уникальную метку времени (например: 1715629123456)
+    // Cache Busting
     const cacheBuster = new Date().getTime();
-
-    // Добавляем &t=... к ссылке Google. 
-    // Это заставляет сервер думать, что мы запрашиваем новый файл каждый раз.
     const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL + "&t=" + cacheBuster);
     const GOOGLE_PROMO_URL = "https://corsproxy.io/?" + encodeURIComponent(PROMO_SHEET_URL + "&t=" + cacheBuster);
     
@@ -389,16 +388,17 @@
     let SYRUPS = ["Карамель", "Ваниль", "Орех"];
     let SAUCES = ["Кетчуп"];
     let ALT_MILKS = ["Кокосовое"];
+    let PROMOS_ENABLED = true; // По умолчанию включено
 
     const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
 
     let menuData = [];
-    let promoData = []; // Храним список промокодов
+    let promoData = []; 
     let cart = [];
     let currentModalProduct = null;
     let upsellShown = false;
     let appliedDiscount = 0; 
-    let appliedPromoCode = ""; // Сам код
+    let appliedPromoCode = ""; 
 
     let favorites = JSON.parse(localStorage.getItem('coffee_favorites')) || [];
 
@@ -418,18 +418,16 @@
         tg.HapticFeedback.impactOccurred('light');
     }
 
-    // НОВАЯ ЛОГИКА ПРОМОКОДОВ
     function applyPromo() {
         const codeInput = document.getElementById('promo-code');
         const code = codeInput.value.trim().toUpperCase();
         
-        // Ищем код в загруженной базе
         const found = promoData.find(p => p.Code && p.Code.toUpperCase() === code);
         
         if(found) {
             const limit = parseInt(found.Limit);
             if (limit > 0) {
-                appliedDiscount = parseFloat(found.Discount.replace(',','.')); // На случай запятых в CSV
+                appliedDiscount = parseFloat(found.Discount.replace(',','.')); 
                 appliedPromoCode = code;
                 
                 codeInput.style.borderColor = "#88d100";
@@ -470,7 +468,6 @@
     }
 
     function initMenu() {
-        // ЗАГРУЖАЕМ ПРОМОКОДЫ
         if (PROMO_SHEET_URL.includes("ИД_ЛИСТА")) {
              console.warn("Ссылка на промокоды не настроена");
         } else {
@@ -478,12 +475,10 @@
                 download: true, header: true, skipEmptyLines: true,
                 complete: function(results) {
                     promoData = results.data;
-                    console.log("Promos loaded:", promoData.length);
                 }
             });
         }
 
-        // ЗАГРУЖАЕМ МЕНЮ
         Papa.parse(GOOGLE_SHEET_URL, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
@@ -502,9 +497,17 @@
                             if (k === 'sauce_names') SAUCES = v.split(',');
                             if (k.startsWith('price_') || k.startsWith('hd_') || k === 'br_egg') PRICES[k.replace('price_', '')] = parsePrice(v);
                             if (k === 'price_cinnamon') PRICES.cinnamon = parsePrice(v);
+                            if (k === 'enable_promos') PROMOS_ENABLED = (v.toLowerCase() === 'true');
                         }
                     });
                 }
+                
+                // СКРЫВАЕМ ИЛИ ПОКАЗЫВАЕМ БЛОК ПРОМОКОДОВ
+                const promoContainer = document.getElementById('promo-container');
+                if (promoContainer) {
+                    promoContainer.style.display = PROMOS_ENABLED ? 'flex' : 'none';
+                }
+
                 if (SYRUPS[0] !== "Нет") SYRUPS.unshift("Нет");
                 if (SAUCES[0] !== "Нет") SAUCES.unshift("Нет");
 
@@ -912,10 +915,9 @@
     function togglePayment() { const isCash = document.getElementById('p-cash').checked || document.getElementById('p-card').checked; document.getElementById('payment-phone-block').style.display = isCash ? 'none' : 'block'; }
     function toggleTimePicker() { const isTime = document.getElementById('t-time').checked; document.getElementById('time-picker-container').style.display = isTime ? 'block' : 'none'; }
     
-function calculateCheckoutTotal() { 
+    function calculateCheckoutTotal() { 
         let t = cart.reduce((s, i) => s + i.price, 0); 
         if(appliedDiscount > 0) {
-            // ИСПОЛЬЗУЕМ Math.round ВМЕСТО Math.floor
             const discountAmount = Math.round(t * appliedDiscount);
             t = t - discountAmount;
             document.getElementById('checkout-total-sum').innerText = `Итого: ${t} ₸ (Скидка -${discountAmount})`;
@@ -964,7 +966,7 @@ function calculateCheckoutTotal() {
                 paymentPhone: payPhone, 
                 comment, 
                 discount: appliedDiscount,
-                promoCode: appliedPromoCode // ОТПРАВЛЯЕМ КОД
+                promoCode: appliedPromoCode 
             } 
         }; 
         tg.sendData(JSON.stringify(orderData)); 
@@ -987,5 +989,3 @@ function calculateCheckoutTotal() {
 </script>
 </body>
 </html>
-
-
