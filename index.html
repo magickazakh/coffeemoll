@@ -50,6 +50,8 @@
             .radio-input:checked + .radio-label, .checkout-radio-input:checked + .checkout-radio-label { background: #064e3b !important; border-color: var(--primary-color) !important; }
             .category-title { background: #1a1a1a !important; border-bottom: 1px solid #333 !important; }
             .accordion-header { background: #333 !important; color: #fff !important; }
+            /* Стиль для кнопки повтора в темной теме */
+            .repeat-card { background: #333 !important; border-color: #444 !important; }
         }
 
         /* --- БАЗОВЫЕ СТИЛИ --- */
@@ -72,6 +74,26 @@
         #search-input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; transition: 0.2s; margin: 0; box-sizing: border-box; font-family: var(--font-body); }
         #search-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(136, 209, 0, 0.1); }
         
+        /* 2. СТИЛИ ДЛЯ КНОПКИ ПОВТОРА */
+        #repeat-order-container { padding: 0 15px 10px 15px; display: none; }
+        .repeat-card {
+            background: #fff;
+            border: 1px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(136, 209, 0, 0.1);
+            transition: transform 0.1s;
+        }
+        .repeat-card:active { transform: scale(0.98); background: #f9f9f9; }
+        .repeat-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+        .repeat-title { font-size: 13px; font-weight: 700; color: var(--primary-color); text-transform: uppercase; font-family: var(--font-title); letter-spacing: 0.5px; }
+        .repeat-desc { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .repeat-icon { font-size: 20px; color: var(--primary-color); margin-left: 10px; }
+
         .nav-scroller { overflow-x: auto; white-space: nowrap; padding: 5px 15px 5px 15px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .nav-scroller::-webkit-scrollbar { display: none; }
         .nav-indicator { display: flex; justify-content: center; gap: 6px; padding-bottom: 10px; }
@@ -249,6 +271,19 @@
     <div class="search-wrapper">
         <input type="text" id="search-input" placeholder="🔍 Найти..." oninput="filterMenu()">
     </div>
+    
+    <!-- 2. КНОПКА ПОВТОРА (СКРЫТА ПО УМОЛЧАНИЮ) -->
+    <div id="repeat-order-container">
+        <div class="repeat-card" onclick="loadLastOrder()">
+            <div class="repeat-info">
+                <div class="repeat-title">↻ Повторить прошлый заказ</div>
+                <div class="repeat-desc" id="repeat-desc">...</div>
+                <div id="repeat-price" style="font-weight:bold; font-size:13px; color:#333;"></div>
+            </div>
+            <div class="repeat-icon">➔</div>
+        </div>
+    </div>
+
     <div class="nav-scroller" id="nav-container"></div>
     <div class="nav-indicator" id="nav-dots"></div>
 </div>
@@ -389,6 +424,10 @@
     let SAUCES = ["Кетчуп"];
     let ALT_MILKS = ["Кокосовое"];
     let PROMOS_ENABLED = true; // По умолчанию включено
+    
+    // 1. ДИНАМИЧЕСКИЕ ЧАСЫ (По умолчанию)
+    let OPEN_HOUR = 9;
+    let CLOSE_HOUR = 23;
 
     const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
 
@@ -468,6 +507,9 @@
     }
 
     function initMenu() {
+        // Проверяем сохраненный заказ при запуске
+        checkRepeatOrder();
+
         if (PROMO_SHEET_URL.includes("ИД_ЛИСТА")) {
              console.warn("Ссылка на промокоды не настроена");
         } else {
@@ -498,6 +540,10 @@
                             if (k.startsWith('price_') || k.startsWith('hd_') || k === 'br_egg') PRICES[k.replace('price_', '')] = parsePrice(v);
                             if (k === 'price_cinnamon') PRICES.cinnamon = parsePrice(v);
                             if (k === 'enable_promos') PROMOS_ENABLED = (v.toLowerCase() === 'true');
+                            
+                            // 1. ПАРСИНГ ВРЕМЕНИ ИЗ ТАБЛИЦЫ
+                            if (k === 'open_time') OPEN_HOUR = parseInt(v.split(':')[0]);
+                            if (k === 'close_time') CLOSE_HOUR = parseInt(v.split(':')[0]);
                         }
                     });
                 }
@@ -586,10 +632,25 @@
 
     function checkWorkingHours() {
         const now = new Date(); const hour = now.getHours();
-        const isOpen = hour >= 9 && hour < 23;
+        
+        // 1. ИСПОЛЬЗУЕМ ДИНАМИЧЕСКИЕ ЧАСЫ
+        const isOpen = hour >= OPEN_HOUR && hour < CLOSE_HOUR;
+        
         const badge = document.getElementById('work-status');
-        if(isOpen) { badge.innerText = "Открыто (09:00 - 23:00)"; badge.style.background = "#e6fffa"; badge.style.color = "#047857"; } 
-        else { badge.innerText = "Закрыто (с 09:00)"; badge.style.background = "#fee2e2"; badge.style.color = "#991b1b"; }
+        if(isOpen) { 
+            // Формируем красивую строку времени (09:00 - 23:00)
+            const o = OPEN_HOUR < 10 ? '0' + OPEN_HOUR : OPEN_HOUR;
+            const c = CLOSE_HOUR < 10 ? '0' + CLOSE_HOUR : CLOSE_HOUR;
+            badge.innerText = `Открыто (${o}:00 - ${c}:00)`; 
+            badge.style.background = "#e6fffa"; 
+            badge.style.color = "#047857"; 
+        } 
+        else { 
+            const o = OPEN_HOUR < 10 ? '0' + OPEN_HOUR : OPEN_HOUR;
+            badge.innerText = `Закрыто (с ${o}:00)`; 
+            badge.style.background = "#fee2e2"; 
+            badge.style.color = "#991b1b"; 
+        }
         return isOpen; 
     }
     function isPizzaAvailable() { const hour = new Date().getHours(); return hour >= 11; }
@@ -969,8 +1030,45 @@
                 promoCode: appliedPromoCode 
             } 
         }; 
+        
+        // 2. СОХРАНЯЕМ ЗАКАЗ ДЛЯ ПОВТОРА
+        localStorage.setItem('coffee_last_order', JSON.stringify(cart));
+        
         tg.sendData(JSON.stringify(orderData)); 
         setTimeout(function() { cart = []; updateCartButton(); closeCheckout(); tg.close(); }, 100);
+    }
+    
+    // 2. ФУНКЦИИ ДЛЯ ПОВТОРА ЗАКАЗА
+    function checkRepeatOrder() {
+        const lastOrder = localStorage.getItem('coffee_last_order');
+        if (lastOrder) {
+            try {
+                const items = JSON.parse(lastOrder);
+                if (items.length > 0) {
+                    const desc = items.map(i => i.name).join(', ');
+                    const price = items.reduce((s, i) => s + i.price, 0);
+                    
+                    document.getElementById('repeat-desc').innerText = desc;
+                    document.getElementById('repeat-price').innerText = price + " ₸";
+                    document.getElementById('repeat-order-container').style.display = 'block';
+                }
+            } catch(e) { console.error(e); }
+        }
+    }
+
+    function loadLastOrder() {
+        const lastOrder = localStorage.getItem('coffee_last_order');
+        if (lastOrder) {
+            const items = JSON.parse(lastOrder);
+            // Добавляем к текущей корзине
+            items.forEach(item => cart.push(item));
+            
+            updateCartButton();
+            tg.HapticFeedback.notificationOccurred('success');
+            
+            // Скрываем кнопку, чтобы не нажать дважды случайно
+            document.getElementById('repeat-order-container').style.display = 'none';
+        }
     }
     
     function getImageByCategory(cat) { const map = { "Кофе": "https://cdn-icons-png.flaticon.com/512/751/751621.png", "Завтраки": "https://cdn-icons-png.flaticon.com/512/2771/2771406.png", "Круассаны": "https://cdn-icons-png.flaticon.com/512/3014/3014528.png", "Салаты": "https://cdn-icons-png.flaticon.com/512/2062/2062296.png", "Чай": "https://cdn-icons-png.flaticon.com/512/3054/3054889.png", "Лимонады": "https://cdn-icons-png.flaticon.com/512/2447/2447137.png", "Коктейли": "https://cdn-icons-png.flaticon.com/512/3081/3081986.png", "Хот-доги": "https://cdn-icons-png.flaticon.com/512/1980/1980788.png", "Пицца": "https://cdn-icons-png.flaticon.com/512/3132/3132693.png", "Закуски": "https://cdn-icons-png.flaticon.com/512/5787/5787016.png", "Сезонное": "https://cdn-icons-png.flaticon.com/512/4421/4421089.png", "Смузи": "https://cdn-icons-png.flaticon.com/512/1147/1147588.png", "Холодные напитки": "https://cdn-icons-png.flaticon.com/512/956/956850.png", "Пасты": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png" }; return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png"; }
