@@ -51,11 +51,8 @@
             .radio-input:checked + .radio-label, .checkout-radio-input:checked + .checkout-radio-label { background: #064e3b !important; border-color: var(--primary-color) !important; }
             .category-title { background: #1a1a1a !important; border-bottom: 1px solid #333 !important; }
             .accordion-header { background: #333 !important; color: #fff !important; }
-            /* Стиль для кнопки повтора в темной теме */
             .repeat-card { background: #333 !important; border-color: #444 !important; }
-            /* Стиль кнопки "Нет, спасибо" в upsell для темной темы */
             .upsell-no { background: #444 !important; color: #ccc !important; }
-            .reviews-btn { background: #333 !important; border-color: #444 !important; color: #fff !important; }
         }
 
         /* --- БАЗОВЫЕ СТИЛИ --- */
@@ -73,24 +70,6 @@
         .motto { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-weight: 600; max-width: 180px; line-height: 1.2; }
 
         .status-badge { font-family: var(--font-body); font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; transition: 0.3s; white-space: nowrap; margin-left: 10px;}
-
-        /* КНОПКА ОТЗЫВОВ */
-        .reviews-btn { 
-            width: 32px; height: 32px; 
-            border-radius: 50%; 
-            background: white; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 16px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-            cursor: pointer; 
-            border: 1px solid var(--border-color);
-            margin-left: 8px;
-        }
-        
-        /* ЗВЕЗДЫ РЕЙТИНГА */
-        .star-rating { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
-        .star { font-size: 36px; color: #ddd; cursor: pointer; transition: 0.2s; }
-        .star.active { color: #FFC107; transform: scale(1.1); }
         
         /* ПОИСК И ПОВТОР ЗАКАЗА (АНИМАЦИЯ СКРЫТИЯ) */
         .search-wrapper { 
@@ -346,7 +325,6 @@
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
             <div id="work-status" class="status-badge">Checking...</div>
-            <div class="reviews-btn" onclick="openReviewModal()">💬</div>
         </div>
     </header>
     <div class="search-wrapper">
@@ -386,27 +364,6 @@
 </div>
 
 <div class="modal-overlay" id="product-modal" onclick="closeProductModal(event)"><div class="modal-content" id="product-modal-content"></div></div>
-
-<!-- МОДАЛКА ОТЗЫВОВ -->
-<div class="modal-overlay" id="review-modal" onclick="closeReviewModal(event)">
-    <div class="modal-content" style="max-width: 400px;">
-        <div class="modal-header">
-            <div class="modal-title">ОТЗЫВ</div>
-            <div class="close-icon" onclick="closeReviewModal(true)">✕</div>
-        </div>
-        <div style="padding: 20px 0; text-align: center;">
-            <div class="star-rating">
-                <span class="star" onclick="setRate(1)">★</span>
-                <span class="star" onclick="setRate(2)">★</span>
-                <span class="star" onclick="setRate(3)">★</span>
-                <span class="star" onclick="setRate(4)">★</span>
-                <span class="star" onclick="setRate(5)">★</span>
-            </div>
-            <textarea id="review-text" placeholder="Напишите что-нибудь хорошее..." style="height: 100px; margin-bottom: 20px;"></textarea>
-            <button class="modal-add-btn" onclick="sendReview()">ОТПРАВИТЬ</button>
-        </div>
-    </div>
-</div>
 
 <div class="modal-overlay" id="checkout-modal"><div class="modal-content" id="checkout-content">
     <div class="modal-header"><div class="modal-title">ВАШ ЗАКАЗ</div><div class="close-icon" onclick="closeCheckout()">✕</div></div>
@@ -553,7 +510,6 @@
     let appliedPromoCode = ""; 
 
     let favorites = JSON.parse(localStorage.getItem('coffee_favorites')) || [];
-    let currentRating = 0;
 
     function toggleFavorite(e, id) {
         e.stopPropagation(); 
@@ -567,45 +523,6 @@
         renderMenu();
         
         tg.HapticFeedback.impactOccurred('light');
-    }
-
-    // ФУНКЦИИ ОТЗЫВОВ
-    function openReviewModal() {
-        document.getElementById('review-modal').style.display = 'flex';
-        currentRating = 0;
-        setRate(0);
-        document.getElementById('review-text').value = '';
-    }
-    
-    function closeReviewModal(force) { 
-        if (force === true || (force && force.target.id === 'review-modal')) {
-            document.getElementById('review-modal').style.display = 'none'; 
-        }
-    }
-    
-    function setRate(n) {
-        currentRating = n;
-        const stars = document.querySelectorAll('.star');
-        stars.forEach((s, i) => {
-            if (i < n) s.classList.add('active');
-            else s.classList.remove('active');
-        });
-    }
-    
-    function sendReview() {
-        if (currentRating === 0) { alert("Пожалуйста, поставьте оценку"); return; }
-        const text = document.getElementById('review-text').value.trim();
-        
-        const data = {
-            type: 'review', // ВАЖНО: этот флаг ловит бот
-            rating: currentRating,
-            text: text,
-            name: tg.initDataUnsafe?.user?.first_name || "Аноним"
-        };
-        
-        tg.sendData(JSON.stringify(data));
-        closeReviewModal(true);
-        tg.close();
     }
 
     function applyPromo() {
@@ -659,29 +576,39 @@
 
     // Функция обновления высоты хедера для sticky элементов
     function updateHeaderHeight() {
-        // Scroll hide logic:
+        // Глобальные переменные для скролла
         let lastScrollTop = 0;
+        const scrollDelta = 5; // Порог чувствительности
         const headerEl = document.querySelector('.header-container');
 
+        // Слушатель скролла (один раз)
         window.addEventListener('scroll', () => {
             const st = window.pageYOffset || document.documentElement.scrollTop;
             
+            // Если скролл меньше дельты, игнорируем (защита от дребезга)
+            if(Math.abs(lastScrollTop - st) <= scrollDelta) return;
+
             if (st > lastScrollTop && st > 50) {
-                 // Scroll Down
+                 // Скролл ВНИЗ
                  headerEl.classList.add('mini-header');
             } else if (st < lastScrollTop) {
-                 // Scroll Up
+                 // Скролл ВВЕРХ
                  headerEl.classList.remove('mini-header');
             }
             lastScrollTop = st <= 0 ? 0 : st;
         });
+
+        // Обновление CSS переменной высоты
+        function updateCssHeight() {
+            if(headerEl) {
+                document.documentElement.style.setProperty('--header-height', headerEl.offsetHeight + 'px');
+            }
+        }
         
-        headerEl.addEventListener('transitionend', () => {
-             document.documentElement.style.setProperty('--header-height', headerEl.offsetHeight + 'px');
-        });
-        
+        headerEl.addEventListener('transitionend', updateCssHeight);
+        window.addEventListener('resize', updateCssHeight);
         // Initial set
-        document.documentElement.style.setProperty('--header-height', headerEl.offsetHeight + 'px');
+        updateCssHeight();
     }
 
     // 2. ФУНКЦИЯ ПОДГОТОВКИ ДАННЫХ ДЛЯ ОТОБРАЖЕНИЯ (С ИЗБРАННЫМ)
