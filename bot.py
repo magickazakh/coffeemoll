@@ -21,7 +21,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 # --- НАСТРОЙКИ ---
 TOKEN = os.getenv("BOT_TOKEN", "8444027240:AAFEiACM5x-OPmR9CFgk1zyrmU24PgovyCY") 
-ADMIN_CHAT_ID = -1003356844624
+ADMIN_CHAT_ID = 1054308942
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
 SHEET_NAME = "COFFEEMOLL TELEGRAM" # <--- УКАЖИТЕ ТОЧНОЕ НАЗВАНИЕ ВАШЕЙ ТАБЛИЦЫ В GOOGLE
 # -----------------
@@ -344,3 +344,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Бот остановлен.")
+
