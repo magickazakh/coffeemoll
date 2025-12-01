@@ -24,7 +24,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 TOKEN = os.getenv("BOT_TOKEN", "8444027240:AAFEiACM5x-OPmR9CFgk1zyrmU24PgovyCY") 
 ADMIN_CHAT_ID = 1054308942
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
-SHEET_NAME = "CoffeeMoll Menu"
+SHEET_NAME = "COFFEEMOLL TELEGRAM"
 
 # Номер для ОБЩИХ чаевых (если вдруг понадобится)
 KASPI_NUMBER = "+7 700 643 73 03" 
@@ -477,3 +477,4 @@ async def main():
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
