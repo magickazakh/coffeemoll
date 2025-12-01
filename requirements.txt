@@ -1,2 +1,7 @@
 aiogram==3.17.0
+
 aiohttp==3.11.11
+
+gspread
+
+oauth2client
