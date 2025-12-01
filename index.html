@@ -374,8 +374,14 @@
     // !!! ЗАМЕНИТЕ ССЫЛКУ НИЖЕ НА ВАШУ НОВУЮ ССЫЛКУ PROMOCODES !!!
     const PROMO_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=19369806&single=true&output=csv";
     
-    const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL);
-    const GOOGLE_PROMO_URL = "https://corsproxy.io/?" + encodeURIComponent(PROMO_SHEET_URL);
+    // --- ИСПРАВЛЕНИЕ КЕШИРОВАНИЯ ---
+    // Создаем уникальную метку времени (например: 1715629123456)
+    const cacheBuster = new Date().getTime();
+
+    // Добавляем &t=... к ссылке Google. 
+    // Это заставляет сервер думать, что мы запрашиваем новый файл каждый раз.
+    const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL + "&t=" + cacheBuster);
+    const GOOGLE_PROMO_URL = "https://corsproxy.io/?" + encodeURIComponent(PROMO_SHEET_URL + "&t=" + cacheBuster);
     
     const CATEGORY_ORDER = ["Популярное", "Сезонное", "Кофе", "Чай", "Холодные напитки", "Молочные коктейли", "Завтраки", "Круассаны", "Хот-доги", "Салаты", "Пицца", "Пасты", "Закуски"];
 
@@ -981,4 +987,5 @@ function calculateCheckoutTotal() {
 </script>
 </body>
 </html>
+
 
