@@ -233,6 +233,7 @@
         .upsell-no { background: #f3f4f6; color: #666; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; flex: 1;}
         .upsell-title { font-family: var(--font-title); margin: 0 0 10px 0; letter-spacing: 0.5px; font-size: 20px; font-weight: 700;}
         .upsell-product { font-family: var(--font-title); font-weight: 700; margin-bottom: 5px; letter-spacing: 0.5px; font-size: 18px;}
+        .upsell-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 15px; }
 
         @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
         @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
@@ -278,7 +279,7 @@
             <div class="repeat-info">
                 <div class="repeat-title">↻ Повторить прошлый заказ</div>
                 <div class="repeat-desc" id="repeat-desc">...</div>
-                <div id="repeat-price" style="font-weight:bold; font-size:13px; color:#333;"></div>
+                <div id="repeat-price" style="font-weight:bold; font-size:13px; color: var(--text-main);"></div>
             </div>
             <div class="repeat-icon">➔</div>
         </div>
@@ -396,9 +397,9 @@
 
 <div class="upsell-overlay" id="upsell-modal"><div class="upsell-content">
     <h3 class="upsell-title">К КОФЕ ИДЕАЛЬНО ПОДОЙДЕТ!</h3>
-    <img src="https://file.garden/aSB7wx7270Kujihk/%D0%9A%D1%80%D1%83%D0%B0%D1%81%D1%81%D0%B0%D0%BD%20%D0%BA%D1%83%D1%80%D0%B8%D1%86%D0%B0.png" alt="Croissant" class="upsell-img">
-    <div class="upsell-product">КРУАССАН С КУРИЦЕЙ</div>
-    <div style="font-size: 14px; color: #666; margin-bottom: 15px;">1000 ₸</div>
+    <img src="" alt="Upsell" class="upsell-img">
+    <div class="upsell-product">ТОВАР</div>
+    <div class="upsell-desc" id="upsell-price">0 ₸</div>
     <div class="upsell-btn-row"><button class="upsell-no" onclick="closeUpsell()">Нет, спасибо</button><button class="upsell-yes" onclick="acceptUpsell()">Добавить</button></div>
 </div></div>
 
@@ -431,11 +432,22 @@
 
     const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
 
+    // UPSELL RULES
+    const UPSELL_RULES = {
+        "КОФЕ": ["КРУАССАНЫ", "ЗАКУСКИ"],
+        "ЧАЙ": ["КРУАССАНЫ", "ЗАКУСКИ"],
+        "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "ЗАКУСКИ"],
+        "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
+        "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
+        "ЗАВТРАКИ": ["КОФЕ", "ЧАЙ", "СЕЗОННОЕ"]
+    };
+
     let menuData = [];
     let promoData = []; 
     let cart = [];
     let currentModalProduct = null;
     let upsellShown = false;
+    let currentUpsellItem = null;
     let appliedDiscount = 0; 
     let appliedPromoCode = ""; 
 
@@ -785,11 +797,70 @@
         openComplexModal(product);
     }
 
-    function checkUpsell() { setTimeout(() => { document.getElementById('upsell-modal').style.display = 'flex'; upsellShown = true; }, 500); }
+    // Dynamic Upsell Logic
+    function checkUpsell(triggerProduct) {
+        if (upsellShown) return;
+
+        const triggerCat = triggerProduct.cat.toUpperCase();
+        let targetCats = [];
+
+        for (const [key, targets] of Object.entries(UPSELL_RULES)) {
+            if (triggerCat.includes(key)) {
+                targetCats = targets;
+                break;
+            }
+        }
+
+        if (targetCats.length === 0) return;
+
+        const potential = menuData.filter(p => 
+            p.available && 
+            targetCats.some(tc => p.cat.toUpperCase().includes(tc)) &&
+            p.id !== triggerProduct.id
+        );
+
+        if (potential.length === 0) return;
+
+        currentUpsellItem = potential[Math.floor(Math.random() * potential.length)];
+
+        document.querySelector('.upsell-title').innerText = "К ЭТОМУ ОТЛИЧНО ПОДОЙДЕТ!";
+        document.querySelector('.upsell-img').src = currentUpsellItem.img || getImageByCategory(currentUpsellItem.cat);
+        document.querySelector('.upsell-product').innerText = currentUpsellItem.name;
+        
+        let price = currentUpsellItem.price || currentUpsellItem.basePrice;
+        if (currentUpsellItem.hasVolumes && currentUpsellItem.volumes.length > 0) {
+             price = currentUpsellItem.volumes[0].p;
+        }
+        document.getElementById('upsell-price').innerText = price + " ₸";
+
+        setTimeout(() => {
+            document.getElementById('upsell-modal').style.display = 'flex';
+            upsellShown = true;
+        }, 500);
+    }
+
     function closeUpsell() { document.getElementById('upsell-modal').style.display = 'none'; }
+    
     function acceptUpsell() {
-        const croissant = menuData.find(p => p.id == 42); 
-        if(croissant) { cart.push({ name: croissant.name, price: croissant.price, options: [], cat: croissant.cat }); updateCartButton(); tg.HapticFeedback.notificationOccurred('success'); }
+        if (currentUpsellItem) {
+            let price = currentUpsellItem.price || currentUpsellItem.basePrice;
+            let opts = [];
+            
+            // If complex, take default options
+            if (currentUpsellItem.hasVolumes && currentUpsellItem.volumes.length > 0) {
+                 price = currentUpsellItem.volumes[0].p;
+                 opts.push(`Порция: ${currentUpsellItem.volumes[0].n}`);
+            }
+            
+            cart.push({ 
+                name: currentUpsellItem.name, 
+                price: price, 
+                options: opts, 
+                cat: currentUpsellItem.cat 
+            });
+            updateCartButton();
+            tg.HapticFeedback.notificationOccurred('success');
+        }
         closeUpsell();
     }
 
@@ -930,7 +1001,7 @@
 
         cart.push({ name: prod.name, price: price, options: opts, cat: prod.cat });
         closeProductModal(true); updateCartButton(); tg.HapticFeedback.notificationOccurred('success');
-        if (!upsellShown && (prod.cat.toLowerCase().includes('кофе') || prod.cat.toLowerCase().includes('чай'))) checkUpsell();
+        checkUpsell(prod);
     }
 
     function closeProductModal(force) { if (force === true) { document.getElementById('product-modal').style.display = 'none'; return; } const e = force; if (e && e.target.id === 'product-modal') document.getElementById('product-modal').style.display = 'none'; }
