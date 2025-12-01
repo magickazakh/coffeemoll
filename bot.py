@@ -1,3 +1,4 @@
+from datetime import datetime
 import asyncio
 import json
 import logging
@@ -44,50 +45,67 @@ def get_creds_path():
         return "/etc/secrets/creds.json"
     return None
 
-def process_promo_code(code):
+def process_promo_code(code, user_id):
     """
-    Ищет промокод в таблице, проверяет лимит.
-    Если ок -> уменьшает лимит на 1.
+    1. Проверяет, использовал ли user_id этот код (PromoHistory).
+    2. Проверяет глобальный лимит (Promocodes).
+    3. Если все ок -> списывает лимит и записывает в историю.
+    
+    Возвращает: "OK", "USED" (уже юзал), "LIMIT" (кончился), "NOT_FOUND", "ERROR"
     """
-    if not code: return False
+    if not code: return "NOT_FOUND"
     
     creds_file = get_creds_path()
     if not creds_file:
         logging.error("❌ Файл creds.json не найден!")
-        return True # Если ошибка на нашей стороне, лучше простить клиенту скидку
+        return "ERROR"
 
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
         creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
         client = gspread.authorize(creds)
         
-        # Открываем таблицу и лист Promocodes
-        sheet = client.open(SHEET_NAME).worksheet("Promocodes")
+        # Открываем таблицу
+        spreadsheet = client.open(SHEET_NAME)
+        sheet_promo = spreadsheet.worksheet("Promocodes")
+        sheet_history = spreadsheet.worksheet("PromoHistory")
         
-        # Ищем ячейку с кодом
-        try:
-            cell = sheet.find(code)
-        except gspread.exceptions.CellNotFound:
-            logging.warning(f"Промокод {code} не найден в таблице")
-            return False 
+        # --- ШАГ 1: ПРОВЕРКА ИСТОРИИ (Личная) ---
+        # Получаем все записи истории (это может быть медленно, если записей 10000+, но для кофейни ок)
+        history_data = sheet_history.get_all_values()
+        
+        # Проходимся по строкам и ищем совпадение ID и Кода
+        # row[0] = UserID, row[1] = PromoCode
+        for row in history_data:
+            if str(row[0]) == str(user_id) and str(row[1]).upper() == code.upper():
+                return "USED" # Пользователь уже брал этот код
 
-        # Лимит находится в колонке 3 (C) той же строки
-        limit_cell_val = sheet.cell(cell.row, 3).value
+        # --- ШАГ 2: ПРОВЕРКА ЛИМИТА (Глобальная) ---
+        try:
+            cell = sheet_promo.find(code)
+        except gspread.exceptions.CellNotFound:
+            return "NOT_FOUND"
+
+        limit_cell_val = sheet_promo.cell(cell.row, 3).value
         limit = int(limit_cell_val) if limit_cell_val else 0
         
         if limit > 0:
-            # Уменьшаем лимит на 1
-            sheet.update_cell(cell.row, 3, limit - 1)
-            logging.info(f"Промокод {code} применен. Осталось: {limit - 1}")
-            return True
+            # --- ШАГ 3: СПИСАНИЕ ---
+            # 1. Уменьшаем глобальный лимит
+            sheet_promo.update_cell(cell.row, 3, limit - 1)
+            
+            # 2. Добавляем запись в историю: ID, Код, Дата
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            sheet_history.append_row([str(user_id), code, current_time])
+            
+            logging.info(f"Промокод {code} успешно применен пользователем {user_id}")
+            return "OK"
         else:
-            logging.warning(f"Лимит промокода {code} исчерпан")
-            return False
+            return "LIMIT"
 
     except Exception as e:
         logging.error(f"Ошибка API Google Sheets: {e}")
-        return True # В случае ошибки API сохраняем скидку
-
+        return "ERROR"
 # --- ВЕБ-СЕРВЕР ---
 async def health_check(request):
     return web.Response(text="Bot is running OK!")
@@ -146,35 +164,55 @@ async def cmd_start(message: types.Message):
 @dp.message(F.web_app_data)
 async def web_app_data_handler(message: types.Message):
     try:
+        # ... (начало функции без изменений) ...
         data = json.loads(message.web_app_data.data)
         cart = data.get('cart', [])
         total = data.get('total', 0)
         info = data.get('info', {})
 
-        # --- ОБРАБОТКА ПРОМОКОДА ---
+        # --- НОВАЯ ЛОГИКА ОБРАБОТКИ ПРОМОКОДА ---
         promo_code = info.get('promoCode', '')
         discount_rate = info.get('discount', 0)
         discount_text_for_admin = ""
+        user_id = message.from_user.id # Получаем ID пользователя
         
-        # Если есть код, пытаемся списать его в базе
+        warning_msg = "" # Сообщение для пользователя, если что-то пошло не так
+
+        # Если в заказе есть промокод
         if promo_code and discount_rate > 0:
-            # Запускаем в отдельном потоке, чтобы не блокировать бота
+            # Запускаем проверку
             loop = asyncio.get_running_loop()
-            promo_success = await loop.run_in_executor(None, process_promo_code, promo_code)
+            promo_status = await loop.run_in_executor(None, process_promo_code, promo_code, user_id)
             
-            if promo_success:
-                # Рассчитываем сумму скидки для красоты чека
+            if promo_status == "OK":
+                # ВСЁ ОТЛИЧНО
                 try:
-                    # total - это уже цена со скидкой. Восстанавливаем полную цену.
-                    # Формула: Total = Original * (1 - rate)  => Original = Total / (1 - rate)
                     original_price = int(total / (1 - discount_rate))
                     discount_amount = original_price - total
                     discount_text_for_admin = f"\n🎁 <b>Промокод:</b> {promo_code} (-{discount_amount} ₸)"
                 except:
                     discount_text_for_admin = f"\n🎁 <b>Промокод:</b> {promo_code}"
+            
             else:
-                # Если код не списался (лимит кончился прямо сейчас), можно уведомить админа
-                discount_text_for_admin = f"\n⚠️ <b>Промокод:</b> {promo_code} (Ошибка списания/Лимит)"
+                # ПРОБЛЕМА С КОДОМ -> ОТМЕНЯЕМ СКИДКУ
+                # Восстанавливаем цену без скидки
+                try:
+                    original_price = int(total / (1 - discount_rate))
+                    total = original_price # Возвращаем полную цену
+                except:
+                    pass # Если ошибка математики, оставляем как есть (редкий кейс)
+                
+                discount_rate = 0 # Обнуляем ставку
+                
+                if promo_status == "USED":
+                    warning_msg = f"⚠️ Промокод <b>{promo_code}</b> уже был использован вами ранее. Скидка отменена."
+                    discount_text_for_admin = f"\n❌ <b>Промокод:</b> {promo_code} (Повторное использование)"
+                elif promo_status == "LIMIT":
+                    warning_msg = f"⚠️ Лимит промокода <b>{promo_code}</b> исчерпан. Скидка отменена."
+                    discount_text_for_admin = f"\n❌ <b>Промокод:</b> {promo_code} (Лимит исчерпан)"
+                else:
+                    warning_msg = f"⚠️ Ошибка применения промокода <b>{promo_code}</b>. Скидка отменена."
+                    discount_text_for_admin = f"\n❌ <b>Промокод:</b> {promo_code} (Ошибка)"
         # ---------------------------
 
         is_delivery = (info.get('deliveryType') == 'Доставка')
@@ -215,7 +253,14 @@ async def web_app_data_handler(message: types.Message):
         if is_delivery: text += "\n⚠️ <i>+ Доставка</i>"
 
         await bot.send_message(chat_id=ADMIN_CHAT_ID, text=text, reply_markup=get_decision_kb(message.chat.id))
-        await message.answer(f"✅ Заказ принят!\nСумма: {total} ₸\nЖдите подтверждения времени.")
+        
+        # Формируем ответ клиенту
+        client_response = f"✅ Заказ принят!\nСумма: {total} ₸"
+        if warning_msg:
+            client_response += f"\n\n{warning_msg}" # Добавляем предупреждение, если скидка слетела
+        client_response += "\nЖдите подтверждения времени."
+        
+        await message.answer(client_response)
 
     except Exception as e:
         logging.error(f"Error: {e}")
@@ -344,4 +389,5 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Бот остановлен.")
+
 
