@@ -9,9 +9,7 @@
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" as="style" crossorigin>
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-    <link rel="dns-prefetch" href="https://file.garden">
-    <link rel="dns-prefetch" href="https://cdn-icons-png.flaticon.com">
-
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     
@@ -50,7 +48,6 @@
             .status-badge { background: #064e3b !important; color: #a7f3d0 !important; }
             .radio-label, .checkout-radio-label { background: #333 !important; border-color: #444 !important; color: #fff !important; }
             .radio-input:checked + .radio-label, .checkout-radio-input:checked + .checkout-radio-label { background: #064e3b !important; border-color: var(--primary-color) !important; }
-            /* Для липкого заголовка в темной теме */
             .category-title { background: #1a1a1a !important; border-bottom: 1px solid #333 !important; }
             .accordion-header { background: #333 !important; color: #fff !important; }
         }
@@ -85,22 +82,7 @@
         .nav-btn.active { background: #000000; color: var(--primary-color); border-color: #000000; }
 
         .category-section { margin-bottom: 20px; scroll-margin-top: 150px; }
-        
-        /* В. ЛИПКИЕ ЗАГОЛОВКИ */
-        .category-title { 
-            position: sticky; 
-            top: 135px; /* Высота вашей шапки (примерно) */
-            background: var(--bg-color); /* Чтобы текст не просвечивал */
-            z-index: 30; 
-            padding: 10px 15px; 
-            font-family: var(--font-title); 
-            font-size: 24px; 
-            color: var(--text-main); 
-            letter-spacing: 0.5px; 
-            font-weight: 700; 
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            transition: background 0.3s;
-        }
+        .category-title { position: sticky; top: 135px; background: var(--bg-color); z-index: 30; padding: 10px 15px; font-family: var(--font-title); font-size: 24px; color: var(--text-main); letter-spacing: 0.5px; font-weight: 700; border-bottom: 1px solid rgba(0,0,0,0.05); transition: background 0.3s; }
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         
@@ -141,10 +123,7 @@
         .loading-title { font-family: var(--font-logo); font-size: 36px; margin-bottom: 5px; }
         .loading-motto { font-size: 13px; color: #666; font-style: italic; font-family: var(--font-body); }
         
-        /* З. ОШИБКА ЗАГРУЗКИ */
         .error-btn { background: var(--text-main); color: var(--bg-color); border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; }
-
-        /* Г. НИЧЕГО НЕ НАЙДЕНО */
         #no-results { display: none; text-align: center; padding: 40px 20px; color: var(--text-secondary); }
         .no-res-icon { font-size: 48px; margin-bottom: 10px; display: block; }
 
@@ -158,7 +137,6 @@
         .modal-img-wrapper { width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin-bottom: 15px; background: #f9fafb; display: flex; align-items: center; justify-content: center; }
         .modal-img { width: 100%; height: 100%; object-fit: contain; background-color: #fff; }
 
-        /* И. АККОРДЕОН */
         .accordion { margin-bottom: 15px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
         .accordion-header { background: #f9fafb; padding: 12px 15px; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-main); font-family: var(--font-body); }
         .accordion-content { display: none; padding: 15px; border-top: 1px solid var(--border-color); background: var(--card-bg); }
@@ -300,7 +278,7 @@
     <div id="cart-list-container"></div>
     
     <div class="promo-section">
-        <input type="text" id="promo-code" placeholder="Промокод (тест: COFFEE10)" style="margin-bottom: 0;">
+        <input type="text" id="promo-code" placeholder="Промокод" style="margin-bottom: 0;">
         <button class="promo-btn" onclick="applyPromo()">OK</button>
     </div>
 
@@ -391,8 +369,14 @@
     tg.ready();
     tg.expand(); 
 
+    // === ВАЖНО: ВСТАВЬТЕ СЮДА ВАШИ ССЫЛКИ ===
     const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv"; 
+    // !!! ЗАМЕНИТЕ ССЫЛКУ НИЖЕ НА ВАШУ НОВУЮ ССЫЛКУ PROMOCODES !!!
+    const PROMO_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=19369806&single=true&output=csv";
+    
     const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL);
+    const GOOGLE_PROMO_URL = "https://corsproxy.io/?" + encodeURIComponent(PROMO_SHEET_URL);
+    
     const CATEGORY_ORDER = ["Популярное", "Сезонное", "Кофе", "Чай", "Холодные напитки", "Молочные коктейли", "Завтраки", "Круассаны", "Хот-доги", "Салаты", "Пицца", "Пасты", "Закуски"];
 
     let PRICES = { alt_milk: 400, add_milk: 50, add_cream: 50, add_honey: 100, add_lemon: 50, syrup: 0, shot: 300, hd_cheese: 150, hd_jalapeno: 150, hd_onion: 150, egg: 70, sauce: 150, cinnamon: 0 };
@@ -403,10 +387,12 @@
     const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
 
     let menuData = [];
+    let promoData = []; // Храним список промокодов
     let cart = [];
     let currentModalProduct = null;
     let upsellShown = false;
     let appliedDiscount = 0; 
+    let appliedPromoCode = ""; // Сам код
 
     let favorites = JSON.parse(localStorage.getItem('coffee_favorites')) || [];
 
@@ -426,17 +412,31 @@
         tg.HapticFeedback.impactOccurred('light');
     }
 
-    const PROMO_CODES = { "COFFEE10": 0.10, "SALE20": 0.20 };
+    // НОВАЯ ЛОГИКА ПРОМОКОДОВ
     function applyPromo() {
         const codeInput = document.getElementById('promo-code');
         const code = codeInput.value.trim().toUpperCase();
-        if(PROMO_CODES[code]) {
-            appliedDiscount = PROMO_CODES[code];
-            codeInput.style.borderColor = "#88d100";
-            alert(`Промокод применен! Скидка ${appliedDiscount * 100}%`);
-            calculateCheckoutTotal();
+        
+        // Ищем код в загруженной базе
+        const found = promoData.find(p => p.Code && p.Code.toUpperCase() === code);
+        
+        if(found) {
+            const limit = parseInt(found.Limit);
+            if (limit > 0) {
+                appliedDiscount = parseFloat(found.Discount.replace(',','.')); // На случай запятых в CSV
+                appliedPromoCode = code;
+                
+                codeInput.style.borderColor = "#88d100";
+                alert(`Промокод применен! Скидка ${appliedDiscount * 100}%`);
+                calculateCheckoutTotal();
+            } else {
+                appliedDiscount = 0; appliedPromoCode = "";
+                codeInput.style.borderColor = "red";
+                alert("Лимит этого промокода исчерпан");
+                calculateCheckoutTotal();
+            }
         } else {
-            appliedDiscount = 0;
+            appliedDiscount = 0; appliedPromoCode = "";
             codeInput.style.borderColor = "red";
             alert("Неверный промокод");
             calculateCheckoutTotal();
@@ -458,13 +458,26 @@
         return "";
     }
 
-    // З. ОБРАБОТКА ОШИБОК
     function showErrorScreen() {
         document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('error-screen').style.display = 'flex';
     }
 
     function initMenu() {
+        // ЗАГРУЖАЕМ ПРОМОКОДЫ
+        if (PROMO_SHEET_URL.includes("ИД_ЛИСТА")) {
+             console.warn("Ссылка на промокоды не настроена");
+        } else {
+            Papa.parse(GOOGLE_PROMO_URL, {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    promoData = results.data;
+                    console.log("Promos loaded:", promoData.length);
+                }
+            });
+        }
+
+        // ЗАГРУЖАЕМ МЕНЮ
         Papa.parse(GOOGLE_SHEET_URL, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
@@ -586,7 +599,6 @@
             }
         });
 
-        // Г. НИЧЕГО НЕ НАЙДЕНО - ЛОГИКА
         const noRes = document.getElementById('no-results');
         const sections = document.querySelectorAll('.category-section');
         
@@ -595,7 +607,6 @@
             sections.forEach(s => s.style.display = 'none');
         } else {
             noRes.style.display = 'none';
-            // Показываем только секции, где есть видимые товары
             sections.forEach(section => {
                const visibleInSec = [...section.querySelectorAll('.card')].filter(c => c.style.display !== 'none').length;
                section.style.display = visibleInSec > 0 ? 'block' : 'none';
@@ -727,7 +738,6 @@
         recalcPrice();
     }
     
-    // И. ЛОГИКА АККОРДЕОНА
     function toggleAccordion() {
         const acc = document.getElementById('extras-accordion');
         acc.classList.toggle('open');
@@ -740,7 +750,6 @@
         let imgHtml = ''; if (product.img) { imgHtml = `<div class="modal-img-wrapper"><img src="${product.img}" class="modal-img"></div>`; }
         let html = `<div class="modal-header"><div class="modal-title-block">${imgHtml}<div class="modal-title">${product.name}</div> <div class="modal-desc">${product.fullDesc || product.desc || ""}</div></div><div class="close-icon" onclick="closeProductModal(true)">✕</div></div>`;
         
-        // Основные опции (Порция и Молоко) - ВСЕГДА ВИДИМЫ
         if (product.hasVolumes && product.volumes.length > 0) {
             html += `<div class="option-group"><label class="option-label">Порция</label><div class="radio-group">`;
             product.volumes.forEach((v, i) => { html += `<input type="radio" name="vol" id="v${i}" value="${i}" class="radio-input" ${i===0?'checked':''} onchange="recalcPrice()"><label for="v${i}" class="radio-label">${v.n}<br>${v.p}₸</label>`; });
@@ -757,7 +766,6 @@
             html += `</select></div></div>`;
         }
 
-        // Собираем второстепенные добавки для АККОРДЕОНА
         let extrasHtml = '';
         let hasExtras = false;
         const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
@@ -786,7 +794,6 @@
              extrasHtml += `<div style="margin-top:10px"><label class="option-label">Сироп (${displayPrice})</label><select id="syr" onchange="recalcPrice()">${sOpts}</select></div>`;
         }
 
-        // Если есть добавки, засовываем их в аккордеон
         if (hasExtras) {
             html += `<div class="accordion" id="extras-accordion">
                 <div class="accordion-header" onclick="toggleAccordion()">
@@ -939,7 +946,20 @@
         
         saveUserData(name, phone, address); 
         const total = calculateCheckoutTotal(); 
-        const orderData = { cart: cart, total: total, info: { name, phone, deliveryType: prettyDelivery, address: (delType==='delivery'?address:''), paymentType: payType, paymentPhone: payPhone, comment, discount: appliedDiscount } }; 
+        const orderData = { 
+            cart: cart, 
+            total: total, 
+            info: { 
+                name, phone, 
+                deliveryType: prettyDelivery, 
+                address: (delType==='delivery'?address:''), 
+                paymentType: payType, 
+                paymentPhone: payPhone, 
+                comment, 
+                discount: appliedDiscount,
+                promoCode: appliedPromoCode // ОТПРАВЛЯЕМ КОД
+            } 
+        }; 
         tg.sendData(JSON.stringify(orderData)); 
         setTimeout(function() { cart = []; updateCartButton(); closeCheckout(); tg.close(); }, 100);
     }
@@ -953,7 +973,6 @@
         else btn.classList.remove('visible');
     });
 
-    // Обработка оффлайн режима браузера
     window.addEventListener('offline', () => { showErrorScreen(); });
     window.addEventListener('online', () => { location.reload(); });
 
