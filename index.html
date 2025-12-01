@@ -28,6 +28,7 @@
             --text-secondary: #6b7280;      
             --input-bg: #ffffff;
             --border-color: #eee;
+            --header-height: 140px; /* Значение по умолчанию, обновляется JS */
             
             --font-logo: 'Bebas Neue', cursive;
             --font-title: 'Oswald', sans-serif;
@@ -105,8 +106,23 @@
         .nav-btn { display: inline-block; padding: 8px 16px; margin-right: 8px; background: var(--card-bg); border-radius: 20px; font-size: 15px; font-weight: 500; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border-color); transition: 0.2s; font-family: var(--font-title); letter-spacing: 0.5px; }
         .nav-btn.active { background: #000000; color: var(--primary-color); border-color: #000000; }
 
-        .category-section { margin-bottom: 20px; scroll-margin-top: 150px; }
-        .category-title { position: sticky; top: 135px; background: var(--bg-color); z-index: 30; padding: 10px 15px; font-family: var(--font-title); font-size: 24px; color: var(--text-main); letter-spacing: 0.5px; font-weight: 700; border-bottom: 1px solid rgba(0,0,0,0.05); transition: background 0.3s; }
+        .category-section { margin-bottom: 20px; scroll-margin-top: 160px; }
+        
+        /* ЛИПКИЕ ЗАГОЛОВКИ */
+        .category-title { 
+            position: sticky; 
+            top: var(--header-height, 135px); /* Используем переменную для точного позиционирования */
+            background: var(--bg-color); 
+            z-index: 30; 
+            padding: 10px 15px; 
+            font-family: var(--font-title); 
+            font-size: 24px; 
+            color: var(--text-main); 
+            letter-spacing: 0.5px; 
+            font-weight: 700; 
+            border-bottom: 1px solid rgba(0,0,0,0.05); 
+            transition: top 0.3s, background 0.3s; /* Плавный переход при изменении высоты шапки */
+        }
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         
@@ -232,7 +248,7 @@
         .upsell-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
         .upsell-btn-row { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
         .upsell-yes { background: #88d100; color: #3e2723; padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; flex: 1;}
-        .upsell-no { background: #f3f4f6; color: #666; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; flex: 1;}
+        .upsell-no { background: #444 !important; color: #ccc !important; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; flex: 1;}
         .upsell-title { font-family: var(--font-title); margin: 0 0 10px 0; letter-spacing: 0.5px; font-size: 20px; font-weight: 700; color: var(--text-main); }
         .upsell-product { font-family: var(--font-title); font-weight: 700; margin-bottom: 5px; letter-spacing: 0.5px; font-size: 18px; color: var(--text-main); }
         .upsell-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 15px; }
@@ -519,6 +535,14 @@
         document.getElementById('error-screen').style.display = 'flex';
     }
 
+    // Функция обновления высоты хедера для sticky элементов
+    function updateHeaderHeight() {
+        const header = document.querySelector('.header-container');
+        if(header) {
+            document.documentElement.style.setProperty('--header-height', header.offsetHeight + 'px');
+        }
+    }
+
     function initMenu() {
         // Проверяем сохраненный заказ при запуске
         checkRepeatOrder();
@@ -638,6 +662,7 @@
 
                 document.getElementById('loading-screen').style.display = 'none';
                 renderMenu();
+                updateHeaderHeight(); // Обновляем высоту хедера после рендеринга
             },
             error: function(err) { console.error("CSV Error:", err); showErrorScreen(); }
         });
@@ -843,26 +868,28 @@
     function closeUpsell() { document.getElementById('upsell-modal').style.display = 'none'; }
     
     function acceptUpsell() {
-        if (currentUpsellItem) {
-            let price = currentUpsellItem.price || currentUpsellItem.basePrice;
-            let opts = [];
-            
-            // If complex, take default options
-            if (currentUpsellItem.hasVolumes && currentUpsellItem.volumes.length > 0) {
-                 price = currentUpsellItem.volumes[0].p;
-                 opts.push(`Порция: ${currentUpsellItem.volumes[0].n}`);
-            }
-            
-            cart.push({ 
+        if (!currentUpsellItem) return;
+
+        closeUpsell(); // Close the upsell prompt
+
+        // Check if the item needs configuration (Volumes, Milk, or any Modifiers)
+        if (currentUpsellItem.type === 'complex' || currentUpsellItem.hasMilk || Object.keys(currentUpsellItem.mods).length > 0) {
+            // Open the customization modal
+            setTimeout(() => {
+                openComplexModal(currentUpsellItem);
+            }, 100); // Small delay for smooth transition
+        } else {
+            // Simple item, add directly
+             let price = currentUpsellItem.price || currentUpsellItem.basePrice;
+             cart.push({ 
                 name: currentUpsellItem.name, 
                 price: price, 
-                options: opts, 
+                options: [], 
                 cat: currentUpsellItem.cat 
             });
             updateCartButton();
             tg.HapticFeedback.notificationOccurred('success');
         }
-        closeUpsell();
     }
 
     function loadUserData() {
@@ -902,7 +929,7 @@
             html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group">
                 <input type="radio" name="milk" id="m1" value="std" class="radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label">Обычное</label>
                 <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label">Безлакт.<br>+${PRICES.milk_lf_price || 0}</label>
-                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label">Альтерн.<br>+${PRICES.milk_lf_price || 0}</label>
+                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label">Альтерн.</label>
             </div><div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
             ALT_MILKS.forEach(m => html += `<option value="${m}">${m}</option>`);
             html += `</select></div></div>`;
@@ -1155,6 +1182,9 @@
         if (window.scrollY > 300) btn.classList.add('visible');
         else btn.classList.remove('visible');
     });
+
+    // Слушатель изменения размера окна для обновления высоты хедера
+    window.addEventListener('resize', updateHeaderHeight);
 
     window.addEventListener('offline', () => { showErrorScreen(); });
     window.addEventListener('online', () => { location.reload(); });
