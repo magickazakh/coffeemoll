@@ -52,6 +52,8 @@
             .accordion-header { background: #333 !important; color: #fff !important; }
             /* Стиль для кнопки повтора в темной теме */
             .repeat-card { background: #333 !important; border-color: #444 !important; }
+            /* Стиль кнопки "Нет, спасибо" в upsell для темной темы */
+            .upsell-no { background: #444 !important; color: #ccc !important; }
         }
 
         /* --- БАЗОВЫЕ СТИЛИ --- */
@@ -226,13 +228,13 @@
         .scroll-top-btn.visible { opacity: 1; pointer-events: auto; }
 
         .upsell-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1100; align-items: center; justify-content: center; }
-        .upsell-content { background: white; width: 85%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; animation: popIn 0.3s; }
+        .upsell-content { background: var(--card-bg); width: 85%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; animation: popIn 0.3s; }
         .upsell-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
         .upsell-btn-row { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
         .upsell-yes { background: #88d100; color: #3e2723; padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; flex: 1;}
         .upsell-no { background: #f3f4f6; color: #666; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; flex: 1;}
-        .upsell-title { font-family: var(--font-title); margin: 0 0 10px 0; letter-spacing: 0.5px; font-size: 20px; font-weight: 700;}
-        .upsell-product { font-family: var(--font-title); font-weight: 700; margin-bottom: 5px; letter-spacing: 0.5px; font-size: 18px;}
+        .upsell-title { font-family: var(--font-title); margin: 0 0 10px 0; letter-spacing: 0.5px; font-size: 20px; font-weight: 700; color: var(--text-main); }
+        .upsell-product { font-family: var(--font-title); font-weight: 700; margin-bottom: 5px; letter-spacing: 0.5px; font-size: 18px; color: var(--text-main); }
         .upsell-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 15px; }
 
         @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
@@ -435,11 +437,10 @@
     // UPSELL RULES
     const UPSELL_RULES = {
         "КОФЕ": ["КРУАССАНЫ", "ЗАКУСКИ"],
-        "ЧАЙ": ["КРУАССАНЫ", "ЗАКУСКИ"],
-        "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "ЗАКУСКИ"],
+        "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
         "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
         "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
-        "ЗАВТРАКИ": ["КОФЕ", "ЧАЙ", "СЕЗОННОЕ"]
+        "ЗАВТРАКИ": ["КОФЕ", "ЧАЙ"]
     };
 
     let menuData = [];
@@ -901,11 +902,20 @@
             html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group">
                 <input type="radio" name="milk" id="m1" value="std" class="radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label">Обычное</label>
                 <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label">Безлакт.<br>+${PRICES.milk_lf_price || 0}</label>
-                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label">Альтерн.</label>
+                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label">Альтерн.<br>+${PRICES.milk_lf_price || 0}</label>
             </div><div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
             ALT_MILKS.forEach(m => html += `<option value="${m}">${m}</option>`);
             html += `</select></div></div>`;
         }
+
+        // --- ИЗМЕНЕНИЕ: СОУС ТЕПЕРЬ СНАРУЖИ АККОРДЕОНА (ВИДЕН СРАЗУ) ---
+        if ('sauce' in product.mods) {
+             let price = product.mods['sauce']; let displayPrice = price > 0 ? `+${price}` : 'Бесплатно';
+             html += `<div class="option-group"><label class="option-label">Соус (${displayPrice})</label><select id="sauce-select" onchange="recalcPrice()">`;
+             SAUCES.forEach(s => html += `<option value="${s}">${s}</option>`);
+             html += `</select></div>`;
+        }
+        // -------------------------------------------------------------
 
         let extrasHtml = '';
         let hasExtras = false;
@@ -917,13 +927,8 @@
              }
         });
 
-        if ('sauce' in product.mods) {
-             hasExtras = true;
-             let price = product.mods['sauce']; let displayPrice = price > 0 ? `+${price}` : 'Бесплатно';
-             extrasHtml += `<div style="margin-top:10px"><label class="option-label">Соус (${displayPrice})</label><select id="sauce-select" onchange="recalcPrice()">`;
-             SAUCES.forEach(s => extrasHtml += `<option value="${s}">${s}</option>`);
-             extrasHtml += `</select></div>`;
-        }
+        // Соус удален отсюда, так как он теперь выше
+
         if ('sugar' in product.mods) {
             hasExtras = true;
             extrasHtml += `<div style="margin-top:10px"><label class="option-label">Сахар</label><input type="number" id="sug" placeholder="0" min="0"></div>`;
