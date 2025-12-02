@@ -16,7 +16,7 @@ jobs:
       - name: Wake up Render
         env:
           URL: ${{ secrets.SITE_URL }}
-          TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TOKEN: ${{ secrets.TELEGRAM_TOKE }}
           CHAT_ID: ${{ secrets.TELEGRAM_TO }}
         run: |
           # Используем User-Agent как у браузера, чтобы Render точно засчитал это как активность
