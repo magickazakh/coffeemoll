@@ -319,7 +319,7 @@ async def set_time(c: CallbackQuery, state: FSMContext):
     clean_text = old_text.split("\n\n✅")[0]
     await c.message.edit_text(f"{clean_text}\n\n✅ <b>ПРИНЯТ</b> ({t_val})", reply_markup=get_ready_kb(uid))
     
-    msg_client = f"👨‍🍳 Принят! Готовность: <b>{t_val}</b>."
+    msg_client = f"👨‍🍳 Принят! Готовность: <b>{t_val}</b>.\n📞Телефон для связи: +77006437303"
     if is_delivery:
         msg_client += "\n<i>(Время приготовления, без учета доставки)</i>"
         
@@ -536,3 +536,4 @@ async def main():
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
