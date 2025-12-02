@@ -22,22 +22,22 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 # --- НАСТРОЙКИ ---
 TOKEN = os.getenv("BOT_TOKEN", "8444027240:AAFEiACM5x-OPmR9CFgk1zyrmU24PgovyCY") 
-ADMIN_CHAT_ID = -1003472248648
+ADMIN_CHAT_ID = -1003356844624
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
 SHEET_NAME = "CoffeeMoll Menu"
 
 # --- НАСТРОЙКИ ТЕМ (TOPICS) ---
-TOPIC_ID_ORDERS = 20
-TOPIC_ID_REVIEWS = 3
+TOPIC_ID_ORDERS = 68
+TOPIC_ID_REVIEWS = 69
 # ------------------------------
 
-KASPI_NUMBER = "+7 700 643 73 03" 
+KASPI_NUMBER = "+7 747 240 20 02" 
 
 # --- НАСТРОЙКА БАРИСТА ---
 BARISTAS = {
-    "1": {"name": "Имя Бариста 1", "phone": "+7 700 000 00 01"},
-    "2": {"name": "Имя Бариста 2", "phone": "+7 700 000 00 02"},
-    "3": {"name": "Имя Бариста 3", "phone": "+7 700 000 00 03"}
+    "1": {"name": "Анара", "phone": "+7 700 000 00 01"},
+    "2": {"name": "Карина", "phone": "+7 700 000 00 02"},
+    "3": {"name": "Павел", "phone": "+7 771 904 44 55"}
 }
 # -----------------
 
@@ -71,6 +71,9 @@ def get_gspread_client():
     return gspread.authorize(creds)
 
 def process_promo_code(code, user_id):
+    """
+    Возвращает статусы: "OK", "USED", "LIMIT", "NOT_FOUND", "ERROR"
+    """
     if not code: return "NOT_FOUND"
     client = get_gspread_client()
     if not client: return "ERROR"
@@ -80,11 +83,14 @@ def process_promo_code(code, user_id):
         sheet_promo = sheet.worksheet("Promocodes")
         sheet_history = sheet.worksheet("PromoHistory")
         
+        # 1. Проверка истории (использовал ли юзер этот код)
         history = sheet_history.get_all_values()
         for row in history:
+            # row[0] = UserID, row[1] = Code
             if str(row[0]) == str(user_id) and str(row[1]).upper() == code.upper():
                 return "USED"
 
+        # 2. Поиск кода и проверка лимита
         try: cell = sheet_promo.find(code)
         except: return "NOT_FOUND"
 
@@ -206,19 +212,33 @@ async def web_app_data_handler(message: types.Message):
         promo_code = info.get('promoCode', '')
         discount_rate = info.get('discount', 0)
         discount_text = ""
+        client_warning = "" # Сообщение для клиента о проблемах с промокодом
         
         if promo_code and discount_rate > 0:
             loop = asyncio.get_running_loop()
             res = await loop.run_in_executor(None, process_promo_code, promo_code, message.from_user.id)
+            
             if res == "OK":
                 try:
                     orig = round(total / (1 - discount_rate))
                     discount_text = f"\n🎁 <b>Промокод:</b> {promo_code} (-{int(orig - total)} ₸)"
                 except: discount_text = f"\n🎁 <b>Промокод:</b> {promo_code}"
             else:
-                try: total = int(round(total / (1 - discount_rate)))
+                # Если промокод не прошел проверку на сервере (повтор или лимит)
+                try: 
+                    # Восстанавливаем полную цену
+                    total = int(round(total / (1 - discount_rate)))
                 except: pass
-                discount_text = f"\n❌ <b>Промокод:</b> {promo_code} (Ошибка/Лимит)"
+                
+                if res == "USED":
+                    discount_text = f"\n❌ <b>Промокод:</b> {promo_code} (Повтор)"
+                    client_warning = f"\n⚠️ <b>Промокод {promo_code} уже использован вами!</b>\nСкидка отменена."
+                elif res == "LIMIT":
+                    discount_text = f"\n❌ <b>Промокод:</b> {promo_code} (Лимит)"
+                    client_warning = f"\n⚠️ <b>Лимит промокода {promo_code} исчерпан!</b>\nСкидка отменена."
+                else:
+                    discount_text = f"\n❌ <b>Промокод:</b> {promo_code} (Ошибка)"
+                    client_warning = f"\n⚠️ <b>Ошибка применения промокода!</b>\nСкидка отменена."
 
         # Определение типа заказа для чека
         delivery_type = info.get('deliveryType') # "Доставка", "В зале", "Самовывоз"
@@ -238,7 +258,6 @@ async def web_app_data_handler(message: types.Message):
         if info.get('comment'): text += f"💬 <i>{info.get('comment')}</i>\n"
         
         text += f"➖➖➖➖➖➖➖➖➖➖\n"
-        # --- ОБНОВЛЕННЫЙ ЦИКЛ С УЧЕТОМ КОЛИЧЕСТВА (QTY) ---
         for i, item in enumerate(cart, 1):
             opts = [o for o in item.get('options', []) if o and o != "Без сахара"]
             opts_str = f" ({', '.join(opts)})" if opts else ""
@@ -246,7 +265,6 @@ async def web_app_data_handler(message: types.Message):
             qty_str = f" <b>x {qty}</b>" if qty > 1 else ""
             
             text += f"{i}. <b>{item.get('name')}</b>{opts_str}{qty_str}\n"
-        # ---------------------------------------------------
             
         text += discount_text
         text += f"\n💰 <b>ИТОГО: {total} ₸</b>"
@@ -258,7 +276,14 @@ async def web_app_data_handler(message: types.Message):
             reply_markup=get_decision_kb(message.chat.id),
             message_thread_id=TOPIC_ID_ORDERS
         )
-        await message.answer(f"✅ Заказ принят!\nСумма: {total} ₸\nЖдите подтверждения времени.")
+        
+        # Ответ клиенту с предупреждением, если промокод слетел
+        response_text = f"✅ Заказ принят!\nСумма: {total} ₸"
+        if client_warning:
+            response_text += f"\n{client_warning}"
+        response_text += "\n\nЖдите подтверждения времени."
+
+        await message.answer(response_text)
 
     except Exception as e: logging.error(f"Order Error: {e}")
 
@@ -281,7 +306,7 @@ async def set_time(c: CallbackQuery, state: FSMContext):
         await c.message.edit_reply_markup(reply_markup=get_decision_kb(uid))
         return
     if act == "custom":
-        await c.message.answer("Введите время (напр. '40 мин'):")
+        await c.message.answer("Введите время (напр. '40 мин или 17:30'):")
         await state.update_data(msg_id=c.message.message_id, uid=uid)
         await state.set_state(OrderState.waiting_for_custom_time)
         await c.answer()
@@ -353,12 +378,14 @@ async def given(c: CallbackQuery, state: FSMContext):
     # --- ЛОГИКА ЗАПРОСА ОТЗЫВА ---
     try:
         if is_del:
+            # Если доставка - отправляем кнопку "Я получил"
             await bot.send_message(
                 uid,
                 "🚗 Курьер выехал!\nКак только получите заказ, нажмите кнопку ниже, чтобы оценить качество:",
                 reply_markup=get_received_kb()
             )
         else:
+            # Самовывоз - просим отзыв сразу
             await start_review_process(uid, state)
 
     except Exception as e:
@@ -441,7 +468,7 @@ async def barista_choice(c: CallbackQuery, state: FSMContext):
         await state.update_data(tips=tips_info)
         
         await c.message.edit_text(
-            f"💳 Kaspi Gold ({barista['name']}):\n<code>{barista['phone']}</code>\n\nСпасибо за поддержку! ❤️\n\nНапишите ваш отзыв:", 
+            f"💳 Kaspi\Halyk ({barista['name']}):\n<code>{barista['phone']}</code>\n\nСпасибо за поддержку! ❤️\n\nНапишите ваш отзыв:", 
             reply_markup=get_skip_comment_kb()
         )
     else:
