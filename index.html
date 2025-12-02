@@ -443,18 +443,30 @@
     const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL + "&t=" + cacheBuster);
     const GOOGLE_PROMO_URL = "https://corsproxy.io/?" + encodeURIComponent(PROMO_SHEET_URL + "&t=" + cacheBuster);
     
+    // ИЗБРАННОЕ ТЕПЕРЬ ПЕРВЫМ В СПИСКЕ (ВИРТУАЛЬНАЯ КАТЕГОРИЯ)
     const CATEGORY_ORDER = ["ИЗБРАННОЕ", "Популярное", "Сезонное", "Кофе", "Чай", "Холодные напитки", "Молочные коктейли", "Завтраки", "Круассаны", "Хот-доги", "Салаты", "Пицца", "Пасты", "Закуски"];
 
     let PRICES = { alt_milk: 400, add_milk: 50, add_cream: 50, add_honey: 100, add_lemon: 50, syrup: 0, shot: 300, hd_cheese: 150, hd_jalapeno: 150, hd_onion: 150, egg: 70, sauce: 150, cinnamon: 0 };
     let SYRUPS = ["Карамель", "Ваниль", "Орех"];
     let SAUCES = ["Кетчуп"];
     let ALT_MILKS = ["Кокосовое"];
-    let PROMOS_ENABLED = true;
+    let PROMOS_ENABLED = true; // По умолчанию включено
+    
+    // 1. ДИНАМИЧЕСКИЕ ЧАСЫ (По умолчанию)
     let OPEN_HOUR = 9;
     let CLOSE_HOUR = 23;
 
     const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
-    const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ", "ЗАКУСКИ"], "ЧАЙ": ["КРУАССАНЫ", "ЗАКУСКИ"], "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ЗАВТРАКИ": ["КОФЕ", "ЧАЙ"] };
+
+    // UPSELL RULES
+    const UPSELL_RULES = {
+        "КОФЕ": ["КРУАССАНЫ", "ЗАКУСКИ"],
+        "ЧАЙ": ["КРУАССАНЫ", "ЗАКУСКИ"],
+        "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
+        "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
+        "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
+        "ЗАВТРАКИ": ["КОФЕ", "ЧАЙ"]
+    };
 
     let menuData = [];
     let promoData = []; 
@@ -464,6 +476,7 @@
     let currentUpsellItem = null;
     let appliedDiscount = 0; 
     let appliedPromoCode = ""; 
+
     let favorites = JSON.parse(localStorage.getItem('coffee_favorites')) || [];
 
     // 3. TOAST NOTIFICATIONS
@@ -492,7 +505,7 @@
         if(idx > -1) favorites.splice(idx, 1);
         else favorites.push(id);
         localStorage.setItem('coffee_favorites', JSON.stringify(favorites));
-        renderMenu();
+        renderMenu(); // Перерисовываем меню для обновления порядка
         tg.HapticFeedback.impactOccurred('medium');
     }
 
@@ -570,18 +583,22 @@
         const navBtns = document.querySelectorAll('.nav-btn');
         let current = '';
         
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            if (scrollY >= sectionTop - 180) {
-                current = section.getAttribute('id');
-            }
-        });
+        // Если в самом верху, выбираем первую категорию
+        if (window.scrollY < 100 && sections.length > 0) {
+             current = sections[0].getAttribute('id');
+        } else {
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+        }
         
         navBtns.forEach(btn => {
             btn.classList.remove('active');
-            if (btn.getAttribute('href').includes(current)) {
+            if (current && btn.getAttribute('href') === '#' + current) {
                 btn.classList.add('active');
-                // Auto scroll nav
                 btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
             }
         });
@@ -590,18 +607,28 @@
     // 4. ИСПРАВЛЕНИЕ ДУБЛЕЙ В ИЗБРАННОМ
     function getDisplayData() {
         const favIds = new Set(favorites);
-        // Берем оригинальные данные, находим уникальные ID, которые в избранном
-        // Используем Map для уникальности по ID, чтобы не брать дубли из "Популярного"
-        const uniqueFavItems = new Map();
+        // Создаем отдельный массив для избранного
+        const favItems = [];
+        // И отдельный массив для остальных товаров
+        const normalItems = [];
         
+        // Чтобы избежать дублей в САМОМ списке избранного (если вдруг ID повторяются), используем Set
+        const addedToFav = new Set();
+
         menuData.forEach(p => {
-            if (favIds.has(String(p.id)) && !uniqueFavItems.has(p.id)) {
-                uniqueFavItems.set(p.id, {...p, cat: "ИЗБРАННОЕ"});
+            if (favIds.has(String(p.id)) && !addedToFav.has(p.id)) {
+                // Это товар для избранного
+                // Важно: делаем копию объекта, чтобы изменить категорию только для отображения вверху
+                favItems.push({...p, cat: "ИЗБРАННОЕ"});
+                addedToFav.add(p.id);
             }
+            // Добавляем товар в его родную категорию всегда (чтобы он был и там, и там, как в приложениях доставки)
+            // Или, если вы хотите УБРАТЬ его из родной категории, добавьте else.
+            // Обычно дублируют: и сверху в избранном, и внизу в каталоге.
+            normalItems.push(p);
         });
         
-        const favArray = Array.from(uniqueFavItems.values());
-        return [...favArray, ...menuData];
+        return [...favItems, ...normalItems];
     }
 
     function initMenu() {
@@ -922,10 +949,22 @@
         } else if (product.fixedVolume) { html += `<div class="option-group"><label class="option-label">Объем: ${product.fixedVolume}</label></div>`; }
 
         if(product.hasMilk) {
+            // Determine alt milk price for display
+            let altMilkDisplayPrice = PRICES.alt_milk; // Default
+            if (product.mods && product.mods.alt_milk !== undefined) {
+                if (Array.isArray(product.mods.alt_milk)) {
+                    // If array, we show first one or range. Let's show first one.
+                    altMilkDisplayPrice = product.mods.alt_milk[0];
+                } else {
+                    altMilkDisplayPrice = product.mods.alt_milk;
+                }
+            }
+            const altMilkText = altMilkDisplayPrice > 0 ? `+${altMilkDisplayPrice}` : '';
+
             html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group">
                 <input type="radio" name="milk" id="m1" value="std" class="radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label">Обычное</label>
                 <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label">Безлакт.<br>+${PRICES.milk_lf_price || 0}</label>
-                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label">Альтерн.</label>
+                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label">Альтерн.<br><span id="alt-milk-price-display">${altMilkText}</span></label>
             </div><div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
             ALT_MILKS.forEach(m => html += `<option value="${m}">${m}</option>`);
             html += `</select></div></div>`;
@@ -984,15 +1023,20 @@
 
         if(prod.hasMilk) {
             const el = document.querySelector('input[name="milk"]:checked');
+            
+            // Update alt milk label if price depends on volume
+            let milkPrice = PRICES.alt_milk;
+            if (prod.mods && prod.mods.alt_milk !== undefined) {
+                 if (Array.isArray(prod.mods.alt_milk)) {
+                    const volEl = document.querySelector('input[name="vol"]:checked');
+                    const volIndex = volEl ? parseInt(volEl.value) : 0;
+                    milkPrice = prod.mods.alt_milk[volIndex] !== undefined ? prod.mods.alt_milk[volIndex] : prod.mods.alt_milk[0];
+                 } else { milkPrice = prod.mods.alt_milk; }
+            }
+            const labelSpan = document.getElementById('alt-milk-price-display');
+            if(labelSpan) labelSpan.innerText = milkPrice > 0 ? `+${milkPrice}` : '';
+
             if(el && el.value === 'alt') {
-                let milkPrice = PRICES.alt_milk;
-                if (prod.mods && prod.mods.alt_milk !== undefined) {
-                    if (Array.isArray(prod.mods.alt_milk)) {
-                        const volEl = document.querySelector('input[name="vol"]:checked');
-                        const volIndex = volEl ? parseInt(volEl.value) : 0;
-                        milkPrice = prod.mods.alt_milk[volIndex] !== undefined ? prod.mods.alt_milk[volIndex] : prod.mods.alt_milk[0];
-                    } else { milkPrice = prod.mods.alt_milk; }
-                }
                 p += milkPrice;
             }
         }
