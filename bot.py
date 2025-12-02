@@ -229,20 +229,24 @@ async def web_app_data_handler(message: types.Message):
         text = f"{order_icon} <b>НОВЫЙ ЗАКАЗ</b>\n➖➖➖➖➖➖➖➖➖➖\n"
         text += f"👤 {info.get('name')} (<a href='tel:{info.get('phone')}'>{info.get('phone')}</a>)\n"
         
-        # 1. ИСПРАВЛЕНИЕ: Четкое отображение типа заказа
         if is_del:
             text += f"📍 <b>Адрес:</b> {info.get('address')}\n"
         else:
-            # Пишем "В зале" или "Самовывоз"
             text += f"📍 <b>{delivery_type}</b>\n"
             
         text += f"💳 {info.get('paymentType')}\n"
         if info.get('comment'): text += f"💬 <i>{info.get('comment')}</i>\n"
         
         text += f"➖➖➖➖➖➖➖➖➖➖\n"
+        # --- ОБНОВЛЕННЫЙ ЦИКЛ С УЧЕТОМ КОЛИЧЕСТВА (QTY) ---
         for i, item in enumerate(cart, 1):
             opts = [o for o in item.get('options', []) if o and o != "Без сахара"]
-            text += f"{i}. <b>{item.get('name')}</b> {'('+ ', '.join(opts) +')' if opts else ''}\n"
+            opts_str = f" ({', '.join(opts)})" if opts else ""
+            qty = item.get('qty', 1)
+            qty_str = f" <b>x {qty}</b>" if qty > 1 else ""
+            
+            text += f"{i}. <b>{item.get('name')}</b>{opts_str}{qty_str}\n"
+        # ---------------------------------------------------
             
         text += discount_text
         text += f"\n💰 <b>ИТОГО: {total} ₸</b>"
@@ -285,12 +289,11 @@ async def set_time(c: CallbackQuery, state: FSMContext):
     
     t_val = f"{act} мин"
     old_text = c.message.text
-    is_delivery = "🚗" in old_text # Проверяем, доставка ли это по иконке
+    is_delivery = "🚗" in old_text 
     
     clean_text = old_text.split("\n\n✅")[0]
     await c.message.edit_text(f"{clean_text}\n\n✅ <b>ПРИНЯТ</b> ({t_val})", reply_markup=get_ready_kb(uid))
     
-    # 2. ИСПРАВЛЕНИЕ: Уточнение для доставки
     msg_client = f"👨‍🍳 Принят! Готовность: <b>{t_val}</b>."
     if is_delivery:
         msg_client += "\n<i>(Время приготовления, без учета доставки)</i>"
@@ -307,13 +310,6 @@ async def custom_time(m: types.Message, state: FSMContext):
     try:
         await bot.edit_message_reply_markup(m.chat.id, d['msg_id'], reply_markup=get_ready_kb(d['uid']))
         
-        # Получаем текст старого сообщения, чтобы проверить на доставку (через reply)
-        reply_msg = m.reply_to_message # Это работает, если reply_to_message_id был передан, но тут мы просто шлем новое
-        
-        # При ручном вводе сложно проверить текст старого сообщения без лишних запросов.
-        # Будем считать, что уведомление стандартное, или можно сохранить is_del в state.
-        # Для простоты добавим универсальную приписку.
-        
         await bot.send_message(
             chat_id=m.chat.id, 
             text=f"Время установлено: {m.text}", 
@@ -321,7 +317,6 @@ async def custom_time(m: types.Message, state: FSMContext):
             message_thread_id=TOPIC_ID_ORDERS
         )
         
-        # Отправляем клиенту
         await bot.send_message(d['uid'], f"👨‍🍳 Принят! Готовность: <b>{m.text}</b>.\n<i>(Если это доставка, время пути не учтено)</i>")
     except: pass
     await state.clear()
@@ -337,7 +332,6 @@ async def ready(c: CallbackQuery):
     # Меняем статус админа на "ГОТОВ"
     await c.message.edit_text(f"{clean}\n\n🏁 <b>ГОТОВ</b>", reply_markup=get_given_kb(uid))
     
-    # 3. ИСПРАВЛЕНИЕ: Не пишем "Передан курьеру" раньше времени
     client_msg = "📦 <b>Заказ готов и упакован!</b>\nОжидаем курьера." if is_del else "🎉 <b>Ваш заказ готов!</b>\nЖдем вас на выдаче ☕️"
     
     try: await bot.send_message(uid, client_msg)
@@ -356,16 +350,15 @@ async def given(c: CallbackQuery, state: FSMContext):
     status_text = "🚗 <b>КУРЬЕР ВЫЕХАЛ</b>" if is_del else "🤝 <b>ВЫДАН / ЗАВЕРШЕН</b>"
     await c.message.edit_text(f"{clean}\n\n{status_text}")
     
+    # --- ЛОГИКА ЗАПРОСА ОТЗЫВА ---
     try:
         if is_del:
-            # Если доставка - отправляем кнопку "Я получил"
             await bot.send_message(
                 uid,
                 "🚗 Курьер выехал!\nКак только получите заказ, нажмите кнопку ниже, чтобы оценить качество:",
                 reply_markup=get_received_kb()
             )
         else:
-            # Самовывоз - просим отзыв сразу
             await start_review_process(uid, state)
 
     except Exception as e:
@@ -419,7 +412,6 @@ async def rate_food(c: CallbackQuery, state: FSMContext):
         )
         await state.set_state(ReviewState.waiting_for_tips_decision)
     else:
-        # Доставка или плохая оценка -> Сразу отзыв
         tips_reason = "Нет (Доставка)" if is_delivery else "Нет (Низкая оценка)"
         await state.update_data(tips=tips_reason)
         
@@ -517,4 +509,3 @@ async def main():
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
-
