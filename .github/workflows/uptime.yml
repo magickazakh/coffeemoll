@@ -2,12 +2,11 @@ name: ☕ Keep-Alive & Monitor
 
 on:
   schedule:
-    # CRON: Каждые 14 минут
-    # Часы (UTC): с 03:00 до 18:59
-    # Часы (KZ):  с 08:00 до 23:59 (С запасом покрывает 08:30 - 23:30)
-    - cron: '*/9 3-18 * * *'
+    # ИЗМЕНЕНИЕ: Ставим каждые 8 минут (*/8) вместо 14.
+    # Это создаст запас прочности, если GitHub задержит запуск на пару минут.
+    # Render засыпает через 15 минут. 8 мин + 5 мин (лаг) = 13 мин < 15 мин.
+    - cron: '*/5 3-18 * * *'
   
-  # Кнопка для ручного запуска (если нужно проверить прямо сейчас)
   workflow_dispatch:
 
 jobs:
@@ -20,27 +19,24 @@ jobs:
           TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.TELEGRAM_TO }}
         run: |
-          echo "Pinging $URL to keep it alive..."
-          
-          # --max-time 60: Ждем ответ 60 секунд (Render может долго просыпаться)
-          # --retry 3: Если ошибка, пробуем еще 3 раза
-          http_code=$(curl -o /dev/null -s -w "%{http_code}\n" --max-time 60 --retry 3 "$URL")
+          # Используем User-Agent как у браузера, чтобы Render точно засчитал это как активность
+          http_code=$(curl -o /dev/null -s -w "%{http_code}\n" --max-time 60 --retry 3 -A "Mozilla/5.0 (KeepAlive)" "$URL")
           
           echo "Response Code: $http_code"
           
-          # Если код НЕ 200, значит сайт лежит
           if [ "$http_code" -ne 200 ]; then
-            echo "🚨 Бот не проснулся!"
+            # Если ошибка, пробуем разбудить еще раз через 5 секунд (контрольный выстрел)
+            sleep 5
+            http_code_retry=$(curl -o /dev/null -s -w "%{http_code}\n" --max-time 60 -A "Mozilla/5.0 (KeepAlive)" "$URL")
             
-            MESSAGE="⚠️ <b>Render не отвечает!</b>%0AКод: $http_code%0AВремя: $(date)"
-            
-            # Отправка уведомления в Telegram
-            curl -s -X POST "https://api.telegram.org/bot$TOKEN/sendMessage" \
-              -d chat_id="$CHAT_ID" \
-              -d text="$MESSAGE" \
-              -d parse_mode="HTML"
-              
-            exit 1
+            if [ "$http_code_retry" -ne 200 ]; then
+                # Если и второй раз не ответил - шлем тревогу
+                curl -s -X POST "https://api.telegram.org/bot$TOKEN/sendMessage" \
+                -d chat_id="$CHAT_ID" \
+                -d text="⚠️ <b>Render спит!</b>%0AКод: $http_code" \
+                -d parse_mode="HTML"
+                exit 1
+            fi
           else
-            echo "✅ Render активен (успешно проснулся)."
+            echo "✅ Render бодрствует."
           fi
