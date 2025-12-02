@@ -164,7 +164,7 @@ def get_given_kb(user_id):
 
 def get_received_kb():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📦 Я получил заказ", callback_data="ord_received")]
+        [InlineKeyboardButton(text="📦 Заказ у меня", callback_data="ord_received")]
     ])
 
 # Клавиатуры для отзывов
@@ -184,7 +184,7 @@ def get_baristas_kb():
     buttons = []
     for b_id, data in BARISTAS.items():
         buttons.append([InlineKeyboardButton(text=data['name'], callback_data=f"barista_{b_id}")])
-    buttons.append([InlineKeyboardButton(text="Передумал", callback_data="tips_no")])
+    buttons.append([InlineKeyboardButton(text="Отмена", callback_data="tips_no")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def get_skip_comment_kb():
@@ -542,6 +542,7 @@ async def main():
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
 
