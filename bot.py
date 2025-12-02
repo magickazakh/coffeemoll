@@ -255,6 +255,12 @@ async def web_app_data_handler(message: types.Message):
             text += f"📍 <b>{delivery_type}</b>\n"
             
         text += f"💳 {info.get('paymentType')}\n"
+        
+        # --- ИСПРАВЛЕНИЕ: Добавляем номер телефона для Kaspi/Halyk ---
+        if info.get('paymentType') in ['Kaspi', 'Halyk']:
+            text += f"📱 <b>Счет:</b> <code>{info.get('paymentPhone')}</code>\n"
+        # ------------------------------------------------------------
+
         if info.get('comment'): text += f"💬 <i>{info.get('comment')}</i>\n"
         
         text += f"➖➖➖➖➖➖➖➖➖➖\n"
@@ -536,4 +542,5 @@ async def main():
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
