@@ -301,7 +301,7 @@ async def decision(c: CallbackQuery):
     if act == "accept": await c.message.edit_reply_markup(reply_markup=get_time_kb(uid))
     else:
         await c.message.edit_text(f"{c.message.text}\n\n❌ <b>ОТКЛОНЕН</b>")
-        try: await bot.send_message(uid, "❌ Заказ отклонен.")
+        try: await bot.send_message(uid, "❌ Заказ отклонен. Скоро свяжемся с вами для уточнения.")
         except: pass
     await c.answer()
 
@@ -542,5 +542,6 @@ async def main():
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
