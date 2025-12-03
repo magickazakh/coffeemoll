@@ -3,13 +3,15 @@ import json
 import logging
 import sys
 import os
+import re 
 from datetime import datetime
 from aiohttp import web
 
-# --- БИБЛИОТЕКИ ДЛЯ GOOGLE SHEETS ---
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-# ------------------------------------
+# --- FIREBASE IMPORTS ---
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+# ------------------------
 
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command, CommandStart
@@ -549,6 +551,7 @@ async def main():
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
 
