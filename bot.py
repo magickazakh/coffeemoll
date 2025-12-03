@@ -24,12 +24,12 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 # --- НАСТРОЙКИ ---
 TOKEN = os.getenv("BOT_TOKEN", "8444027240:AAFEiACM5x-OPmR9CFgk1zyrmU24PgovyCY") 
-ADMIN_CHAT_ID = -1003356844624
+ADMIN_CHAT_ID = -1003472248648
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
 
 # --- НАСТРОЙКИ ТЕМ (TOPICS) ---
-TOPIC_ID_ORDERS = 68
-TOPIC_ID_REVIEWS = 69
+TOPIC_ID_ORDERS = 20
+TOPIC_ID_REVIEWS = 3
 # ------------------------------
 
 KASPI_NUMBER = "+7 747 240 20 02" 
@@ -512,3 +512,4 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
