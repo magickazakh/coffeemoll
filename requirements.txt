@@ -5,3 +5,5 @@ aiohttp==3.11.11
 gspread
 
 oauth2client
+
+firebase-admin
