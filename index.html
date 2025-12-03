@@ -460,7 +460,7 @@
     const PROMO_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=19369806&single=true&output=csv";
     
     // --- ВАЖНО: УКАЖИТЕ URL ВАШЕГО БОТА НА RENDER ---
-    const BACKEND_URL = "https://coffeemoll-bot.onrender.com"; 
+    const BACKEND_URL = "https://coffeemoll.onrender.com"; 
     // ------------------------------------------------
 
     // Cache Busting
@@ -479,7 +479,11 @@
     let CLOSE_HOUR = 23;
 
     const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
-    const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ", "ЗАКУСКИ"], "ЧАЙ": ["КРУАССАНЫ", "ЗАКУСКИ"], "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ЗАВТРАКИ": ["КОФЕ", "ЧАЙ"] };
+    const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ"],
+        "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
+        "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ", "ЛИМОНАДЫ"],
+        "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
+        "ЗАВТРАКИ": ["КОФЕ", "СЕЗОННОЕ"] };
 
     let menuData = [];
     let promoData = []; 
@@ -1388,3 +1392,4 @@
 </script>
 </body>
 </html>
+
