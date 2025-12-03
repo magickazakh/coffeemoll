@@ -56,131 +56,154 @@ class ReviewState(StatesGroup):
     waiting_for_barista_choice = State()
     waiting_for_comment = State()
 
-# --- GOOGLE SHEETS ---
-_gs_client = None
-_gs_sheet_cache = None
+# --- FIREBASE SETUP ---
+def init_firebase():
+    # Проверяем, не инициализировано ли уже приложение, чтобы избежать ошибок при перезагрузке
+    if not firebase_admin._apps:
+        # Определяем путь к файлу ключей (Локально или на Render)
+        cred_path = "firebase_creds.json"
+        if os.path.exists("/etc/secrets/firebase_creds.json"):
+            cred_path = "/etc/secrets/firebase_creds.json"
+            
+        if os.path.exists(cred_path):
+            cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred)
+            logging.info("🔥 Firebase Connected!")
+        else:
+            logging.error("❌ Firebase credentials file not found!")
+            return None
+    return firestore.client()
 
-def get_creds_path():
-    if os.path.exists("creds.json"): return "creds.json"
-    elif os.path.exists("/etc/secrets/creds.json"): return "/etc/secrets/creds.json"
-    return None
+db = init_firebase()
 
-def get_gspread_service():
-    global _gs_client, _gs_sheet_cache
-    try:
-        if _gs_client and _gs_sheet_cache:
-            return _gs_client, _gs_sheet_cache
-        path = get_creds_path()
-        if not path: return None, None
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name(path, scope)
-        _gs_client = gspread.authorize(creds)
-        _gs_sheet_cache = _gs_client.open(SHEET_NAME)
-        return _gs_client, _gs_sheet_cache
-    except Exception as e:
-        logging.error(f"Connection Error: {e}")
-        _gs_client = None
-        _gs_sheet_cache = None
-        return None, None
+def clean_id(raw_id):
+    """Удаляет всё кроме цифр из ID"""
+    if not raw_id: return ""
+    return re.sub(r'\D', '', str(raw_id))
 
-# --- ФУНКЦИЯ ДЛЯ ФОНОВОЙ ПРОВЕРКИ (ТОЛЬКО ЧТЕНИЕ) ---
-def check_promo_status(code, user_id):
-    """Проверяет статус, но НЕ списывает использование"""
-    global _gs_client
-    if not code: return "NOT_FOUND", 0
+# --- ЛОГИКА ПРОМОКОДОВ (FIREBASE) ---
+
+def check_promo_firebase(code, user_id):
+    """Проверяет статус промокода (Read-only)"""
+    if not db: return "ERROR", 0
     
-    for attempt in range(2):
-        try:
-            client, spreadsheet = get_gspread_service()
-            if not spreadsheet: return "ERROR", 0
-            
-            sheet_promo = spreadsheet.worksheet("Promocodes")
-            sheet_history = spreadsheet.worksheet("PromoHistory")
-            
-            # 1. Проверка истории
-            history = sheet_history.get_all_values()
-            for row in history:
-                if str(row[0]) == str(user_id) and str(row[1]).upper() == code.upper():
-                    return "USED", 0
-
-            # 2. Поиск кода
-            try: cell = sheet_promo.find(code)
-            except: return "NOT_FOUND", 0
-
-            # 3. Получение скидки и лимита
-            # B=Discount(2), C=Limit(3)
-            discount_val = sheet_promo.cell(cell.row, 2).value
-            limit = int(sheet_promo.cell(cell.row, 3).value or 0)
-            
-            if limit > 0:
-                try:
-                    discount = float(str(discount_val).replace(',', '.'))
-                except:
-                    discount = 0
-                return "OK", discount
-            else: 
-                return "LIMIT", 0
-                
-        except Exception as e:
-            logging.warning(f"Check Promo Error: {e}")
-            _gs_client = None
-            if attempt == 1: return "ERROR", 0
-
-# --- ФУНКЦИЯ СПИСАНИЯ (ДЛЯ ЗАКАЗА) ---
-def process_promo_code(code, user_id):
-    global _gs_client
-    for attempt in range(2):
-        try:
-            client, spreadsheet = get_gspread_service()
-            if not spreadsheet: return "ERROR"
-            sheet_promo = spreadsheet.worksheet("Promocodes")
-            sheet_history = spreadsheet.worksheet("PromoHistory")
-            
-            # Повторная проверка перед записью (на всякий случай)
-            history = sheet_history.get_all_values()
-            for row in history:
-                if str(row[0]) == str(user_id) and str(row[1]).upper() == code.upper():
-                    return "USED"
-
-            try: cell = sheet_promo.find(code)
-            except: return "NOT_FOUND"
-
-            limit = int(sheet_promo.cell(cell.row, 3).value or 0)
-            if limit > 0:
-                sheet_promo.update_cell(cell.row, 3, limit - 1)
-                sheet_history.append_row([str(user_id), code, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
-                return "OK"
-            else: return "LIMIT"
-        except Exception as e:
-            _gs_client = None
-            if attempt == 1: return "ERROR"
-
-def save_review(user_id, name, service_rate, food_rate, tips, comment):
-    client, spreadsheet = get_gspread_service()
-    if not spreadsheet: return
+    code = code.strip().upper()
+    uid = clean_id(user_id)
+    
     try:
-        spreadsheet.worksheet("Reviews").append_row([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), str(user_id), name, service_rate, food_rate, tips, comment])
-    except: pass
+        # 1. Проверяем историю (Коллекция 'promo_history', документ = UID_CODE)
+        # Это мгновенный поиск по ключу (O(1))
+        history_ref = db.collection('promo_history').document(f"{uid}_{code}")
+        if history_ref.get().exists:
+            return "USED", 0
+
+        # 2. Проверяем сам промокод (Коллекция 'promocodes', документ = CODE)
+        promo_ref = db.collection('promocodes').document(code)
+        promo_doc = promo_ref.get()
+        
+        if not promo_doc.exists:
+            return "NOT_FOUND", 0
+            
+        data = promo_doc.to_dict()
+        limit = data.get('limit', 0)
+        discount = data.get('discount', 0)
+        
+        # Приводим скидку к float на всякий случай
+        try: discount = float(discount)
+        except: discount = 0
+        
+        if limit > 0:
+            return "OK", discount
+        else:
+            return "LIMIT", 0
+            
+    except Exception as e:
+        logging.error(f"Firebase Check Error: {e}")
+        return "ERROR", 0
+
+# Транзакционная функция для атомарного списания
+@firestore.transactional
+def use_promo_transaction(transaction, code, uid):
+    promo_ref = db.collection('promocodes').document(code)
+    history_ref = db.collection('promo_history').document(f"{uid}_{code}")
+    
+    # Читаем данные внутри транзакции
+    snapshot = promo_ref.get(transaction=transaction)
+    
+    if not snapshot.exists:
+        return "NOT_FOUND"
+    
+    current_limit = snapshot.get('limit')
+    
+    if current_limit <= 0:
+        return "LIMIT"
+        
+    # Проверяем историю (на случай если успел использовать в параллельном потоке)
+    hist_snap = history_ref.get(transaction=transaction)
+    if hist_snap.exists:
+        return "USED"
+
+    # Пишем данные
+    transaction.update(promo_ref, {'limit': current_limit - 1})
+    transaction.set(history_ref, {
+        'user_id': uid,
+        'code': code,
+        'timestamp': firestore.SERVER_TIMESTAMP
+    })
+    return "OK"
+
+def process_promo_firebase(code, user_id):
+    """Пытается списать промокод"""
+    if not db: return "ERROR"
+    
+    code = code.strip().upper()
+    uid = clean_id(user_id)
+    
+    try:
+        transaction = db.transaction()
+        result = use_promo_transaction(transaction, code, uid)
+        return result
+    except Exception as e:
+        logging.error(f"Transaction Error: {e}")
+        return "ERROR"
+
+# --- ЗАПИСЬ ОТЗЫВОВ (FIREBASE) ---
+
+def save_review_firebase(user_id, name, service_rate, food_rate, tips, comment):
+    if not db: return
+    try:
+        # Просто добавляем документ в коллекцию 'reviews' с авто-ID
+        db.collection('reviews').add({
+            'user_id': str(user_id),
+            'name': name,
+            'service_rate': service_rate,
+            'food_rate': food_rate,
+            'tips': tips,
+            'comment': comment,
+            'timestamp': firestore.SERVER_TIMESTAMP,
+            'date_str': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+    except Exception as e:
+        logging.error(f"Save Review Error: {e}")
 
 # --- API ДЛЯ WEB APP ---
+
 async def api_check_promo(request):
-    # CORS заголовки
     headers = {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"
     }
-    
-    if request.method == 'OPTIONS':
-        return web.Response(headers=headers)
+    if request.method == 'OPTIONS': return web.Response(headers=headers)
 
     try:
         data = await request.json()
-        code = data.get('code', '').strip().upper()
+        code = data.get('code', '')
         user_id = data.get('userId')
         
         loop = asyncio.get_running_loop()
-        status, discount = await loop.run_in_executor(None, check_promo_status, code, user_id)
+        # Вызываем Firebase проверку в отдельном потоке, чтобы не блочить бота
+        status, discount = await loop.run_in_executor(None, check_promo_firebase, code, user_id)
         
         return web.json_response({'status': status, 'discount': discount}, headers=headers)
     except Exception as e:
@@ -193,172 +216,89 @@ async def start_web_server():
     app = web.Application()
     app.router.add_get("/", health_check)
     app.router.add_get("/health", health_check)
-    
-    # ДОБАВЛЕН НОВЫЙ МАРШРУТ
     app.router.add_post("/api/check_promo", api_check_promo)
     app.router.add_options("/api/check_promo", api_check_promo)
-    
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
 
+# --- ЗАПУСК ---
+async def main():
+    await start_web_server()
+    await bot.delete_webhook(drop_pending_updates=True)
+    print("🤖 Bot started with Firebase...")
+    await dp.start_polling(bot)
+
 # --- КЛАВИАТУРЫ ---
-
+# (Остались без изменений)
 def get_decision_kb(user_id):
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ Принять", callback_data=f"dec_accept_{user_id}"),
-         InlineKeyboardButton(text="❌ Отклонить", callback_data=f"dec_reject_{user_id}")]
-    ])
-
+    return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="✅ Принять", callback_data=f"dec_accept_{user_id}"), InlineKeyboardButton(text="❌ Отклонить", callback_data=f"dec_reject_{user_id}")]])
 def get_time_kb(user_id):
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="5 мин", callback_data=f"time_5_{user_id}"),
-         InlineKeyboardButton(text="10 мин", callback_data=f"time_10_{user_id}"),
-         InlineKeyboardButton(text="15 мин", callback_data=f"time_15_{user_id}")],
-        [InlineKeyboardButton(text="20 мин", callback_data=f"time_20_{user_id}"),
-         InlineKeyboardButton(text="30 мин", callback_data=f"time_30_{user_id}"),
-         InlineKeyboardButton(text="✍️ Своё", callback_data=f"time_custom_{user_id}")],
-        [InlineKeyboardButton(text="🔙 Назад", callback_data=f"time_back_{user_id}")]
-    ])
-
-def get_ready_kb(user_id):
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🏁 Готов", callback_data=f"ord_ready_{user_id}")]
-    ])
-
-def get_given_kb(user_id):
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ Выдан / Передан курьеру", callback_data=f"ord_given_{user_id}")]
-    ])
-
-def get_received_kb():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📦 Заказ получен", callback_data="ord_received")]
-    ])
-
-# Клавиатуры для отзывов
-def get_stars_kb(category):
-    buttons = []
-    for i in range(1, 6):
-        buttons.append(InlineKeyboardButton(text=f"{i} ⭐", callback_data=f"rate_{category}_{i}"))
-    return InlineKeyboardMarkup(inline_keyboard=[buttons])
-
-def get_yes_no_kb():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Да 👍", callback_data="tips_yes"),
-         InlineKeyboardButton(text="Нет 🙅‍♂️", callback_data="tips_no")]
-    ])
-
+    return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="5 мин", callback_data=f"time_5_{user_id}"), InlineKeyboardButton(text="10 мин", callback_data=f"time_10_{user_id}"), InlineKeyboardButton(text="15 мин", callback_data=f"time_15_{user_id}")], [InlineKeyboardButton(text="20 мин", callback_data=f"time_20_{user_id}"), InlineKeyboardButton(text="30 мин", callback_data=f"time_30_{user_id}"), InlineKeyboardButton(text="✍️ Своё", callback_data=f"time_custom_{user_id}")], [InlineKeyboardButton(text="🔙 Назад", callback_data=f"time_back_{user_id}")]])
+def get_ready_kb(user_id): return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏁 Готов", callback_data=f"ord_ready_{user_id}")]])
+def get_given_kb(user_id): return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="✅ Выдан / Передан курьеру", callback_data=f"ord_given_{user_id}")]])
+def get_received_kb(): return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="📦 Заказ получен", callback_data="ord_received")]])
+def get_stars_kb(c): return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=f"{i} ⭐", callback_data=f"rate_{c}_{i}") for i in range(1, 6)]])
+def get_yes_no_kb(): return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Да 👍", callback_data="tips_yes"), InlineKeyboardButton(text="Нет 🙅‍♂️", callback_data="tips_no")]])
 def get_baristas_kb():
-    buttons = []
-    for b_id, data in BARISTAS.items():
-        buttons.append([InlineKeyboardButton(text=data['name'], callback_data=f"barista_{b_id}")])
-    buttons.append([InlineKeyboardButton(text="Отмена", callback_data="tips_no")])
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
+    b = [[InlineKeyboardButton(text=d['name'], callback_data=f"barista_{k}")] for k, d in BARISTAS.items()]
+    b.append([InlineKeyboardButton(text="Отмена", callback_data="tips_no")])
+    return InlineKeyboardMarkup(inline_keyboard=b)
+def get_skip_comment_kb(): return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="⏩ Пропустить", callback_data="skip_comment")]])
 
-def get_skip_comment_kb():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="⏩ Пропустить", callback_data="skip_comment")]
-    ])
 
-# --- ОБРАБОТЧИКИ ЗАКАЗА ---
+# --- ОБРАБОТЧИКИ (С ИНТЕГРАЦИЕЙ FIREBASE) ---
 
 @dp.message(CommandStart())
-async def cmd_start(message: types.Message):
-    markup = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=WEB_APP_URL))]], resize_keyboard=True)
-    await message.answer("Добро пожаловать в CoffeeMoll! 🥐", reply_markup=markup)
+async def cmd_start(m: types.Message):
+    await m.answer("Добро пожаловать в CoffeeMoll! 🥐", reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=WEB_APP_URL))]], resize_keyboard=True))
 
 @dp.message(F.web_app_data)
-async def web_app_data_handler(message: types.Message):
+async def web_app_data_handler(m: types.Message):
     try:
-        data = json.loads(message.web_app_data.data)
-        if data.get('type') == 'review': return
-
-        cart = data.get('cart', [])
-        total = data.get('total', 0)
-        info = data.get('info', {})
-
-        promo_code = info.get('promoCode', '')
-        discount_rate = info.get('discount', 0)
-        discount_text = ""
-        client_warning = "" 
+        d = json.loads(m.web_app_data.data)
+        if d.get('type') == 'review': return
+        cart, total, info = d.get('cart', []), d.get('total', 0), d.get('info', {})
+        promo, disc = info.get('promoCode', ''), info.get('discount', 0)
+        d_txt, warn = "", ""
         
-        if promo_code and discount_rate > 0:
+        if promo and disc > 0:
+            # --- FIREBASE PROCESS ---
             loop = asyncio.get_running_loop()
-            # Промокоды проверяем в executor, с механизмом повторных попыток
-            res = await loop.run_in_executor(None, process_promo_code, promo_code, message.from_user.id)
+            res = await loop.run_in_executor(None, process_promo_firebase, promo, m.from_user.id)
             
             if res == "OK":
-                try:
-                    orig = round(total / (1 - discount_rate))
-                    discount_text = f"\n🎁 <b>Промокод:</b> {promo_code} (-{int(orig - total)} ₸)"
-                except: discount_text = f"\n🎁 <b>Промокод:</b> {promo_code}"
+                try: d_txt = f"\n🎁 <b>Промокод:</b> {promo} (-{int(round(total/(1-disc)) - total)} ₸)"
+                except: d_txt = f"\n🎁 <b>Промокод:</b> {promo}"
             else:
-                try: total = int(round(total / (1 - discount_rate)))
+                try: total = int(round(total/(1-disc)))
                 except: pass
-                
-                if res == "USED":
-                    discount_text = f"\n❌ <b>Промокод:</b> {promo_code} (Повтор)"
-                    client_warning = f"\n⚠️ <b>Промокод {promo_code} уже использован вами!</b>\nСкидка отменена."
-                elif res == "LIMIT":
-                    discount_text = f"\n❌ <b>Промокод:</b> {promo_code} (Лимит)"
-                    client_warning = f"\n⚠️ <b>Лимит промокода {promo_code} исчерпан!</b>\nСкидка отменена."
-                else:
-                    discount_text = f"\n❌ <b>Промокод:</b> {promo_code} (Ошибка)"
-                    client_warning = f"\n⚠️ <b>Ошибка применения промокода!</b>\nСкидка отменена."
+                reasons = {"USED": "Повтор", "LIMIT": "Лимит"}
+                user_reasons = {"USED": "уже использован вами", "LIMIT": "исчерпан"}
+                d_txt = f"\n❌ <b>Промокод:</b> {promo} ({reasons.get(res, 'Ошибка')})"
+                warn = f"\n⚠️ <b>Промокод {promo} {user_reasons.get(res, 'не сработал')}!</b>\nСкидка отменена."
 
-        # Определение типа заказа для чека
-        delivery_type = info.get('deliveryType') # "Доставка", "В зале", "Самовывоз"
-        is_del = (delivery_type == 'Доставка')
-        
-        order_icon = "🚗" if is_del else "🏃"
-        
-        text = f"{order_icon} <b>НОВЫЙ ЗАКАЗ</b>\n➖➖➖➖➖➖➖➖➖➖\n"
-        text += f"👤 {info.get('name')} (<a href='tel:{info.get('phone')}'>{info.get('phone')}</a>)\n"
-        
-        if is_del:
-            text += f"📍 <b>Адрес:</b> {info.get('address')}\n"
-        else:
-            text += f"📍 <b>{delivery_type}</b>\n"
-            
-        text += f"💳 {info.get('paymentType')}\n"
-        
-        # --- ИСПРАВЛЕНИЕ: Добавляем номер телефона для Kaspi/Halyk ---
-        if info.get('paymentType') in ['Kaspi', 'Halyk']:
-            text += f"📱 <b>Счет:</b> <code>{info.get('paymentPhone')}</code>\n"
-        # ------------------------------------------------------------
-
-        if info.get('comment'): text += f"💬 <i>{info.get('comment')}</i>\n"
-        
-        text += f"➖➖➖➖➖➖➖➖➖➖\n"
+        is_del = (info.get('deliveryType') == 'Доставка')
+        txt = f"{'🚗' if is_del else '🏃'} <b>НОВЫЙ ЗАКАЗ</b>\n➖➖➖➖➖➖➖➖➖➖\n👤 {info.get('name')} (<a href='tel:{info.get('phone')}'>{info.get('phone')}</a>)\n"
+        txt += f"📍 {'Адрес: ' + info.get('address') if is_del else info.get('deliveryType')}\n💳 {info.get('paymentType')}\n"
+        if info.get('paymentType') in ['Kaspi', 'Halyk']: txt += f"📱 <b>Счет:</b> <code>{info.get('paymentPhone')}</code>\n"
+        if info.get('comment'): txt += f"💬 <i>{info.get('comment')}</i>\n"
+        if "Ко времени" in str(info.get('comment')): txt += "⏰ <b>КО ВРЕМЕНИ!</b>\n"
+        txt += f"➖➖➖➖➖➖➖➖➖➖\n"
         for i, item in enumerate(cart, 1):
             opts = [o for o in item.get('options', []) if o and o != "Без сахара"]
-            opts_str = f" ({', '.join(opts)})" if opts else ""
-            qty = item.get('qty', 1)
-            qty_str = f" <b>x {qty}</b>" if qty > 1 else ""
-            
-            text += f"{i}. <b>{item.get('name')}</b>{opts_str}{qty_str}\n"
-            
-        text += discount_text
-        text += f"\n💰 <b>ИТОГО: {total} ₸</b>"
-        if is_del: text += "\n⚠️ <i>+ Доставка</i>"
+            q = item.get('qty', 1)
+            txt += f"{i}. <b>{item.get('name')}</b> {'('+ ', '.join(opts) +')' if opts else ''}{f' <b>x {q}</b>' if q > 1 else ''}\n"
+        txt += f"{d_txt}\n💰 <b>ИТОГО: {total} ₸</b>"
+        if is_del: txt += "\n⚠️ <i>+ Доставка</i>"
 
-        await bot.send_message(
-            chat_id=ADMIN_CHAT_ID, 
-            text=text, 
-            reply_markup=get_decision_kb(message.chat.id),
-            message_thread_id=TOPIC_ID_ORDERS
-        )
+        await bot.send_message(ADMIN_CHAT_ID, txt, reply_markup=get_decision_kb(m.chat.id), message_thread_id=TOPIC_ID_ORDERS)
         
-        # Ответ клиенту с предупреждением, если промокод слетел
         response_text = f"✅ Заказ принят!\nСумма: {total} ₸"
-        if client_warning:
-            response_text += f"\n{client_warning}"
+        if warn: response_text += f"\n{warn}"
         response_text += "\n\nЖдите подтверждения времени."
-
-        await message.answer(response_text)
-
+        await m.answer(response_text)
     except Exception as e: logging.error(f"Order Error: {e}")
 
 # --- ЛОГИКА СТАТУСОВ (ADMIN) ---
@@ -561,7 +501,7 @@ async def finalize_review(message, state, comment_text, user):
     
     # Сохранение в фоне
     loop = asyncio.get_running_loop()
-    loop.run_in_executor(None, save_review, 
+    loop.run_in_executor(None, save_review_firebase, 
                          user.id, 
                          user.first_name,
                          data.get('service_rate'),
@@ -609,6 +549,7 @@ async def main():
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
 
