@@ -46,9 +46,8 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=MemoryStorage())
 
-# --- СОСТОЯНИЯ (FSM) ---
 class OrderState(StatesGroup):
-    waiting_for_custom_time = State()
+    waiting_f8or_custom_time = State()
 
 class ReviewState(StatesGroup):
     waiting_for_service_rate = State()
@@ -57,7 +56,7 @@ class ReviewState(StatesGroup):
     waiting_for_barista_choice = State()
     waiting_for_comment = State()
 
-# --- GOOGLE SHEETS (OPTIMIZED & ROBUST) ---
+# --- GOOGLE SHEETS ---
 _gs_client = None
 _gs_sheet_cache = None
 
@@ -84,71 +83,121 @@ def get_gspread_service():
         _gs_sheet_cache = None
         return None, None
 
-def process_promo_code(code, user_id):
+# --- ФУНКЦИЯ ДЛЯ ФОНОВОЙ ПРОВЕРКИ (ТОЛЬКО ЧТЕНИЕ) ---
+def check_promo_status(code, user_id):
+    """Проверяет статус, но НЕ списывает использование"""
     global _gs_client
+    if not code: return "NOT_FOUND", 0
     
-    # Делаем 2 попытки: если первая упала (токен протух), переподключаемся и пробуем снова
     for attempt in range(2):
         try:
             client, spreadsheet = get_gspread_service()
-            if not spreadsheet: return "ERROR"
+            if not spreadsheet: return "ERROR", 0
             
             sheet_promo = spreadsheet.worksheet("Promocodes")
             sheet_history = spreadsheet.worksheet("PromoHistory")
             
-            # 1. Проверка истории (LIVE запрос)
+            # 1. Проверка истории
+            history = sheet_history.get_all_values()
+            for row in history:
+                if str(row[0]) == str(user_id) and str(row[1]).upper() == code.upper():
+                    return "USED", 0
+
+            # 2. Поиск кода
+            try: cell = sheet_promo.find(code)
+            except: return "NOT_FOUND", 0
+
+            # 3. Получение скидки и лимита
+            # B=Discount(2), C=Limit(3)
+            discount_val = sheet_promo.cell(cell.row, 2).value
+            limit = int(sheet_promo.cell(cell.row, 3).value or 0)
+            
+            if limit > 0:
+                try:
+                    discount = float(str(discount_val).replace(',', '.'))
+                except:
+                    discount = 0
+                return "OK", discount
+            else: 
+                return "LIMIT", 0
+                
+        except Exception as e:
+            logging.warning(f"Check Promo Error: {e}")
+            _gs_client = None
+            if attempt == 1: return "ERROR", 0
+
+# --- ФУНКЦИЯ СПИСАНИЯ (ДЛЯ ЗАКАЗА) ---
+def process_promo_code(code, user_id):
+    global _gs_client
+    for attempt in range(2):
+        try:
+            client, spreadsheet = get_gspread_service()
+            if not spreadsheet: return "ERROR"
+            sheet_promo = spreadsheet.worksheet("Promocodes")
+            sheet_history = spreadsheet.worksheet("PromoHistory")
+            
+            # Повторная проверка перед записью (на всякий случай)
             history = sheet_history.get_all_values()
             for row in history:
                 if str(row[0]) == str(user_id) and str(row[1]).upper() == code.upper():
                     return "USED"
 
-            # 2. Поиск кода (LIVE запрос)
             try: cell = sheet_promo.find(code)
             except: return "NOT_FOUND"
 
-            # 3. Проверка лимита (LIVE запрос)
             limit = int(sheet_promo.cell(cell.row, 3).value or 0)
-            
             if limit > 0:
                 sheet_promo.update_cell(cell.row, 3, limit - 1)
                 sheet_history.append_row([str(user_id), code, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
                 return "OK"
-            else: 
-                return "LIMIT"
-                
+            else: return "LIMIT"
         except Exception as e:
-            logging.warning(f"Google Sheets Error (Attempt {attempt+1}): {e}")
-            _gs_client = None # Сброс кеша для следующей попытки
-            if attempt == 1: return "ERROR" # Если вторая попытка тоже упала
+            _gs_client = None
+            if attempt == 1: return "ERROR"
 
 def save_review(user_id, name, service_rate, food_rate, tips, comment):
-    global _gs_client
-    for attempt in range(2):
-        try:
-            client, spreadsheet = get_gspread_service()
-            if not spreadsheet: return
-            sheet = spreadsheet.worksheet("Reviews")
-            sheet.append_row([
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                str(user_id),
-                name,
-                service_rate,
-                food_rate,
-                tips,
-                comment
-            ])
-            return # Успех
-        except Exception as e:
-            logging.error(f"Save Review Error (Attempt {attempt+1}): {e}")
-            _gs_client = None
+    client, spreadsheet = get_gspread_service()
+    if not spreadsheet: return
+    try:
+        spreadsheet.worksheet("Reviews").append_row([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), str(user_id), name, service_rate, food_rate, tips, comment])
+    except: pass
 
-# --- ВЕБ-СЕРВЕР ---
+# --- API ДЛЯ WEB APP ---
+async def api_check_promo(request):
+    # CORS заголовки
+    headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+    
+    if request.method == 'OPTIONS':
+        return web.Response(headers=headers)
+
+    try:
+        data = await request.json()
+        code = data.get('code', '').strip().upper()
+        user_id = data.get('userId')
+        
+        loop = asyncio.get_running_loop()
+        status, discount = await loop.run_in_executor(None, check_promo_status, code, user_id)
+        
+        return web.json_response({'status': status, 'discount': discount}, headers=headers)
+    except Exception as e:
+        return web.json_response({'status': 'ERROR', 'error': str(e)}, headers=headers)
+
 async def health_check(request): return web.Response(text="OK")
+
 async def start_web_server():
     port = int(os.environ.get("PORT", 10000))
     app = web.Application()
     app.router.add_get("/", health_check)
     app.router.add_get("/health", health_check)
+    
+    # ДОБАВЛЕН НОВЫЙ МАРШРУТ
+    app.router.add_post("/api/check_promo", api_check_promo)
+    app.router.add_options("/api/check_promo", api_check_promo)
+    
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)
@@ -560,6 +609,7 @@ async def main():
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
 
