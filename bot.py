@@ -47,7 +47,7 @@ bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=MemoryStorage())
 
 class OrderState(StatesGroup):
-    waiting_f8or_custom_time = State()
+    waiting_for_custom_time = State()
 
 class ReviewState(StatesGroup):
     waiting_for_service_rate = State()
@@ -609,6 +609,7 @@ async def main():
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
 
