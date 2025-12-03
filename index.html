@@ -51,7 +51,7 @@
             .status-badge { background: #064e3b !important; color: #a7f3d0 !important; }
             .radio-label, .checkout-radio-label { background: #333 !important; border-color: #444 !important; color: #fff !important; }
             .radio-input:checked + .radio-label, .checkout-radio-input:checked + .checkout-radio-label { background: #064e3b !important; border-color: var(--primary-color) !important; }
-            .category-separator { border-bottom: 1px solid #333 !important; }
+            .category-title { background: #1a1a1a !important; border-bottom: 1px solid #333 !important; }
             .accordion-header { background: #333 !important; color: #fff !important; }
             .repeat-card { background: #333 !important; border-color: #444 !important; }
             .upsell-no { background: #444 !important; color: #ccc !important; }
@@ -76,7 +76,6 @@
             transform: translateY(-75px); /* Сдвигаем вверх на высоту лого и поиска */
         }
 
-        /* ИСПРАВЛЕНО: убрана фиксированная высота height: 60px, теперь она автоматическая */
         header { 
             padding: 12px 15px 10px 15px; 
             display: flex; 
@@ -406,7 +405,7 @@
             <input type="radio" name="deliveryType" id="d-delivery" value="delivery" class="checkout-radio-input" onchange="toggleDelivery()">
             <label for="d-delivery" class="checkout-radio-label">🚗 Доставка</label>
         </div>
-        <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸ (до двери от 800 ₸)</b> (оплачивается курьеру отдельно).</div>
+        <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸</b> (оплачивается курьеру).</div>
     </div>
     
     <div id="address-block" style="display: none;">
@@ -441,7 +440,7 @@
     </div>
     
     <div class="option-group"><label class="option-label">Комментарий</label><textarea id="order-comment" placeholder="Пожелания..."></textarea></div>
-    <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Даю согласие на связь в случае вопросов.</span></div>
+    <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Согласен, что со мной свяжутся в случае вопросов.</span></div>
     <button class="modal-add-btn" id="submit-btn" onclick="submitOrder()">ПОДТВЕРДИТЬ ЗАКАЗ</button>
 </div></div>
 
@@ -461,14 +460,13 @@
     // === ВАЖНО: ВСТАВЬТЕ СЮДА ВАШИ ССЫЛКИ ===
     const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv"; 
     // !!! ЗАМЕНИТЕ ССЫЛКУ НИЖЕ НА ВАШУ НОВУЮ ССЫЛКУ PROMOCODES !!!
-    const PROMO_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=19369806&single=true&output=csv";
+    const PROMO_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=1980302766&single=true&output=csv";
     
     // Cache Busting
     const cacheBuster = new Date().getTime();
     const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL + "&t=" + cacheBuster);
     const GOOGLE_PROMO_URL = "https://corsproxy.io/?" + encodeURIComponent(PROMO_SHEET_URL + "&t=" + cacheBuster);
     
-    // ИЗБРАННОЕ ТЕПЕРЬ ПЕРВЫМ В СПИСКЕ (ВИРТУАЛЬНАЯ КАТЕГОРИЯ)
     const CATEGORY_ORDER = ["ИЗБРАННОЕ", "Популярное", "Сезонное", "Кофе", "Чай", "Холодные напитки", "Молочные коктейли", "Завтраки", "Круассаны", "Хот-доги", "Салаты", "Пицца", "Пасты", "Закуски"];
 
     let PRICES = { alt_milk: 400, add_milk: 50, add_cream: 50, add_honey: 100, add_lemon: 50, syrup: 0, shot: 300, hd_cheese: 150, hd_jalapeno: 150, hd_onion: 150, egg: 70, sauce: 150, cinnamon: 0 };
@@ -485,11 +483,12 @@
 
     // UPSELL RULES
     const UPSELL_RULES = {
-        "КОФЕ": ["КРУАССАНЫ"],
-        "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ", "ЛИМОНАДЫ"],
-        "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ", "ЛИМОНАДЫ"],
-        "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ", "ЛИМОНАДЫ"],
-        "ЗАВТРАКИ": ["КОФЕ", "СЕЗОННОЕ"]
+        "КОФЕ": ["КРУАССАНЫ", "ЗАКУСКИ"],
+        "ЧАЙ": ["КРУАССАНЫ", "ЗАКУСКИ"],
+        "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
+        "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
+        "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
+        "ЗАВТРАКИ": ["КОФЕ", "ЧАЙ"]
     };
 
     let menuData = [];
@@ -502,9 +501,6 @@
     let appliedPromoCode = ""; 
 
     let favorites = JSON.parse(localStorage.getItem('coffee_favorites')) || [];
-    let currentRating = 0;
-    
-    let usedPromos = JSON.parse(localStorage.getItem('coffee_used_promos')) || [];
 
     // Loading messages logic
     const loadingTexts = [
@@ -564,14 +560,6 @@
     function applyPromo() {
         const codeInput = document.getElementById('promo-code');
         const code = codeInput.value.trim().toUpperCase();
-        
-        // Проверка локального использования
-        if(usedPromos.includes(code)) {
-            showToast("Вы уже использовали этот промокод", 'error');
-            codeInput.style.borderColor = "red";
-            return;
-        }
-
         const found = promoData.find(p => p.Code && p.Code.toUpperCase() === code);
         
         if(found) {
@@ -1031,8 +1019,8 @@
 
             html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group">
                 <input type="radio" name="milk" id="m1" value="std" class="radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label">Обычное</label>
-                <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label"><div>Безлактазное<br>+${PRICES.milk_lf_price || 0}</div></label>
-                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label"><div>Растительное<br><span id="alt-milk-price-display">${altMilkText}</span></div></label>
+                <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label"><div>Безлакт.<br>+${PRICES.milk_lf_price || 0}</div></label>
+                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label"><div>Альтерн.<br><span id="alt-milk-price-display">${altMilkText}</span></div></label>
             </div><div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
             ALT_MILKS.forEach(m => html += `<option value="${m}">${m}</option>`);
             html += `</select></div></div>`;
@@ -1125,8 +1113,8 @@
         if(prod.hasVolumes && prod.volumes.length > 0) { const v = document.querySelector('input[name="vol"]:checked').value; opts.push(`Порция: ${prod.volumes[v].n}`); }
         if(prod.hasMilk) {
             const m = document.querySelector('input[name="milk"]:checked').value;
-            if(m==='lf') opts.push("Молоко: Безлактозное");
-            if(m==='alt') { const t = document.getElementById('alt-milk-type').value; opts.push(`Молоко: Растительное (${t})`); }
+            if(m==='lf') opts.push("Молоко: Безлакт.");
+            if(m==='alt') { const t = document.getElementById('alt-milk-type').value; opts.push(`Молоко: Альтерн. (${t})`); }
         }
         const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
         checkboxes.forEach(key => { const el = document.getElementById(`mod-${key}`); if (el && el.checked) opts.push(`Доп: ${MOD_LABELS[key]}`); });
@@ -1314,12 +1302,6 @@
         // 2. СОХРАНЯЕМ ЗАКАЗ ДЛЯ ПОВТОРА
         localStorage.setItem('coffee_last_order', JSON.stringify(cart));
         
-        // SAVE used promo locally
-        if (appliedPromoCode) {
-            usedPromos.push(appliedPromoCode);
-            localStorage.setItem('coffee_used_promos', JSON.stringify(usedPromos));
-        }
-        
         tg.sendData(JSON.stringify(orderData)); 
         setTimeout(function() { cart = []; updateCartButton(); closeCheckout(); tg.close(); }, 100);
     }
@@ -1398,8 +1380,7 @@
     window.addEventListener('offline', () => { showErrorScreen(); });
     window.addEventListener('online', () => { location.reload(); });
 
-    try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e); showErrorScreen(); }
+    try { initMenu(); } catch (e) { console.error(e); showErrorScreen(); }
 </script>
 </body>
 </html>
-
