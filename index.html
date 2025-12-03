@@ -76,6 +76,7 @@
             transform: translateY(-75px); /* Сдвигаем вверх на высоту лого и поиска */
         }
 
+        /* ИСПРАВЛЕНО: убрана фиксированная высота height: 60px, теперь она автоматическая */
         header { 
             padding: 12px 15px 10px 15px; 
             display: flex; 
@@ -201,7 +202,6 @@
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px;}
         .loading-title { font-family: var(--font-logo); font-size: 36px; margin-bottom: 5px; }
         .loading-motto { font-size: 13px; color: #666; font-style: italic; font-family: var(--font-body); transition: opacity 0.3s ease; }
-        
         .error-btn { background: var(--text-main); color: var(--bg-color); border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         #no-results { display: none; text-align: center; padding: 40px 20px; color: var(--text-secondary); }
         .no-res-icon { font-size: 48px; margin-bottom: 10px; display: block; }
@@ -236,14 +236,12 @@
         .radio-input { display: none; }
         .radio-input:checked + .radio-label { background-color: #f0fdf4; border-color: var(--primary-color); color: #000; box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15); }
         .radio-input:checked + .radio-label::before { border-color: var(--primary-color); background-color: var(--primary-color); box-shadow: inset 0 0 0 3px #fff; }
-        
         .checkout-radio-group { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; width: 100% !important; }
         .checkout-radio-label { display: flex !important; align-items: center !important; justify-content: flex-start !important; padding: 10px 12px !important; background: #fff !important; border: 1px solid #e5e7eb !important; border-radius: 10px !important; cursor: pointer !important; font-size: 14px !important; font-weight: 500 !important; color: #374151 !important; transition: all 0.2s !important; min-height: 44px !important; width: 100% !important; box-sizing: border-box !important; position: relative !important; font-family: var(--font-body) !important; }
         .checkout-radio-label::before { content: '' !important; display: inline-block !important; width: 16px !important; height: 16px !important; border: 2px solid #9ca3af !important; border-radius: 50% !important; margin-right: 10px !important; box-sizing: border-box !important; flex-shrink: 0 !important; transition: 0.2s !important; }
         .checkout-radio-input { display: none !important; }
         .checkout-radio-input:checked + .checkout-radio-label { background-color: #f0fdf4 !important; border-color: var(--primary-color) !important; color: #000 !important; box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15) !important; }
         .checkout-radio-input:checked + .checkout-radio-label::before { border-color: var(--primary-color) !important; background-color: var(--primary-color) !important; box-shadow: inset 0 0 0 3px #fff !important; }
-        
         input[type="text"], input[type="number"], input[type="tel"], textarea, input[type="time"] { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 14px; box-sizing: border-box; background: var(--input-bg); margin-bottom: 10px; font-family: var(--font-body); transition: all 0.2s; color: var(--text-main); }
         input:focus, textarea:focus, select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(136, 209, 0, 0.1); outline: none; }
         select { width: 100%; padding: 12px 15px; padding-right: 40px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 14px; font-family: var(--font-body); color: var(--text-main); background-color: var(--input-bg); box-sizing: border-box; margin-bottom: 10px; outline: none; transition: all 0.2s; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2388d100' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 15px center; background-size: 16px; font-weight: 500; cursor: pointer; }
@@ -258,7 +256,6 @@
         .modal-footer { margin-top: 20px; display: flex; gap: 10px; }
         .modal-add-btn { background: var(--primary-color); color: var(--primary-text); width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; font-family: var(--font-title); letter-spacing: 0.5px; }
         .modal-add-btn:disabled { background: #ccc; cursor: not-allowed; }
-        
         .cart-item { background: var(--input-bg); border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
         .cart-item-info { flex: 1; padding-right: 10px; }
         .cart-item-title { font-family: var(--font-title); font-size: 15px; margin-bottom: 2px; letter-spacing: 0.3px; font-weight: 700; color: var(--text-main); }
@@ -273,7 +270,6 @@
         .info-box { background: #e0f2fe; color: #075985; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; display: none; border: 1px solid #bae6fd; line-height: 1.4; font-family: var(--font-body); }
         .promo-section { margin: 15px 0; display: flex; gap: 8px; }
         .promo-btn { background: #f0f0f0; border: none; padding: 0 15px; border-radius: 12px; cursor: pointer; font-weight: 600; color: #333; }
-        
         .upsell-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1100; align-items: center; justify-content: center; }
         .upsell-content { background: var(--card-bg); width: 85%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; animation: popIn 0.3s; }
         .upsell-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
@@ -366,8 +362,10 @@
     <div id="cart-list-container"></div>
     
     <div class="promo-section" id="promo-container">
-        <input type="text" id="promo-code" placeholder="Промокод" style="margin-bottom: 0;">
-        <button class="promo-btn" onclick="applyPromo()">OK</button>
+        <div style="display:flex; gap:5px; width:100%;">
+             <input type="text" id="promo-code" placeholder="Промокод" style="margin-bottom: 0; flex:1;">
+             <button class="promo-btn" id="apply-promo-btn" onclick="applyPromo()">OK</button>
+        </div>
     </div>
 
     <div class="checkout-total" id="checkout-total-sum">Итого: 0 ₸</div>
@@ -459,9 +457,12 @@
 
     // === ВАЖНО: ВСТАВЬТЕ СЮДА ВАШИ ССЫЛКИ ===
     const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv"; 
-    // !!! ЗАМЕНИТЕ ССЫЛКУ НИЖЕ НА ВАШУ НОВУЮ ССЫЛКУ PROMOCODES !!!
     const PROMO_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=19369806&single=true&output=csv";
     
+    // --- ВАЖНО: УКАЖИТЕ URL ВАШЕГО БОТА НА RENDER ---
+    const BACKEND_URL = "https://coffeemoll-bot.onrender.com"; 
+    // ------------------------------------------------
+
     // Cache Busting
     const cacheBuster = new Date().getTime();
     const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL + "&t=" + cacheBuster);
@@ -473,22 +474,12 @@
     let SYRUPS = ["Карамель", "Ваниль", "Орех"];
     let SAUCES = ["Кетчуп"];
     let ALT_MILKS = ["Кокосовое"];
-    let PROMOS_ENABLED = true; // По умолчанию включено
-    
-    // 1. ДИНАМИЧЕСКИЕ ЧАСЫ (По умолчанию)
+    let PROMOS_ENABLED = true; 
     let OPEN_HOUR = 9;
     let CLOSE_HOUR = 23;
 
     const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
-
-    // UPSELL RULES
-    const UPSELL_RULES = {
-        "КОФЕ": ["КРУАССАНЫ", "ЗАКУСКИ"],
-        "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
-        "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ", "ЛИМОНАДЫ"],
-        "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"],
-        "ЗАВТРАКИ": ["КОФЕ", "СЕЗОННОЕ"]
-    };
+    const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ", "ЗАКУСКИ"], "ЧАЙ": ["КРУАССАНЫ", "ЗАКУСКИ"], "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ЗАВТРАКИ": ["КОФЕ", "ЧАЙ"] };
 
     let menuData = [];
     let promoData = []; 
@@ -498,7 +489,6 @@
     let currentUpsellItem = null;
     let appliedDiscount = 0; 
     let appliedPromoCode = ""; 
-
     let favorites = JSON.parse(localStorage.getItem('coffee_favorites')) || [];
 
     // Loading messages logic
@@ -513,7 +503,6 @@
     ];
     let textIdx = 0;
     const mottoEl = document.querySelector('.loading-motto');
-    
     if(mottoEl) mottoEl.innerText = loadingTexts[0];
 
     const loadingInterval = setInterval(() => {
@@ -534,7 +523,6 @@
         toast.innerHTML = msg;
         cont.appendChild(toast);
         
-        // Вибрация
         if(type === 'error') tg.HapticFeedback.notificationOccurred('error');
         else tg.HapticFeedback.impactOccurred('light');
         
@@ -552,34 +540,63 @@
         if(idx > -1) favorites.splice(idx, 1);
         else favorites.push(id);
         localStorage.setItem('coffee_favorites', JSON.stringify(favorites));
-        renderMenu(); // Перерисовываем меню для обновления порядка
+        renderMenu();
         tg.HapticFeedback.impactOccurred('medium');
     }
 
-    function applyPromo() {
+    // --- АСИНХРОННАЯ ПРОВЕРКА ПРОМОКОДА ---
+    async function applyPromo() {
         const codeInput = document.getElementById('promo-code');
+        const btn = document.getElementById('apply-promo-btn');
         const code = codeInput.value.trim().toUpperCase();
-        const found = promoData.find(p => p.Code && p.Code.toUpperCase() === code);
         
-        if(found) {
-            const limit = parseInt(found.Limit);
-            if (limit > 0) {
-                appliedDiscount = parseFloat(found.Discount.replace(',','.')); 
+        if (!code) return;
+
+        // Блокируем интерфейс
+        btn.disabled = true;
+        btn.innerText = "...";
+        codeInput.style.borderColor = "#eee";
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/check_promo`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    code: code,
+                    userId: tg.initDataUnsafe?.user?.id || 0
+                })
+            });
+
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+
+            if (data.status === "OK") {
+                appliedDiscount = data.discount;
                 appliedPromoCode = code;
                 codeInput.style.borderColor = "#88d100";
-                showToast(`Промокод применен! -${appliedDiscount * 100}%`);
+                showToast(`Промокод применен! -${Math.round(appliedDiscount * 100)}%`);
                 calculateCheckoutTotal();
-            } else {
+            } else if (data.status === "USED") {
+                appliedDiscount = 0; appliedPromoCode = "";
+                codeInput.style.borderColor = "red";
+                showToast("Вы уже использовали этот код", 'error');
+            } else if (data.status === "LIMIT") {
                 appliedDiscount = 0; appliedPromoCode = "";
                 codeInput.style.borderColor = "red";
                 showToast("Лимит промокода исчерпан", 'error');
-                calculateCheckoutTotal();
+            } else {
+                appliedDiscount = 0; appliedPromoCode = "";
+                codeInput.style.borderColor = "red";
+                showToast("Неверный промокод", 'error');
             }
-        } else {
-            appliedDiscount = 0; appliedPromoCode = "";
-            codeInput.style.borderColor = "red";
-            showToast("Неверный промокод", 'error');
             calculateCheckoutTotal();
+
+        } catch (error) {
+            console.error('Promo check failed:', error);
+            showToast("Ошибка проверки промокода", 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "OK";
         }
     }
 
@@ -604,7 +621,6 @@
         document.getElementById('error-screen').style.display = 'flex';
     }
 
-    // 5. УЛУЧШЕННЫЙ SCROLL LOGIC (БЕЗ ДЕРГАНИЙ)
     function updateHeaderHeight() {
         let lastScrollTop = 0;
         const headerEl = document.querySelector('.header-container');
@@ -621,7 +637,6 @@
             }
             lastScrollTop = st <= 0 ? 0 : st;
             
-            // 2. SCROLLSPY (Подсветка меню)
             updateScrollSpy();
         }, {passive: true});
     }
@@ -631,13 +646,11 @@
         const navBtns = document.querySelectorAll('.nav-btn');
         let current = '';
         
-        // Логика попадания в категорию: проверяем какая ближе всего к верху (с отступом)
         if (window.scrollY < 100 && sections.length > 0) {
              current = sections[0].getAttribute('id');
         } else {
             sections.forEach(section => {
                 const sectionTop = section.offsetTop;
-                // Отступ 150px - это примерно высота свернутой шапки + немного контента
                 if (window.scrollY >= sectionTop - 150) {
                     current = section.getAttribute('id');
                 }
@@ -653,24 +666,17 @@
         });
     }
 
-    // 4. ИСПРАВЛЕНИЕ ДУБЛЕЙ В ИЗБРАННОМ
     function getDisplayData() {
         const favIds = new Set(favorites);
-        // Создаем отдельный массив для избранного
         const favItems = [];
-        // И отдельный массив для остальных товаров
         const normalItems = [];
-        
-        // Чтобы избежать дублей в САМОМ списке избранного
         const addedToFav = new Set();
 
         menuData.forEach(p => {
             if (favIds.has(String(p.id)) && !addedToFav.has(p.id)) {
-                // Создаем копию для избранного с новой категорией
                 favItems.push({...p, cat: "ИЗБРАННОЕ"});
                 addedToFav.add(p.id);
             }
-            // Добавляем товар в общий список как есть
             normalItems.push(p);
         });
         
@@ -692,7 +698,7 @@
         Papa.parse(GOOGLE_SHEET_URL, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
-                clearInterval(loadingInterval); // Stop loading text animation
+                clearInterval(loadingInterval); 
                 if (!results.data || results.data.length === 0) { showErrorScreen(); return; }
 
                 const settingsRow = results.data.find(row => { const id = getVal(row, ['id', 'Идентификатор']); return id && id.toUpperCase() === 'SETTINGS'; });
@@ -790,7 +796,6 @@
                 document.getElementById('loading-screen').style.display = 'none';
                 renderMenu();
                 
-                // Force update header height after loading
                 setTimeout(() => {
                      const headerEl = document.querySelector('.header-container');
                      document.documentElement.style.setProperty('--header-height', headerEl.offsetHeight + 'px');
@@ -1018,8 +1023,8 @@
 
             html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group">
                 <input type="radio" name="milk" id="m1" value="std" class="radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label">Обычное</label>
-                <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label"><div>Безлактозное<br>+${PRICES.milk_lf_price || 0}</div></label>
-                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label"><div>Растительное<br><span id="alt-milk-price-display">${altMilkText}</span></div></label>
+                <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label"><div>Безлакт.<br>+${PRICES.milk_lf_price || 0}</div></label>
+                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label"><div>Альтерн.<br><span id="alt-milk-price-display">${altMilkText}</span></div></label>
             </div><div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
             ALT_MILKS.forEach(m => html += `<option value="${m}">${m}</option>`);
             html += `</select></div></div>`;
@@ -1112,8 +1117,8 @@
         if(prod.hasVolumes && prod.volumes.length > 0) { const v = document.querySelector('input[name="vol"]:checked').value; opts.push(`Порция: ${prod.volumes[v].n}`); }
         if(prod.hasMilk) {
             const m = document.querySelector('input[name="milk"]:checked').value;
-            if(m==='lf') opts.push("Молоко: Безлактозное");
-            if(m==='alt') { const t = document.getElementById('alt-milk-type').value; opts.push(`Молоко: Растительное (${t})`); }
+            if(m==='lf') opts.push("Молоко: Безлакт.");
+            if(m==='alt') { const t = document.getElementById('alt-milk-type').value; opts.push(`Молоко: Альтерн. (${t})`); }
         }
         const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
         checkboxes.forEach(key => { const el = document.getElementById(`mod-${key}`); if (el && el.checked) opts.push(`Доп: ${MOD_LABELS[key]}`); });
@@ -1383,5 +1388,3 @@
 </script>
 </body>
 </html>
-
-
