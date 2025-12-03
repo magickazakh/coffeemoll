@@ -57,69 +57,90 @@ class ReviewState(StatesGroup):
     waiting_for_barista_choice = State()
     waiting_for_comment = State()
 
-# --- GOOGLE SHEETS ---
+# --- GOOGLE SHEETS (OPTIMIZED & ROBUST) ---
+_gs_client = None
+_gs_sheet_cache = None
+
 def get_creds_path():
     if os.path.exists("creds.json"): return "creds.json"
     elif os.path.exists("/etc/secrets/creds.json"): return "/etc/secrets/creds.json"
     return None
 
-def get_gspread_client():
-    path = get_creds_path()
-    if not path: return None
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name(path, scope)
-    return gspread.authorize(creds)
+def get_gspread_service():
+    global _gs_client, _gs_sheet_cache
+    try:
+        if _gs_client and _gs_sheet_cache:
+            return _gs_client, _gs_sheet_cache
+        path = get_creds_path()
+        if not path: return None, None
+        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        creds = ServiceAccountCredentials.from_json_keyfile_name(path, scope)
+        _gs_client = gspread.authorize(creds)
+        _gs_sheet_cache = _gs_client.open(SHEET_NAME)
+        return _gs_client, _gs_sheet_cache
+    except Exception as e:
+        logging.error(f"Connection Error: {e}")
+        _gs_client = None
+        _gs_sheet_cache = None
+        return None, None
 
 def process_promo_code(code, user_id):
-    """
-    Возвращает статусы: "OK", "USED", "LIMIT", "NOT_FOUND", "ERROR"
-    """
-    if not code: return "NOT_FOUND"
-    client = get_gspread_client()
-    if not client: return "ERROR"
+    global _gs_client
     
-    try:
-        sheet = client.open(SHEET_NAME)
-        sheet_promo = sheet.worksheet("Promocodes")
-        sheet_history = sheet.worksheet("PromoHistory")
-        
-        # 1. Проверка истории (использовал ли юзер этот код)
-        history = sheet_history.get_all_values()
-        for row in history:
-            # row[0] = UserID, row[1] = Code
-            if str(row[0]) == str(user_id) and str(row[1]).upper() == code.upper():
-                return "USED"
+    # Делаем 2 попытки: если первая упала (токен протух), переподключаемся и пробуем снова
+    for attempt in range(2):
+        try:
+            client, spreadsheet = get_gspread_service()
+            if not spreadsheet: return "ERROR"
+            
+            sheet_promo = spreadsheet.worksheet("Promocodes")
+            sheet_history = spreadsheet.worksheet("PromoHistory")
+            
+            # 1. Проверка истории (LIVE запрос)
+            history = sheet_history.get_all_values()
+            for row in history:
+                if str(row[0]) == str(user_id) and str(row[1]).upper() == code.upper():
+                    return "USED"
 
-        # 2. Поиск кода и проверка лимита
-        try: cell = sheet_promo.find(code)
-        except: return "NOT_FOUND"
+            # 2. Поиск кода (LIVE запрос)
+            try: cell = sheet_promo.find(code)
+            except: return "NOT_FOUND"
 
-        limit = int(sheet_promo.cell(cell.row, 3).value or 0)
-        if limit > 0:
-            sheet_promo.update_cell(cell.row, 3, limit - 1)
-            sheet_history.append_row([str(user_id), code, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
-            return "OK"
-        else: return "LIMIT"
-    except Exception as e:
-        logging.error(f"Sheets Error: {e}")
-        return "ERROR"
+            # 3. Проверка лимита (LIVE запрос)
+            limit = int(sheet_promo.cell(cell.row, 3).value or 0)
+            
+            if limit > 0:
+                sheet_promo.update_cell(cell.row, 3, limit - 1)
+                sheet_history.append_row([str(user_id), code, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+                return "OK"
+            else: 
+                return "LIMIT"
+                
+        except Exception as e:
+            logging.warning(f"Google Sheets Error (Attempt {attempt+1}): {e}")
+            _gs_client = None # Сброс кеша для следующей попытки
+            if attempt == 1: return "ERROR" # Если вторая попытка тоже упала
 
 def save_review(user_id, name, service_rate, food_rate, tips, comment):
-    client = get_gspread_client()
-    if not client: return
-    try:
-        sheet = client.open(SHEET_NAME).worksheet("Reviews")
-        sheet.append_row([
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            str(user_id),
-            name,
-            service_rate,
-            food_rate,
-            tips,
-            comment
-        ])
-    except Exception as e:
-        logging.error(f"Save Review Error: {e}")
+    global _gs_client
+    for attempt in range(2):
+        try:
+            client, spreadsheet = get_gspread_service()
+            if not spreadsheet: return
+            sheet = spreadsheet.worksheet("Reviews")
+            sheet.append_row([
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                str(user_id),
+                name,
+                service_rate,
+                food_rate,
+                tips,
+                comment
+            ])
+            return # Успех
+        except Exception as e:
+            logging.error(f"Save Review Error (Attempt {attempt+1}): {e}")
+            _gs_client = None
 
 # --- ВЕБ-СЕРВЕР ---
 async def health_check(request): return web.Response(text="OK")
@@ -164,7 +185,7 @@ def get_given_kb(user_id):
 
 def get_received_kb():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📦 Заказ у меня", callback_data="ord_received")]
+        [InlineKeyboardButton(text="📦 Заказ получен", callback_data="ord_received")]
     ])
 
 # Клавиатуры для отзывов
@@ -212,10 +233,11 @@ async def web_app_data_handler(message: types.Message):
         promo_code = info.get('promoCode', '')
         discount_rate = info.get('discount', 0)
         discount_text = ""
-        client_warning = "" # Сообщение для клиента о проблемах с промокодом
+        client_warning = "" 
         
         if promo_code and discount_rate > 0:
             loop = asyncio.get_running_loop()
+            # Промокоды проверяем в executor, с механизмом повторных попыток
             res = await loop.run_in_executor(None, process_promo_code, promo_code, message.from_user.id)
             
             if res == "OK":
@@ -224,10 +246,7 @@ async def web_app_data_handler(message: types.Message):
                     discount_text = f"\n🎁 <b>Промокод:</b> {promo_code} (-{int(orig - total)} ₸)"
                 except: discount_text = f"\n🎁 <b>Промокод:</b> {promo_code}"
             else:
-                # Если промокод не прошел проверку на сервере (повтор или лимит)
-                try: 
-                    # Восстанавливаем полную цену
-                    total = int(round(total / (1 - discount_rate)))
+                try: total = int(round(total / (1 - discount_rate)))
                 except: pass
                 
                 if res == "USED":
@@ -384,14 +403,12 @@ async def given(c: CallbackQuery, state: FSMContext):
     # --- ЛОГИКА ЗАПРОСА ОТЗЫВА ---
     try:
         if is_del:
-            # Если доставка - отправляем кнопку "Я получил"
             await bot.send_message(
                 uid,
                 "🚗 Курьер выехал!\nКак только получите заказ, нажмите кнопку ниже, чтобы оценить качество:",
                 reply_markup=get_received_kb()
             )
         else:
-            # Самовывоз - просим отзыв сразу
             await start_review_process(uid, state)
 
     except Exception as e:
@@ -437,7 +454,6 @@ async def rate_food(c: CallbackQuery, state: FSMContext):
     service_rate = data.get('service_rate', 0)
     is_delivery = data.get('is_delivery', False) 
     
-    # Чаевые ТОЛЬКО если: Самовывоз И Сервис >= 4
     if service_rate >= 4 and not is_delivery:
         await c.message.edit_text(
             f"Еда: {rating} ⭐\n\nЖелаете оставить <b>чаевые</b> бариста?", 
@@ -494,14 +510,15 @@ async def comment_text(m: types.Message, state: FSMContext):
 async def finalize_review(message, state, comment_text, user):
     data = await state.get_data()
     
+    # Сохранение в фоне
     loop = asyncio.get_running_loop()
-    await loop.run_in_executor(None, save_review, 
-                               user.id, 
-                               user.first_name,
-                               data.get('service_rate'),
-                               data.get('food_rate'),
-                               data.get('tips', 'Нет'),
-                               comment_text)
+    loop.run_in_executor(None, save_review, 
+                         user.id, 
+                         user.first_name,
+                         data.get('service_rate'),
+                         data.get('food_rate'),
+                         data.get('tips', 'Нет'),
+                         comment_text)
     
     msg = f"⭐ <b>НОВЫЙ ОТЗЫВ</b>\n"
     msg += f"👤 {user.first_name}\n"
@@ -532,6 +549,7 @@ async def finalize_review(message, state, comment_text, user):
         
     await state.clear()
 
+
 # --- ЗАПУСК ---
 async def main():
     await start_web_server()
@@ -542,6 +560,7 @@ async def main():
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
 
