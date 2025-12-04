@@ -49,7 +49,7 @@
             .status-badge { background: #064e3b !important; color: #a7f3d0 !important; }
             .radio-label, .checkout-radio-label { background: #333 !important; border-color: #444 !important; color: #fff !important; }
             .radio-input:checked + .radio-label, .checkout-radio-input:checked + .checkout-radio-label { background: #064e3b !important; border-color: var(--primary-color) !important; }
-            .category-separator { border-bottom: 1px solid #333 !important; }
+            .category-separator { padding: 0 15px; margin-bottom: 10px; font-size: 22px; font-weight: 700; color: var(--text-main); font-family: var(--font-title); text-transform: uppercase; padding-left: 25px; }
             .accordion-header { background: #333 !important; color: #fff !important; }
             .repeat-card { background: #333 !important; border-color: #444 !important; }
             .upsell-no { background: #444 !important; color: #ccc !important; }
@@ -398,7 +398,7 @@
     const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv"; 
     
     // --- ВАЖНО: УКАЖИТЕ URL ВАШЕГО БОТА НА RENDER ---
-    const BACKEND_URL = "https://coffeemoll-bot.onrender.com"; 
+    const BACKEND_URL = "https://coffeemoll.onrender.com"; 
     // ------------------------------------------------
 
     // Cache Busting
@@ -416,7 +416,7 @@
     let CLOSE_HOUR = 23;
 
     const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
-    const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ", "ЗАКУСКИ"], "ЧАЙ": ["КРУАССАНЫ", "ЗАКУСКИ"], "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ЗАВТРАКИ": ["КОФЕ", "ЧАЙ"] };
+    const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ"], "КРУАССАНЫ": ["СЕЗОННОЕ"], "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ", "ЛИМОНАДЫ"], "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ", "ЛИМОНАДЫ"], "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ", "ЛИМОНАДЫ"], "ЗАВТРАКИ": ["КОФЕ", "СЕЗОННОЕ"] };
 
     let menuData = [];
     let cart = [];
@@ -1346,3 +1346,4 @@
 </script>
 </body>
 </html>
+
