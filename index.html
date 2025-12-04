@@ -5,16 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CoffeeMoll</title>
 
-    <!-- Предзагрузка и шрифты -->
+    <!-- ЗАПРЕТ КЕШИРОВАНИЯ -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
     <link rel="preload" href="https://telegram.org/js/telegram-web-app.js" as="script">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" as="style" crossorigin>
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Библиотеки -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <script>window.onerror = function(msg, url, line) { return false; };</script>
 
@@ -448,6 +452,7 @@
     // ------------------------------------------------
 
     // Cache Busting
+   // Cache Busting
     const cacheBuster = new Date().getTime();
     const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL + "&t=" + cacheBuster);
     
@@ -503,15 +508,17 @@
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         toast.innerHTML = msg;
+        
+        // ПЛАВНОЕ ПОЯВЛЕНИЕ (УЖЕ В CSS)
         cont.appendChild(toast);
         
         if(type === 'error') tg.HapticFeedback.notificationOccurred('error');
         else tg.HapticFeedback.impactOccurred('light');
         
         setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translate(-50%, 20px)';
-            setTimeout(() => toast.remove(), 300);
+            // ПЛАВНОЕ ИСЧЕЗНОВЕНИЕ ЧЕРЕЗ КЛАСС
+            toast.classList.add('hide');
+            setTimeout(() => toast.remove(), 400); // Ждем пока пройдет transition
         }, 3000);
     }
 
@@ -522,7 +529,7 @@
         if(idx > -1) favorites.splice(idx, 1);
         else favorites.push(id);
         localStorage.setItem('coffee_favorites', JSON.stringify(favorites));
-        renderMenu(); // Перерисовываем меню для обновления порядка
+        renderMenu();
         tg.HapticFeedback.impactOccurred('medium');
     }
 
@@ -1382,16 +1389,17 @@
         const hint = document.getElementById('payment-hint');
         
         if (isKaspi) {
-            label.innerText = "Номер Kaspi Gold";
+            label.innerText = "Номер Kaspi";
             hint.innerText = "Вам придет счет на оплату в приложение Kaspi.kz";
         } else if (isHalyk) {
-            label.innerText = "Номер Halyk/Homebank";
+            label.innerText = "Номер Halyk";
             hint.innerText = "Вам придет счет на оплату в приложение Halyk";
         }
     }
 </script>
 </body>
 </html>
+
 
 
 
