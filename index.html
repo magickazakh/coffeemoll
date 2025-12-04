@@ -277,50 +277,6 @@
         @keyframes pop { 0% { transform: scale(0); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes fadeUp { from { opacity:0; transform: translate(-50%, 20px); } to { opacity:1; transform: translate(-50%, 0); } }
-           /* --- НОВЫЕ СТИЛИ ДЛЯ ЛОЯЛЬНОСТИ --- */
-        #loyalty-container {
-            margin: 10px 15px;
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            display: none; /* Скрыт по умолчанию */
-        }
-        .loyalty-header {
-            font-family: var(--font-title);
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .loyalty-count {
-            color: var(--primary-color);
-            font-size: 18px;
-        }
-        .cups-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .cup-icon {
-            font-size: 24px;
-            opacity: 0.2;
-            transition: 0.3s;
-        }
-        .cup-icon.filled {
-            opacity: 1;
-            transform: scale(1.1);
-        }
-        .cup-icon.gift {
-            font-size: 28px;
-            animation: bounce 1s infinite;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
     </style>
 </head>
 <body>
@@ -354,17 +310,6 @@
     </header>
     <div class="search-wrapper">
         <input type="text" id="search-input" placeholder="🔍 Найти..." oninput="filterMenu()">
-    </div>
-       
-    <!-- БЛОК ЛОЯЛЬНОСТИ -->
-    <div id="loyalty-container">
-        <div class="loyalty-header">
-            <span>🎁 ВАШ БОНУС</span>
-            <span class="loyalty-count" id="loyalty-text">0/7</span>
-        </div>
-        <div class="cups-row" id="cups-container">
-            <!-- Cups will be injected here -->
-        </div>
     </div>
     
     <div id="repeat-order-container">
@@ -520,21 +465,31 @@
     let PROMOS_ENABLED = true; 
     let OPEN_HOUR = 9;
     let CLOSE_HOUR = 23;
-    let LOYALTY_ENABLED = false;
-    let LOYALTY_TARGET = 7;
 
     const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
     const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ", "ДЕСЕРТЫ"], "СЕЗОННОЕ": ["КРУАССАНЫ", "ДЕСЕРТЫ"], "КРУАССАНЫ": ["СЕЗОННОЕ"], "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ЗАВТРАКИ": ["КОФЕ", "СЕЗОННОЕ"] };
 
-      let menuData = []; let cart = []; let currentModalProduct = null; let upsellShown = false; let currentUpsellItem = null; let appliedDiscount = 0; let appliedPromoCode = ""; 
+    let menuData = [];
+    let cart = [];
+    let currentModalProduct = null;
+    let upsellShown = false;
+    let currentUpsellItem = null;
+    let appliedDiscount = 0; 
+    let appliedPromoCode = ""; 
     let favorites = JSON.parse(localStorage.getItem('coffee_favorites')) || [];
-    let currentRating = 0;
 
-    // Loading
-    const loadingTexts = ["Загружаем зерно...", "Греем холдер...", "Взбиваем молоко...", "Настраиваем помол...", "Рисуем сердечко...", "Протираем столики...", "Достаем круассаны..."];
+    // Loading messages logic
+    const loadingTexts = [
+        "Загружаем зерно в кофемолку...",
+        "Настраиваем помол...",
+        "Рисуем сердечко на пенке...",
+        "Протираем столики...",
+        "Достаем свежие круассаны..."
+    ];
     let textIdx = 0;
     const mottoEl = document.querySelector('.loading-motto');
     if(mottoEl) mottoEl.innerText = loadingTexts[0];
+
     const loadingInterval = setInterval(() => {
         if(!mottoEl) return;
         mottoEl.style.opacity = 0;
@@ -545,75 +500,37 @@
         }, 150);
     }, 2000);
 
+    // 3. TOAST NOTIFICATIONS
     function showToast(msg, type = 'normal') {
         const cont = document.getElementById('toast-container');
-        const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.innerHTML = msg; cont.appendChild(toast);
-        if(type === 'error') tg.HapticFeedback.notificationOccurred('error'); else tg.HapticFeedback.impactOccurred('light');
-        setTimeout(() => { toast.classList.add('hide'); setTimeout(() => toast.remove(), 400); }, 3000);
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = msg;
+        
+        // ПЛАВНОЕ ПОЯВЛЕНИЕ (УЖЕ В CSS)
+        cont.appendChild(toast);
+        
+        if(type === 'error') tg.HapticFeedback.notificationOccurred('error');
+        else tg.HapticFeedback.impactOccurred('light');
+        
+        setTimeout(() => {
+            // ПЛАВНОЕ ИСЧЕЗНОВЕНИЕ ЧЕРЕЗ КЛАСС
+            toast.classList.add('hide');
+            setTimeout(() => toast.remove(), 400); // Ждем пока пройдет transition
+        }, 3000);
     }
 
     function toggleFavorite(e, id) {
-        e.stopPropagation(); id = String(id);
+        e.stopPropagation(); 
+        id = String(id);
         const idx = favorites.indexOf(id);
-        if(idx > -1) favorites.splice(idx, 1); else favorites.push(id);
+        if(idx > -1) favorites.splice(idx, 1);
+        else favorites.push(id);
         localStorage.setItem('coffee_favorites', JSON.stringify(favorites));
-        renderMenu(); tg.HapticFeedback.impactOccurred('medium');
+        renderMenu();
+        tg.HapticFeedback.impactOccurred('medium');
     }
 
-    // --- LOYALTY LOGIC ---
-    async function loadLoyalty() {
-        if (!LOYALTY_ENABLED) { document.getElementById('loyalty-container').style.display = 'none'; return; }
-        
-        // Визуальная индикация обновления (полупрозрачность)
-        const textEl = document.getElementById('loyalty-text');
-        if(textEl) textEl.style.opacity = '0.5';
-
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/get_user_info?t=${Date.now()}`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
-                },
-                cache: 'no-store',
-                body: JSON.stringify({ userId: tg.initDataUnsafe?.user?.id || 0 })
-            });
-            if (response.ok) {
-                const data = await response.json();
-                renderLoyalty(data.points || 0);
-            }
-        } catch (e) { console.error("Loyalty error", e); }
-        finally {
-             if(textEl) textEl.style.opacity = '1';
-        }
-    }
-
-    function renderLoyalty(points) {
-        const container = document.getElementById('loyalty-container');
-        const cupsContainer = document.getElementById('cups-container');
-        const textEl = document.getElementById('loyalty-text');
-        
-        container.style.display = 'block';
-        cupsContainer.innerHTML = '';
-        textEl.innerText = `${points}/${LOYALTY_TARGET}`;
-
-        for (let i = 0; i < LOYALTY_TARGET; i++) {
-            const span = document.createElement('span');
-            if (i < points) {
-                span.className = 'cup-icon filled';
-                span.innerHTML = '☕';
-            } else if (i === LOYALTY_TARGET - 1 && points >= LOYALTY_TARGET) {
-                 span.className = 'cup-icon gift'; // Подарок если накоплено
-                 span.innerHTML = '🎁';
-            } else {
-                span.className = 'cup-icon';
-                span.innerHTML = '☕';
-            }
-            cupsContainer.appendChild(span);
-        }
-    }
     // --- АСИНХРОННАЯ ПРОВЕРКА ПРОМОКОДА ---
     async function applyPromo() {
         const codeInput = document.getElementById('promo-code');
@@ -790,8 +707,6 @@
                             if (k === 'enable_promos') PROMOS_ENABLED = (v.toLowerCase() === 'true');
                             if (k === 'open_time') OPEN_HOUR = parseInt(v.split(':')[0]);
                             if (k === 'close_time') CLOSE_HOUR = parseInt(v.split(':')[0]);
-                            if (k === 'loyalty_enabled') LOYALTY_ENABLED = (v.toLowerCase() === 'true');
-                            if (k === 'loyalty_steps') LOYALTY_TARGET = parseInt(v);
                         }
                     });
                 }
@@ -869,8 +784,9 @@
                 menuData = [...popularItems, ...rawData];
 
                 document.getElementById('loading-screen').style.display = 'none';
-                renderMenu(); 
-                loadLoyalty();
+                renderMenu();
+                
+                // Force update header height after loading
                 setTimeout(() => {
                      const headerEl = document.querySelector('.header-container');
                      document.documentElement.style.setProperty('--header-height', headerEl.offsetHeight + 'px');
@@ -1363,10 +1279,6 @@
         
         saveUserData(name, phone, address); 
         const total = calculateCheckoutTotal(); 
-        
-        // ИСПРАВЛЕНО: Принудительно конвертируем цель в число
-        const safeLoyaltyTarget = Number(LOYALTY_TARGET) || 0;
-        
         const orderData = { 
             cart: cart, 
             total: total, 
@@ -1378,12 +1290,13 @@
                 paymentPhone: payPhone, 
                 comment, 
                 discount: appliedDiscount, 
-                promoCode: appliedPromoCode, 
-                loyaltyTarget: safeLoyaltyTarget 
+                promoCode: appliedPromoCode 
             } 
         }; 
         
+        // 2. СОХРАНЯЕМ ЗАКАЗ ДЛЯ ПОВТОРА
         localStorage.setItem('coffee_last_order', JSON.stringify(cart));
+        
         tg.sendData(JSON.stringify(orderData)); 
         setTimeout(function() { cart = []; updateCartButton(); closeCheckout(); tg.close(); }, 100);
     }
@@ -1484,8 +1397,6 @@
 </script>
 </body>
 </html>
-
-
 
 
 
