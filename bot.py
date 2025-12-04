@@ -25,12 +25,12 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 # --- НАСТРОЙКИ ---
 TOKEN = os.getenv("BOT_TOKEN", "8444027240:AAFEiACM5x-OPmR9CFgk1zyrmU24PgovyCY") 
-ADMIN_CHAT_ID = -1003356844624
+ADMIN_CHAT_ID = -1003472248648
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
 
 # --- НАСТРОЙКИ ТЕМ (TOPICS) ---
-TOPIC_ID_ORDERS = 68
-TOPIC_ID_REVIEWS = 69
+TOPIC_ID_ORDERS = 20
+TOPIC_ID_REVIEWS = 3
 # ------------------------------
 
 KASPI_NUMBER = "+7 747 240 20 02" 
@@ -181,6 +181,48 @@ def process_promo_firebase(code, user_id):
         logging.error(f"Transaction Error: {e}")
         return "ERROR"
 
+# --- ЛОГИКА ЛОЯЛЬНОСТИ (ИСПРАВЛЕННАЯ) ---
+
+def get_user_loyalty(user_id):
+    """Получает текущие баллы"""
+    if not db: return 0
+    try:
+        doc = db.collection('users').document(str(user_id)).get()
+        if doc.exists:
+            return doc.to_dict().get('loyalty_points', 0)
+        return 0
+    except Exception as e:
+        logging.error(f"Loyalty Get Error: {e}")
+        return 0
+
+def update_loyalty_points(user_id, cups_count, target):
+    """
+    Начисляет баллы и считает, сколько чашек положено бесплатно.
+    Возвращает: (num_free_cups, new_balance)
+    """
+    if not db: return 0, 0
+    try:
+        user_ref = db.collection('users').document(str(user_id))
+        doc = user_ref.get()
+        current_points = doc.to_dict().get('loyalty_points', 0) if doc.exists else 0
+        
+        # Считаем общее количество (было + купил сейчас)
+        total_cups = current_points + cups_count
+        
+        # Сколько полных циклов (бесплатных чашек) получилось?
+        # Если target=7, значит каждая 7-я бесплатно.
+        num_free = total_cups // target
+        
+        # Новый остаток (баллы на следующий раз)
+        new_points = total_cups % target
+        
+        user_ref.set({'loyalty_points': new_points}, merge=True)
+        return num_free, new_points
+        
+    except Exception as e:
+        logging.error(f"Loyalty Update Error: {e}")
+        return 0, 0
+
 # --- ЗАПИСЬ ОТЗЫВОВ ---
 
 async def save_review_background(user_id, name, service_rate, food_rate, tips, comment):
@@ -205,22 +247,26 @@ async def save_review_background(user_id, name, service_rate, food_rate, tips, c
 # --- API ---
 
 async def api_check_promo(request):
-    headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-    }
+    headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" }
     if request.method == 'OPTIONS': return web.Response(headers=headers)
-
     try:
         data = await request.json()
-        code = data.get('code', '')
-        user_id = data.get('userId')
+        code, uid = data.get('code', ''), data.get('userId')
         loop = asyncio.get_running_loop()
-        status, discount = await loop.run_in_executor(None, check_promo_firebase, code, user_id)
+        status, discount = await loop.run_in_executor(None, check_promo_firebase, code, uid)
         return web.json_response({'status': status, 'discount': discount}, headers=headers)
-    except Exception as e:
-        return web.json_response({'status': 'ERROR', 'error': str(e)}, headers=headers)
+    except Exception as e: return web.json_response({'status': 'ERROR', 'error': str(e)}, headers=headers)
+
+async def api_get_user_info(request):
+    headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" }
+    if request.method == 'OPTIONS': return web.Response(headers=headers)
+    try:
+        data = await request.json()
+        uid = data.get('userId')
+        loop = asyncio.get_running_loop()
+        points = await loop.run_in_executor(None, get_user_loyalty, uid)
+        return web.json_response({'points': points}, headers=headers)
+    except Exception as e: return web.json_response({'points': 0}, headers=headers)
 
 async def health_check(request): return web.Response(text="OK")
 
@@ -231,6 +277,8 @@ async def start_web_server():
     app.router.add_get("/health", health_check)
     app.router.add_post("/api/check_promo", api_check_promo)
     app.router.add_options("/api/check_promo", api_check_promo)
+    app.router.add_post("/api/get_user_info", api_get_user_info)
+    app.router.add_options("/api/get_user_info", api_get_user_info)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)
@@ -264,16 +312,9 @@ def get_skip_comment_kb(): return InlineKeyboardMarkup(inline_keyboard=[[InlineK
 
 @dp.message(CommandStart())
 async def cmd_start(m: types.Message):
-     unique_url = f"{WEB_APP_URL}?v={int(time.time())}"
+    unique_url = f"{WEB_APP_URL}?v={int(time.time())}"
+    await m.answer("Добро пожаловать в CoffeeMoll! 🥐", reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=unique_url))]], resize_keyboard=True))
 
-    await m.answer(
-        "Добро пожаловать в CoffeeMoll! 🥐", 
-        reply_markup=ReplyKeyboardMarkup(
-            keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=unique_url))]], 
-            resize_keyboard=True
-        )
-    )
-    
 @dp.message(F.web_app_data)
 async def web_app_data_handler(m: types.Message):
     try:
@@ -281,15 +322,15 @@ async def web_app_data_handler(m: types.Message):
         if d.get('type') == 'review': return
         cart, total, info = d.get('cart', []), d.get('total', 0), d.get('info', {})
         promo, disc = info.get('promoCode', ''), info.get('discount', 0)
+        loyalty_target = info.get('loyaltyTarget', 0)
         d_txt, warn = "", ""
-
+        
         client_name = info.get('name')
         if client_name: NAMES_CACHE[str(m.from_user.id)] = client_name
         
         if promo and disc > 0:
             loop = asyncio.get_running_loop()
             res = await loop.run_in_executor(None, process_promo_firebase, promo, m.from_user.id)
-            
             if res == "OK":
                 try: d_txt = f"\n🎁 <b>Промокод:</b> {promo} (-{int(round(total/(1-disc)) - total)} ₸)"
                 except: d_txt = f"\n🎁 <b>Промокод:</b> {promo}"
@@ -300,6 +341,33 @@ async def web_app_data_handler(m: types.Message):
                 user_reasons = {"USED": "уже использован вами", "LIMIT": "исчерпан"}
                 d_txt = f"\n❌ <b>Промокод:</b> {promo} ({reasons.get(res, 'Ошибка')})"
                 warn = f"\n⚠️ <b>Промокод {promo} {user_reasons.get(res, 'не сработал')}!</b>\nСкидка отменена."
+
+        # --- ЛОГИКА НАЧИСЛЕНИЯ БАЛЛОВ И ПОДАРКОВ ---
+        loyalty_msg = ""
+        coffee_items = [] # Список цен кофе в заказе
+        for item in cart:
+            if 'КОФЕ' in item.get('cat', '').upper():
+                # Если заказали 2 латте, добавляем цену дважды
+                qty = item.get('qty', 1)
+                price = item.get('price', 0)
+                for _ in range(qty):
+                    coffee_items.append(price)
+        
+        coffee_count = len(coffee_items)
+        
+        if coffee_count > 0 and loyalty_target > 0:
+            loop = asyncio.get_running_loop()
+            num_free, new_balance = await loop.run_in_executor(None, update_loyalty_points, m.from_user.id, coffee_count, loyalty_target)
+            
+            if num_free > 0:
+                # Сортируем цены, чтобы найти самые дешевые для подарка
+                coffee_items.sort()
+                # Берем num_free самых дешевых
+                free_items_sum = sum(coffee_items[:num_free])
+                
+                loyalty_msg = f"\n🎁 <b>БОНУС: {num_free} КОФЕ БЕСПЛАТНО!</b>\n📉 <b>Сделайте скидку: {free_items_sum} ₸</b>\n(Баланс после списания: {new_balance}/{loyalty_target})"
+            else:
+                loyalty_msg = f"\n⭐️ Баллы: {new_balance}/{loyalty_target} (+{coffee_count})"
 
         is_del = (info.get('deliveryType') == 'Доставка')
         txt = f"{'🚗' if is_del else '🏃'} <b>НОВЫЙ ЗАКАЗ</b>\n➖➖➖➖➖➖➖➖➖➖\n👤 {info.get('name')} (<a href='tel:{info.get('phone')}'>{info.get('phone')}</a>)\n"
@@ -314,12 +382,17 @@ async def web_app_data_handler(m: types.Message):
             txt += f"{i}. <b>{item.get('name')}</b> {'('+ ', '.join(opts) +')' if opts else ''}{f' <b>x {q}</b>' if q > 1 else ''}\n"
         txt += f"{d_txt}\n💰 <b>ИТОГО: {total} ₸</b>"
         if is_del: txt += "\n⚠️ <i>+ Доставка</i>"
+        txt += loyalty_msg
 
         await bot.send_message(ADMIN_CHAT_ID, txt, reply_markup=get_decision_kb(m.chat.id), message_thread_id=TOPIC_ID_ORDERS)
         
         response_text = f"✅ Заказ отправлен!\nСумма: {total} ₸"
         if warn: response_text += f"\n{warn}"
-        response_text += "\n\nОжидайте удаленного счета. Начнем готовить только после оплаты."
+        
+        if num_free > 0:
+             response_text += f"\n\n🎁 <b>Поздравляем! Вы получили {num_free} бесплатный кофе!</b>\nБариста сделает скидку при оплате."
+        
+        response_text += "\n\nСкоро вам выставят удаленный счет. Начнем готовить заказ только после оплаты."
         await m.answer(response_text)
     except Exception as e: logging.error(f"Order Error: {e}")
 
@@ -556,5 +629,6 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
