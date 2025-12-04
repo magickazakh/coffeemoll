@@ -36,8 +36,8 @@ KASPI_NUMBER = "+7 747 240 20 02"
 
 # --- НАСТРОЙКА БАРИСТА ---
 BARISTAS = {
-    "1": {"name": "Анара", "phone": "+7 700 000 00 01"},
-    "2": {"name": "Карина", "phone": "+7 700 000 00 02"},
+    "1": {"name": "Анара", "phone": "+7 747 240 2002"},
+    "2": {"name": "Карина", "phone": "+7 776 962 28 14"},
     "3": {"name": "Павел", "phone": "+7 771 904 44 55"}
 }
 # -----------------
@@ -501,4 +501,5 @@ async def finalize_review(m, state, txt, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
