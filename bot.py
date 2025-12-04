@@ -264,16 +264,8 @@ def get_skip_comment_kb(): return InlineKeyboardMarkup(inline_keyboard=[[InlineK
 
 @dp.message(CommandStart())
 async def cmd_start(m: types.Message):
-     unique_url = f"{WEB_APP_URL}?v={int(time.time())}"
+    await m.answer("Добро пожаловать в CoffeeMoll! 🥐", reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=WEB_APP_URL))]], resize_keyboard=True))
 
-    await m.answer(
-        "Добро пожаловать в CoffeeMoll! 🥐", 
-        reply_markup=ReplyKeyboardMarkup(
-            keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=unique_url))]], 
-            resize_keyboard=True
-        )
-    )
-    
 @dp.message(F.web_app_data)
 async def web_app_data_handler(m: types.Message):
     try:
@@ -556,5 +548,3 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
-
-
