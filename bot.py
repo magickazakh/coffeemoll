@@ -447,31 +447,33 @@ async def tips_decision(c: CallbackQuery, state: FSMContext):
         await state.set_state(ReviewState.waiting_for_comment)
     await c.answer()
 
-@dp.callback_query(F.data.startswith("barista_"), ReviewState.waiting_for_barista_choice)
+# ИСПРАВЛЕНИЕ ЗДЕСЬ: УБРАЛ ФИЛЬТР СОСТОЯНИЯ
+@dp.callback_query(F.data.startswith("barista_"))
 async def barista_choice(c: CallbackQuery, state: FSMContext):
-    b_id = c.data.split("_")[1]
-    logging.info(f"Barista selected: {b_id}") # Отладка
+    try:
+        b_id = c.data.split("_")[1]
+        
+        if b_id == "cancel":
+             await state.update_data(tips="Нет")
+             await c.message.edit_text("Напишите отзыв:", reply_markup=get_skip_comment_kb())
+             await state.set_state(ReviewState.waiting_for_comment)
+             return
 
-    if b_id == "cancel":
-         await state.update_data(tips="Нет")
-         await c.message.edit_text("Напишите отзыв:", reply_markup=get_skip_comment_kb())
-         await state.set_state(ReviewState.waiting_for_comment)
-         await c.answer()
-         return
-
-    if b_id in BARISTAS:
-        barista = BARISTAS[b_id]
-        await state.update_data(tips=f"Выбрано: {barista['name']}")
-        await c.message.edit_text(
-            f"💳 Kaspi ({barista['name']}):\n<code>{barista['phone']}</code>\n\nСпасибо за поддержку! ❤️\n\nНапишите ваш отзыв:", 
-            reply_markup=get_skip_comment_kb()
-        )
-    else:
-        # Если вдруг ID не найден
-        await c.message.edit_text("Напишите отзыв:", reply_markup=get_skip_comment_kb())
-    
-    await state.set_state(ReviewState.waiting_for_comment)
-    await c.answer()
+        if b_id in BARISTAS:
+            barista = BARISTAS[b_id]
+            await state.update_data(tips=f"Выбрано: {barista['name']}")
+            await c.message.edit_text(
+                f"💳 Kaspi ({barista['name']}):\n<code>{barista['phone']}</code>\n\nСпасибо за поддержку! ❤️\n\nНапишите ваш отзыв:", 
+                reply_markup=get_skip_comment_kb()
+            )
+        else:
+            await c.message.edit_text("Напишите отзыв:", reply_markup=get_skip_comment_kb())
+        
+        await state.set_state(ReviewState.waiting_for_comment)
+    except Exception as e:
+        logging.error(f"Error in barista_choice: {e}")
+    finally:
+        await c.answer()
 
 @dp.callback_query(F.data == "skip_comment", ReviewState.waiting_for_comment)
 async def skip_comment(c: CallbackQuery, state: FSMContext):
