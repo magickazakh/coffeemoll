@@ -331,7 +331,7 @@ async def set_time(c: CallbackQuery, state: FSMContext):
         await c.message.edit_reply_markup(reply_markup=get_decision_kb(uid))
         return
     if act == "custom":
-        await c.message.answer("Введите время (напр. '40 мин или 17:30'):")
+        await c.message.answer("Введите время (напр. '40' или '17:30'):")
         await state.update_data(msg_id=c.message.message_id, uid=uid)
         await state.set_state(OrderState.waiting_for_custom_time)
         await c.answer()
@@ -346,17 +346,60 @@ async def set_time(c: CallbackQuery, state: FSMContext):
     except: pass
     await c.answer()
 
+# --- ВАЛИДАЦИЯ И ОБРАБОТКА КАСТОМНОГО ВРЕМЕНИ ---
 @dp.message(OrderState.waiting_for_custom_time)
 async def custom_time(m: types.Message, state: FSMContext):
-    d = await state.get_data()
+    data = await state.get_data()
+    order_msg_id = data.get('msg_id')
+    user_id = data.get('uid')
+
     try: await m.delete()
     except: pass
+
+    if not order_msg_id or not user_id:
+        await m.answer("⚠️ Ошибка контекста. Повторите действие.")
+        await state.clear()
+        return
+
+    input_text = m.text.strip()
+    final_time = ""
+
+    # Проверка формата
+    if re.match(r'^\d+$', input_text):
+        final_time = f"{input_text} мин"
+    elif re.match(r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$', input_text):
+        final_time = input_text
+    else:
+        msg = await m.answer("⚠️ <b>Неверный формат!</b>\nВведите количество минут (например: <code>40</code>)\nИли точное время (например: <code>18:30</code>)")
+        await asyncio.sleep(5)
+        try: await msg.delete()
+        except: pass
+        return # Не сбрасываем состояние, ждем повторного ввода
+
     try:
-        await bot.edit_message_reply_markup(m.chat.id, d['msg_id'], reply_markup=get_ready_kb(d['uid']))
-        await bot.send_message(m.chat.id, f"Время установлено: {m.text}", reply_to_message_id=d['msg_id'], message_thread_id=TOPIC_ID_ORDERS)
-        await bot.send_message(d['uid'], f"👨‍🍳 Принят! Готовность: <b>{m.text}</b>.\n<i>(Если это доставка, время пути не учтено)</i>")
-    except: pass
-    await state.clear()
+        await bot.edit_message_reply_markup(
+            chat_id=m.chat.id, 
+            message_id=order_msg_id, 
+            reply_markup=get_ready_kb(user_id)
+        )
+        
+        await bot.send_message(
+            chat_id=m.chat.id, 
+            text=f"✅ Время установлено: <b>{final_time}</b>", 
+            reply_to_message_id=order_msg_id, 
+            message_thread_id=TOPIC_ID_ORDERS
+        )
+        
+        await bot.send_message(
+            chat_id=user_id, 
+            text=f"👨‍🍳 Принят! Готовность: <b>{final_time}</b>.\n📞Телефон для связи: +77006437303\n<i>(Если это доставка, время пути не учтено)</i>"
+        )
+    except Exception as e:
+        logging.error(f"Custom time error: {e}")
+        await m.answer(f"⚠️ Ошибка: {e}")
+    
+    finally:
+        await state.clear()
 
 @dp.callback_query(F.data.startswith("ord_ready_"))
 async def ready(c: CallbackQuery):
@@ -447,7 +490,6 @@ async def tips_decision(c: CallbackQuery, state: FSMContext):
         await state.set_state(ReviewState.waiting_for_comment)
     await c.answer()
 
-# ИСПРАВЛЕНИЕ ЗДЕСЬ: УБРАЛ ФИЛЬТР СОСТОЯНИЯ
 @dp.callback_query(F.data.startswith("barista_"))
 async def barista_choice(c: CallbackQuery, state: FSMContext):
     try:
