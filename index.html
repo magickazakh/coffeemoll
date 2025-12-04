@@ -127,9 +127,55 @@
         .add-btn:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
 
         /* УВЕДОМЛЕНИЯ */
-        #toast-container { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; gap: 10px; width: 90%; pointer-events: none; }
-        .toast { background: rgba(0, 0, 0, 0.85); color: white; padding: 12px 16px; border-radius: 12px; font-size: 14px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: fadeUp 0.3s ease-out; backdrop-filter: blur(4px); pointer-events: auto; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        #toast-container { 
+            position: fixed; 
+            bottom: 90px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            z-index: 2000; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            width: 90%; 
+            pointer-events: none; 
+        }
+
+        .toast { 
+            background: rgba(0, 0, 0, 0.85); 
+            color: white; 
+            padding: 12px 16px; 
+            border-radius: 12px; 
+            font-size: 14px; 
+            text-align: center; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); /* Усиленная тень */
+            backdrop-filter: blur(8px); /* Блюр */
+            pointer-events: auto; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px;
+            
+            /* Анимация появления */
+            animation: toastIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            
+            /* Анимация исчезновения (через JS класс) */
+            transition: all 0.4s ease;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Класс для скрытия */
+        .toast.hide {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
         .toast.error { background: rgba(220, 38, 38, 0.9); }
+
+        @keyframes toastIn { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
 
         /* КОРЗИНА КОЛИЧЕСТВО */
         .cart-qty-controls { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
@@ -1346,5 +1392,6 @@
 </script>
 </body>
 </html>
+
 
 
