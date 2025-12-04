@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CoffeeMoll</title>
+
+    <link rel="preload" href="https://telegram.org/js/telegram-web-app.js" as="script">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" as="style" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>window.onerror = function(msg, url, line) { return false; };</script>
+
+    <style>
+        /* --- CSS ПЕРЕМЕННЫЕ --- */
+        :root {
+            --primary-color: #88d100;       
+            --primary-text: #000000;        
+            --bg-color: #F7F8F5;            
+            --card-bg: #ffffff;
+            --text-main: #111111;           
+            --text-secondary: #6b7280;      
+            --input-bg: #ffffff;
+            --border-color: #eee;
+            
+            /* Высота навигации для скролла */
+            --nav-height: 60px; 
+            
+            --font-logo: 'Bebas Neue', cursive;
+            --font-title: 'Oswald', sans-serif;
+            --font-body: 'Montserrat', sans-serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1a1a1a;
+                --card-bg: #2d2d2d;
+                --text-main: #ffffff;
+                --text-secondary: #a0a0a0;
+                --input-bg: #333333;
+                --border-color: #444444;
+            }
+            .header-container { background: #2d2d2d !important; }
+            .logo-coffee { color: #ffffff !important; }
+            .status-badge { background: #064e3b !important; color: #a7f3d0 !important; }
+            .radio-label, .checkout-radio-label { background: #333 !important; border-color: #444 !important; color: #fff !important; }
+            .radio-input:checked + .radio-label, .checkout-radio-input:checked + .checkout-radio-label { background: #064e3b !important; border-color: var(--primary-color) !important; }
+            .category-title { background: #1a1a1a !important; border-bottom: 1px solid #333 !important; }
+            .accordion-header { background: #333 !important; color: #fff !important; }
+            .repeat-card { background: #333 !important; border-color: #444 !important; }
+            .upsell-no { background: #444 !important; color: #ccc !important; }
+            .cart-qty-btn { background: #444 !important; color: #fff !important; }
+        }
+
+        /* --- БАЗОВЫЕ СТИЛИ --- */
+        body { font-family: var(--font-body); margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); padding-bottom: 100px; -webkit-tap-highlight-color: transparent; font-weight: 500; transition: background-color 0.3s, color 0.3s; }
+        
+        /* ШАПКА С АНИМАЦИЕЙ TRANSITION */
+        .header-container { 
+            background: white; 
+            position: sticky; 
+            top: 0; 
+            z-index: 40; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Плавное скрытие */
+        }
+        
+        /* Скрываем верхнюю часть при скролле */
+        .header-container.header-hidden {
+            transform: translateY(-75px); /* Сдвигаем вверх на высоту лого и поиска */
+        }
+
+        /* ИСПРАВЛЕНО: убрана фиксированная высота height: 60px, теперь она автоматическая */
+        header { 
+            padding: 12px 15px 10px 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            height: auto; 
+            min-height: 60px;
+            box-sizing: border-box;
+        }
+        
+        .header-left { display: flex; flex-direction: column; }
+        
+        h1 { margin: 0; font-family: var(--font-logo); font-size: 34px; letter-spacing: 1px; line-height: 1; text-transform: uppercase; }
+        .logo-coffee { color: #000000; }
+        .logo-moll { color: #88d100; }
+
+        .separator-line { width: 141px; height: 3px; background-color: var(--primary-color); margin: 3px 0 3px 0; border-radius: 2px; }
+        .motto { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-weight: 600; max-width: 180px; line-height: 1.2; }
+        .status-badge { font-family: var(--font-body); font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; transition: 0.3s; white-space: nowrap; margin-left: 10px;}
+
+        /* ПОИСК И ПОВТОР ЗАКАЗА (АНИМАЦИЯ СКРЫТИЯ) */
+        .search-wrapper { 
+            padding: 0 15px 10px 15px; 
+            transition: all 0.3s ease-in-out;
+            max-height: 60px;
+            opacity: 1;
+        }
+        #search-input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; transition: 0.2s; margin: 0; box-sizing: border-box; font-family: var(--font-body); }
+        #search-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(136, 209, 0, 0.1); }
+        
+        #repeat-order-container { 
+            padding: 0 15px 10px 15px; 
+            display: none; 
+            transition: all 0.3s ease-in-out;
+            max-height: 100px;
+            opacity: 1;
+        }
+        .repeat-card { background: #fff; border: 1px solid var(--primary-color); border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 5px rgba(136, 209, 0, 0.1); transition: transform 0.1s; }
+        .repeat-card:active { transform: scale(0.98); background: #f9f9f9; }
+        .repeat-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+        .repeat-title { font-size: 13px; font-weight: 700; color: var(--primary-color); text-transform: uppercase; font-family: var(--font-title); letter-spacing: 0.5px; }
+        .repeat-desc { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .repeat-icon { font-size: 20px; color: var(--primary-color); margin-left: 10px; }
+
+        .header-container.mini-header .search-wrapper,
+        .header-container.mini-header #repeat-order-container {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* НАВИГАЦИЯ */
+        .nav-scroller { overflow-x: auto; white-space: nowrap; padding: 10px 15px; -webkit-overflow-scrolling: touch; scrollbar-width: none; background: inherit; }
+        .nav-scroller::-webkit-scrollbar { display: none; }
+        .nav-btn { display: inline-block; padding: 8px 16px; margin-right: 8px; background: var(--card-bg); border-radius: 20px; font-size: 14px; font-weight: 600; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border-color); transition: all 0.3s; font-family: var(--font-body); letter-spacing: 0.5px; }
+        .nav-btn.active { background: #000000; color: var(--primary-color); border-color: #000000; transform: scale(1.05); }
+
+        /* КАРТОЧКИ */
+        .category-section { margin-bottom: 10px; scroll-margin-top: 130px; padding-top: 10px; }
+        
+        /* ЛИПКИЕ ЗАГОЛОВКИ */
+        .category-title { 
+            position: sticky; 
+            top: var(--header-height, 135px); 
+            background: var(--bg-color); 
+            z-index: 30; 
+            padding: 10px 15px; 
+            font-family: var(--font-title); 
+            font-size: 24px; 
+            color: var(--text-main); 
+            letter-spacing: 0.5px; 
+            font-weight: 700; 
+            border-bottom: 1px solid rgba(0,0,0,0.05); 
+            transition: top 0.3s, background 0.3s;
+        }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 10px; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.1s; position: relative; cursor: pointer; border: 1px solid transparent;}
+        .card:active { transform: scale(0.98); border-color: var(--primary-color); }
+        .card-img-container { width: 100%; height: 100px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; overflow: hidden; position: relative; background: #f3f4f6; }
+        .card-skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        @media (prefers-color-scheme: dark) { .card-skeleton { background: linear-gradient(90deg, #333 25%, #444 50%, #333 75%); } }
+        .card img { width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 0.3s ease-in; }
+        .card img.loaded { opacity: 1; }
+        .card.unavailable { opacity: 0.6; pointer-events: none; }
+        .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
+        
+        /* ИЗБРАННОЕ */
+        .fav-btn { 
+            position: absolute; 
+            top: 8px; left: 8px; z-index: 25; 
+            font-size: 18px; color: #9ca3af; 
+            transition: 0.2s; background: rgba(255,255,255,0.95); 
+            border-radius: 50%; width: 28px; height: 28px; 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2); 
+        }
+        .fav-btn.active { color: #ef4444; }
+        .card-badge { position: absolute; top: 8px; right: 8px; background: var(--primary-color); color: var(--primary-text); font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-family: var(--font-title); letter-spacing: 0.5px; }
+        
+        .card h3 { margin: 0 0 5px 0; font-family: var(--font-title); font-size: 16px; font-weight: 700; line-height: 1.1; letter-spacing: 0.3px; }
+        .card .desc { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; font-family: var(--font-body); }
+        .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+        .price { font-weight: 700; font-size: 14px; color: var(--text-main); font-family: var(--font-body); white-space: nowrap; }
+        .add-btn { background-color: var(--primary-color); color: var(--primary-text); border: none; border-radius: 6px; padding: 4px 8px; font-weight: 600; font-size: 10px; pointer-events: none; font-family: var(--font-title); letter-spacing: 0.5px; text-transform: uppercase !important; min-width: auto; }
+        .add-btn:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
+
+        /* УВЕДОМЛЕНИЯ */
+        #toast-container { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; gap: 10px; width: 90%; pointer-events: none; }
+        .toast { background: rgba(0, 0, 0, 0.85); color: white; padding: 12px 16px; border-radius: 12px; font-size: 14px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: fadeUp 0.3s ease-out; backdrop-filter: blur(4px); pointer-events: auto; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .toast.error { background: rgba(220, 38, 38, 0.9); }
+
+        /* КОРЗИНА КОЛИЧЕСТВО */
+        .cart-qty-controls { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
+        .cart-qty-btn { width: 28px; height: 28px; background: #f3f4f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: #333; border: 1px solid var(--border-color); }
+        .cart-item-price-total { font-weight: bold; font-size: 15px; color: var(--primary-color); }
+
+        /* ОСТАЛЬНЫЕ СТИЛИ */
+        .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-color); z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction: column; text-align: center;}
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px;}
+        .loading-title { font-family: var(--font-logo); font-size: 36px; margin-bottom: 5px; }
+        .loading-motto { font-size: 13px; color: #666; font-style: italic; font-family: var(--font-body); transition: opacity 0.3s ease; }
+        
+        .error-btn { background: var(--text-main); color: var(--bg-color); border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        #no-results { display: none; text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+        .no-res-icon { font-size: 48px; margin-bottom: 10px; display: block; }
+        
+        .main-btn { position: fixed; bottom: 15px; left: 15px; right: 15px; background: #000000; color: var(--primary-color); padding: 16px; border-radius: 14px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: none; z-index: 900; font-family: var(--font-title); letter-spacing: 1px; }
+        .cart-counter { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 11px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: pop 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-family: var(--font-body); }
+        .scroll-top-btn { position: fixed; bottom: 80px; right: 15px; width: 40px; height: 40px; background: rgba(0,0,0,0.6); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 800; opacity: 0; pointer-events: none; transition: opacity 0.3s; font-size: 20px; }
+        .scroll-top-btn.visible { opacity: 1; pointer-events: auto; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: flex-end; justify-content: center; backdrop-filter: blur(2px); }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease-out; position: relative; }
+        .modal-header { margin-bottom: 15px; border-bottom: none; padding-bottom: 0; display: block; text-align: center;}
+        .modal-title-block { flex: 1; }
+        .modal-title { font-family: var(--font-title); font-size: 22px; font-weight: 700; letter-spacing: 0.5px; line-height: 1.2; color: var(--text-main); }
+        .modal-desc { font-size: 13px; color: var(--text-secondary); margin-top: 8px; line-height: 1.5; font-family: var(--font-body); }
+        .close-icon { position: absolute; top: 15px; right: 15px; width: 32px; height: 32px; background: #f3f4f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #333; font-size: 18px; z-index: 50; }
+        .modal-img-wrapper { width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin-bottom: 15px; background: #f9fafb; display: flex; align-items: center; justify-content: center; }
+        .modal-img { width: 100%; height: 100%; object-fit: contain; background-color: #fff; }
+        
+        .accordion { margin-bottom: 15px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
+        .accordion-header { background: #f9fafb; padding: 12px 15px; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-main); font-family: var(--font-body); }
+        .accordion-content { display: none; padding: 15px; border-top: 1px solid var(--border-color); background: var(--card-bg); }
+        .accordion-arrow { transition: transform 0.2s; }
+        .accordion.open .accordion-content { display: block; }
+        .accordion.open .accordion-arrow { transform: rotate(180deg); }
+        
+        .option-group { margin-bottom: 15px; position: relative; z-index: 1; }
+        .option-label { font-weight: 700; margin-bottom: 8px; display: block; font-size: 14px; color: var(--text-main); font-family: var(--font-body); }
+        .radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+        .radio-label { display: flex; align-items: center; justify-content: flex-start; padding: 8px 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; color: #374151; transition: all 0.2s; min-height: 42px; width: 100%; box-sizing: border-box; position: relative; font-family: var(--font-body); }
+        .radio-label::before { content: ''; display: inline-block; width: 16px; height: 16px; border: 2px solid #d1d5db; border-radius: 50%; margin-right: 10px; box-sizing: border-box; flex-shrink: 0; transition: 0.2s; }
+        .radio-input { display: none; }
+        .radio-input:checked + .radio-label { background-color: #f0fdf4; border-color: var(--primary-color); color: #000; box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15); }
+        .radio-input:checked + .radio-label::before { border-color: var(--primary-color); background-color: var(--primary-color); box-shadow: inset 0 0 0 3px #fff; }
+        
+        .checkout-radio-group { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; width: 100% !important; }
+        .checkout-radio-label { display: flex !important; align-items: center !important; justify-content: flex-start !important; padding: 10px 12px !important; background: #fff !important; border: 1px solid #e5e7eb !important; border-radius: 10px !important; cursor: pointer !important; font-size: 14px !important; font-weight: 500 !important; color: #374151 !important; transition: all 0.2s !important; min-height: 44px !important; width: 100% !important; box-sizing: border-box !important; position: relative !important; font-family: var(--font-body) !important; }
+        .checkout-radio-label::before { content: '' !important; display: inline-block !important; width: 16px !important; height: 16px !important; border: 2px solid #9ca3af !important; border-radius: 50% !important; margin-right: 10px !important; box-sizing: border-box !important; flex-shrink: 0 !important; transition: 0.2s !important; }
+        .checkout-radio-input { display: none !important; }
+        .checkout-radio-input:checked + .checkout-radio-label { background-color: #f0fdf4 !important; border-color: var(--primary-color) !important; color: #000 !important; box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15) !important; }
+        .checkout-radio-input:checked + .checkout-radio-label::before { border-color: var(--primary-color) !important; background-color: var(--primary-color) !important; box-shadow: inset 0 0 0 3px #fff !important; }
+        
+        input[type="text"], input[type="number"], input[type="tel"], textarea, input[type="time"] { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 14px; box-sizing: border-box; background: var(--input-bg); margin-bottom: 10px; font-family: var(--font-body); transition: all 0.2s; color: var(--text-main); }
+        input:focus, textarea:focus, select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(136, 209, 0, 0.1); outline: none; }
+        select { width: 100%; padding: 12px 15px; padding-right: 40px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 14px; font-family: var(--font-body); color: var(--text-main); background-color: var(--input-bg); box-sizing: border-box; margin-bottom: 10px; outline: none; transition: all 0.2s; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2388d100' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 15px center; background-size: 16px; font-weight: 500; cursor: pointer; }
+        textarea { resize: none; height: 60px; }
+        .checkbox-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--border-color); font-family: var(--font-body); color: var(--text-main); }
+        .toggle-switch { position: relative; display: inline-block; width: 46px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(22px); }
+        .modal-footer { margin-top: 20px; display: flex; gap: 10px; }
+        .modal-add-btn { background: var(--primary-color); color: var(--primary-text); width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; font-family: var(--font-title); letter-spacing: 0.5px; }
+        .modal-add-btn:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .cart-item { background: var(--input-bg); border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+        .cart-item-info { flex: 1; padding-right: 10px; }
+        .cart-item-title { font-family: var(--font-title); font-size: 15px; margin-bottom: 2px; letter-spacing: 0.3px; font-weight: 700; color: var(--text-main); }
+        .cart-item-opts { font-size: 11px; color: var(--text-secondary); }
+        .cart-item-price { font-weight: bold; margin: 0 10px; font-size: 14px; color: var(--text-main); }
+        .cart-item-price-total { font-weight: bold; font-size: 14px; color: var(--primary-color); margin-top: 4px; }
+        .cart-del-btn { color: #ef4444; padding: 5px 10px; cursor: pointer; font-size: 20px; }
+        .checkout-total { font-size: 18px; font-weight: bold; margin-top: 15px; text-align: right; border-top: 2px solid var(--border-color); padding-top: 10px; font-family: var(--font-body); color: var(--text-main); }
+        .delivery-warning { font-size: 13px; color: #d97706; background: #fef3c7; padding: 8px; border-radius: 8px; margin-top: 5px; display: none; font-family: var(--font-body); }
+        .contact-note { font-size: 12px; color: var(--text-secondary); margin-top: 15px; margin-bottom: 20px; display: flex; gap: 5px; align-items: flex-start; font-family: var(--font-body); }
+        .warning-box { background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; display: none; border: 1px solid #fecaca; line-height: 1.4; font-family: var(--font-body); }
+        .info-box { background: #e0f2fe; color: #075985; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; display: none; border: 1px solid #bae6fd; line-height: 1.4; font-family: var(--font-body); }
+        .promo-section { margin: 15px 0; display: flex; gap: 8px; }
+        .promo-btn { background: #f0f0f0; border: none; padding: 0 15px; border-radius: 12px; cursor: pointer; font-weight: 600; color: #333; }
+        
+        .upsell-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1100; align-items: center; justify-content: center; }
+        .upsell-content { background: var(--card-bg); width: 85%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; animation: popIn 0.3s; }
+        .upsell-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
+        .upsell-btn-row { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
+        .upsell-yes { background: #88d100; color: #3e2723; padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; flex: 1;}
+        .upsell-no { background: #444 !important; color: #ccc !important; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; flex: 1;}
+        .upsell-title { font-family: var(--font-title); margin: 0 0 10px 0; letter-spacing: 0.5px; font-size: 20px; font-weight: 700; color: var(--text-main); }
+        .upsell-product { font-family: var(--font-title); font-weight: 700; margin-bottom: 5px; letter-spacing: 0.5px; font-size: 18px; color: var(--text-main); }
+        .upsell-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 15px; }
+
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes popIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
+        @keyframes pop { 0% { transform: scale(0); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes fadeUp { from { opacity:0; transform: translate(-50%, 20px); } to { opacity:1; transform: translate(-50%, 0); } }
+    </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading-screen">
+    <div class="spinner"></div>
+    <div class="loading-title"><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></div>
+    <div class="separator-line"></div>
+    <div class="loading-motto">Кофейня с неприлично вкусным кофе</div>
+</div>
+
+<div id="toast-container"></div>
+
+<div class="loading-overlay" id="error-screen" style="display: none;">
+    <div style="font-size: 50px; margin-bottom: 10px;">📡</div>
+    <div class="loading-title" style="font-size: 24px;">Ошибка связи</div>
+    <div class="loading-motto">Не удалось загрузить меню. Проверьте интернет.</div>
+    <button class="error-btn" onclick="location.reload()">Повторить</button>
+</div>
+
+<div class="header-container">
+    <header>
+        <div class="header-left">
+            <h1><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></h1>
+            <div class="separator-line"></div>
+            <div class="motto">Кофейня с неприлично вкусным кофе</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div id="work-status" class="status-badge">Checking...</div>
+        </div>
+    </header>
+    <div class="search-wrapper">
+        <input type="text" id="search-input" placeholder="🔍 Найти..." oninput="filterMenu()">
+    </div>
+    
+    <div id="repeat-order-container">
+        <div class="repeat-card" onclick="loadLastOrder()">
+            <div class="repeat-info">
+                <div class="repeat-title">↻ Повторить прошлый заказ</div>
+                <div class="repeat-desc" id="repeat-desc">...</div>
+                <div id="repeat-price" style="font-weight:bold; font-size:13px; color: var(--text-main);"></div>
+            </div>
+            <div class="repeat-icon">➔</div>
+        </div>
+    </div>
+
+    <div class="nav-scroller" id="nav-container"></div>
+</div>
+
+<div id="app"></div>
+
+<div id="no-results">
+    <span class="no-res-icon">🔍</span>
+    <h3>Ничего не найдено</h3>
+    <p>Попробуйте изменить запрос</p>
+</div>
+
+<div class="scroll-top-btn" id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
+
+<div class="main-btn" id="cart-btn" onclick="openCheckout()">
+    <span id="cart-text">К корзине</span>
+    <div class="cart-counter" id="cart-count">0</div>
+</div>
+
+<div class="modal-overlay" id="product-modal" onclick="closeProductModal(event)"><div class="modal-content" id="product-modal-content"></div></div>
+
+<div class="modal-overlay" id="checkout-modal"><div class="modal-content" id="checkout-content">
+    <div class="modal-header"><div class="modal-title">ВАШ ЗАКАЗ</div><div class="close-icon" onclick="closeCheckout()">✕</div></div>
+    
+    <div id="closed-warning" class="warning-box">🌙 <b>Мы сейчас закрыты.</b><br>Приготовим ваш заказ в рабочее время (с 09:00).</div>
+    <div id="pizza-warning" class="info-box">🍕 <b>Пицца доступна с 11:00.</b><br>Начнем готовить её после 11:00.</div>
+
+    <div id="cart-list-container"></div>
+    
+    <div class="promo-section" id="promo-container">
+        <div style="display:flex; gap:5px; width:100%;">
+             <input type="text" id="promo-code" placeholder="Промокод" style="margin-bottom: 0; flex:1;">
+             <button class="promo-btn" id="apply-promo-btn" onclick="applyPromo()">OK</button>
+        </div>
+    </div>
+
+    <div class="checkout-total" id="checkout-total-sum">Итого: 0 ₸</div>
+    <div style="margin-top: 20px; border-top: 5px solid #f3f4f6; margin-left: -20px; margin-right: -20px;"></div>
+    <h3 style="margin: 15px 0 10px 0; font-size: 18px; font-family: var(--font-title); letter-spacing: 0.5px; font-weight: 700; color: var(--text-main);">ОФОРМЛЕНИЕ</h3>
+    
+    <div class="option-group"><label class="option-label">Ваши контакты</label>
+        <input type="text" id="client-name" placeholder="Ваше имя">
+        <input type="tel" id="client-phone" placeholder="Номер телефона (+7...)">
+    </div>
+    
+    <div class="option-group">
+        <label class="option-label">Время готовности</label>
+        <div class="checkout-radio-group">
+            <input type="radio" name="orderTimeType" id="t-asap" value="asap" class="checkout-radio-input" checked onchange="toggleTimePicker()">
+            <label for="t-asap" class="checkout-radio-label">⚡ Как можно скорее</label>
+
+            <input type="radio" name="orderTimeType" id="t-time" value="time" class="checkout-radio-input" onchange="toggleTimePicker()">
+            <label for="t-time" class="checkout-radio-label">⏰ Ко времени</label>
+        </div>
+        <div id="time-picker-container" style="display: none; margin-top: 10px;">
+            <input type="time" id="specific-time">
+        </div>
+    </div>
+
+    <div class="option-group">
+        <label class="option-label">Способ получения</label>
+        <div class="checkout-radio-group">
+            <input type="radio" name="deliveryType" id="d-pickup" value="pickup" class="checkout-radio-input" checked onchange="toggleDelivery()">
+            <label for="d-pickup" class="checkout-radio-label">🚶 Самовывоз</label>
+            
+            <input type="radio" name="deliveryType" id="d-dinein" value="dinein" class="checkout-radio-input" onchange="toggleDelivery()">
+            <label for="d-dinein" class="checkout-radio-label">🍽️ В зале</label>
+            
+            <input type="radio" name="deliveryType" id="d-delivery" value="delivery" class="checkout-radio-input" onchange="toggleDelivery()">
+            <label for="d-delivery" class="checkout-radio-label">🚗 Доставка</label>
+        </div>
+        <div id="delivery-msg" class="delivery-warning">⚠️ Стоимость доставки <b>от 600 ₸ (до двери от 800 ₸)</b> (оплачивается курьеру отдельно).</div>
+    </div>
+    
+    <div id="address-block" style="display: none;">
+        <div class="option-group">
+            <label class="option-label">Адрес доставки</label>
+            <textarea id="delivery-address" placeholder="Улица, дом, квартира..."></textarea>
+        </div>
+    </div>
+    
+    <div class="option-group">
+        <label class="option-label">Способ оплаты</label>
+        <div class="checkout-radio-group">
+            <input type="radio" name="paymentType" id="p-cash" value="Наличными" class="checkout-radio-input" checked onchange="togglePayment()">
+            <label for="p-cash" class="checkout-radio-label">💵 Наличные</label>
+            
+            <input type="radio" name="paymentType" id="p-card" value="Картой" class="checkout-radio-input" onchange="togglePayment()">
+            <label for="p-card" class="checkout-radio-label">💳 Картой</label>
+            
+            <input type="radio" name="paymentType" id="p-kaspi" value="Kaspi" class="checkout-radio-input" onchange="togglePayment()">
+            <label for="p-kaspi" class="checkout-radio-label">🔴 Kaspi</label>
+            
+            <input type="radio" name="paymentType" id="p-halyk" value="Halyk" class="checkout-radio-input" onchange="togglePayment()">
+            <label for="p-halyk" class="checkout-radio-label">🟢 Halyk</label>
+        </div>
+    </div>
+    
+    <div id="payment-phone-block" style="display: none;">
+        <div class="option-group">
+            <label class="option-label">Номер для удаленного счета</label>
+            <input type="tel" id="payment-phone" placeholder="Номер привязанный к карте">
+        </div>
+    </div>
+    
+    <div class="option-group"><label class="option-label">Комментарий</label><textarea id="order-comment" placeholder="Пожелания..."></textarea></div>
+    <div class="contact-note"><input type="checkbox" checked disabled style="width: auto; margin: 0;"><span>Даю согласие на связь в случае вопросов.</span></div>
+    <button class="modal-add-btn" id="submit-btn" onclick="submitOrder()">ПОДТВЕРДИТЬ ЗАКАЗ</button>
+</div></div>
+
+<div class="upsell-overlay" id="upsell-modal"><div class="upsell-content">
+    <h3 class="upsell-title">К КОФЕ ИДЕАЛЬНО ПОДОЙДЕТ!</h3>
+    <img src="" alt="Upsell" class="upsell-img">
+    <div class="upsell-product">ТОВАР</div>
+    <div class="upsell-desc" id="upsell-price">0 ₸</div>
+    <div class="upsell-btn-row"><button class="upsell-no" onclick="closeUpsell()">Нет, спасибо</button><button class="upsell-yes" onclick="acceptUpsell()">Добавить</button></div>
+</div></div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand(); 
+
+    // === ВАЖНО: ВСТАВЬТЕ СЮДА ВАШИ ССЫЛКИ ===
+    const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv"; 
+    
+    // --- ВАЖНО: УКАЖИТЕ URL ВАШЕГО БОТА НА RENDER ---
+    const BACKEND_URL = "https://coffeemoll.onrender.com"; 
+    // ------------------------------------------------
+
+    // Cache Busting
+    const cacheBuster = new Date().getTime();
+    const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL + "&t=" + cacheBuster);
+    
+    const CATEGORY_ORDER = ["ИЗБРАННОЕ", "Популярное", "Сезонное", "Кофе", "Чай", "Холодные напитки", "Молочные коктейли", "Завтраки", "Круассаны", "Хот-доги", "Салаты", "Пицца", "Пасты", "Закуски"];
+
+    let PRICES = { alt_milk: 400, add_milk: 50, add_cream: 50, add_honey: 100, add_lemon: 50, syrup: 0, shot: 300, hd_cheese: 150, hd_jalapeno: 150, hd_onion: 150, egg: 70, sauce: 150, cinnamon: 0 };
+    let SYRUPS = ["Карамель", "Ваниль", "Орех"];
+    let SAUCES = ["Кетчуп"];
+    let ALT_MILKS = ["Кокосовое"];
+    let PROMOS_ENABLED = true; 
+    let OPEN_HOUR = 9;
+    let CLOSE_HOUR = 23;
+
+    const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
+    const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ", "ЗАКУСКИ"], "ЧАЙ": ["КРУАССАНЫ", "ЗАКУСКИ"], "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ЗАВТРАКИ": ["КОФЕ", "ЧАЙ"] };
+
+    let menuData = [];
+    let cart = [];
+    let currentModalProduct = null;
+    let upsellShown = false;
+    let currentUpsellItem = null;
+    let appliedDiscount = 0; 
+    let appliedPromoCode = ""; 
+    let favorites = JSON.parse(localStorage.getItem('coffee_favorites')) || [];
+
+    // Loading messages logic
+    const loadingTexts = [
+        "Загружаем зерно в кофемолку...",
+        "Греем холдер...",
+        "Взбиваем молоко...",
+        "Настраиваем помол...",
+        "Рисуем сердечко на пенке...",
+        "Протираем столики...",
+        "Достаем свежие круассаны..."
+    ];
+    let textIdx = 0;
+    const mottoEl = document.querySelector('.loading-motto');
+    if(mottoEl) mottoEl.innerText = loadingTexts[0];
+
+    const loadingInterval = setInterval(() => {
+        if(!mottoEl) return;
+        mottoEl.style.opacity = 0;
+        setTimeout(() => {
+            textIdx = (textIdx + 1) % loadingTexts.length;
+            mottoEl.innerText = loadingTexts[textIdx];
+            mottoEl.style.opacity = 1;
+        }, 150);
+    }, 2000);
+
+    // 3. TOAST NOTIFICATIONS
+    function showToast(msg, type = 'normal') {
+        const cont = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = msg;
+        cont.appendChild(toast);
+        
+        if(type === 'error') tg.HapticFeedback.notificationOccurred('error');
+        else tg.HapticFeedback.impactOccurred('light');
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translate(-50%, 20px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    function toggleFavorite(e, id) {
+        e.stopPropagation(); 
+        id = String(id);
+        const idx = favorites.indexOf(id);
+        if(idx > -1) favorites.splice(idx, 1);
+        else favorites.push(id);
+        localStorage.setItem('coffee_favorites', JSON.stringify(favorites));
+        renderMenu(); // Перерисовываем меню для обновления порядка
+        tg.HapticFeedback.impactOccurred('medium');
+    }
+
+    // --- АСИНХРОННАЯ ПРОВЕРКА ПРОМОКОДА ---
+    async function applyPromo() {
+        const codeInput = document.getElementById('promo-code');
+        const btn = document.getElementById('apply-promo-btn');
+        const code = codeInput.value.trim().toUpperCase();
+        
+        if (!code) return;
+
+        // Блокируем интерфейс
+        btn.disabled = true;
+        btn.innerText = "...";
+        codeInput.style.borderColor = "#eee";
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/check_promo`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    code: code,
+                    userId: tg.initDataUnsafe?.user?.id || 0
+                })
+            });
+
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+
+            if (data.status === "OK") {
+                appliedDiscount = data.discount;
+                appliedPromoCode = code;
+                codeInput.style.borderColor = "#88d100";
+                showToast(`Промокод применен! -${Math.round(appliedDiscount * 100)}%`);
+                calculateCheckoutTotal();
+            } else if (data.status === "USED") {
+                appliedDiscount = 0; appliedPromoCode = "";
+                codeInput.style.borderColor = "red";
+                showToast("Вы уже использовали этот код", 'error');
+            } else if (data.status === "LIMIT") {
+                appliedDiscount = 0; appliedPromoCode = "";
+                codeInput.style.borderColor = "red";
+                showToast("Лимит промокода исчерпан", 'error');
+            } else {
+                appliedDiscount = 0; appliedPromoCode = "";
+                codeInput.style.borderColor = "red";
+                showToast("Неверный промокод", 'error');
+            }
+            calculateCheckoutTotal();
+
+        } catch (error) {
+            console.error('Promo check failed:', error);
+            showToast("Ошибка проверки промокода", 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "OK";
+        }
+    }
+
+    function parsePrice(val) {
+        if (!val) return 0;
+        const clean = String(val).replace(/\D/g, '');
+        return clean ? parseInt(clean, 10) : 0;
+    }
+
+    function getVal(item, keys) {
+        for (let k of keys) {
+            if (item[k] !== undefined) return item[k];
+            const foundKey = Object.keys(item).find(objKey => objKey.trim().toLowerCase() === k.toLowerCase());
+            if (foundKey) return item[foundKey];
+        }
+        return "";
+    }
+
+    function showErrorScreen() {
+        clearInterval(loadingInterval);
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('error-screen').style.display = 'flex';
+    }
+
+    // 5. УЛУЧШЕННЫЙ SCROLL LOGIC (БЕЗ ДЕРГАНИЙ)
+    function updateHeaderHeight() {
+        let lastScrollTop = 0;
+        const headerEl = document.querySelector('.header-container');
+        const delta = 5;
+
+        window.addEventListener('scroll', () => {
+            const st = window.pageYOffset || document.documentElement.scrollTop;
+            if(Math.abs(lastScrollTop - st) <= delta) return;
+            
+            if (st > lastScrollTop && st > 50) {
+                 headerEl.classList.add('header-hidden');
+            } else if (st < lastScrollTop) {
+                 headerEl.classList.remove('header-hidden');
+            }
+            lastScrollTop = st <= 0 ? 0 : st;
+            
+            // 2. SCROLLSPY (Подсветка меню)
+            updateScrollSpy();
+        }, {passive: true});
+    }
+    
+    function updateScrollSpy() {
+        const sections = document.querySelectorAll('.category-section');
+        const navBtns = document.querySelectorAll('.nav-btn');
+        let current = '';
+        
+        // Логика попадания в категорию: проверяем какая ближе всего к верху (с отступом)
+        if (window.scrollY < 100 && sections.length > 0) {
+             current = sections[0].getAttribute('id');
+        } else {
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                // Отступ 150px - это примерно высота свернутой шапки + немного контента
+                if (window.scrollY >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+        }
+        
+        navBtns.forEach(btn => {
+            btn.classList.remove('active');
+            if (current && btn.getAttribute('href') === '#' + current) {
+                btn.classList.add('active');
+                btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
+        });
+    }
+
+    // 4. ИСПРАВЛЕНИЕ ДУБЛЕЙ В ИЗБРАННОМ
+    function getDisplayData() {
+        const favIds = new Set(favorites);
+        // Создаем отдельный массив для избранного
+        const favItems = [];
+        // И отдельный массив для остальных товаров
+        const normalItems = [];
+        
+        // Чтобы избежать дублей в САМОМ списке избранного
+        const addedToFav = new Set();
+
+        menuData.forEach(p => {
+            if (favIds.has(String(p.id)) && !addedToFav.has(p.id)) {
+                // Создаем копию для избранного с новой категорией
+                favItems.push({...p, cat: "ИЗБРАННОЕ"});
+                addedToFav.add(p.id);
+            }
+            // Добавляем товар в общий список как есть
+            normalItems.push(p);
+        });
+        
+        return [...favItems, ...normalItems];
+    }
+
+    function initMenu() {
+        checkRepeatOrder();
+        updateHeaderHeight();
+
+        Papa.parse(GOOGLE_SHEET_URL, {
+            download: true, header: true, skipEmptyLines: true,
+            complete: function(results) {
+                clearInterval(loadingInterval); // Stop loading text animation
+                if (!results.data || results.data.length === 0) { showErrorScreen(); return; }
+
+                const settingsRow = results.data.find(row => { const id = getVal(row, ['id', 'Идентификатор']); return id && id.toUpperCase() === 'SETTINGS'; });
+                if (settingsRow) {
+                    const desc = getVal(settingsRow, ['description', 'Описание']);
+                    const pairs = desc.split(';');
+                    pairs.forEach(pair => {
+                        const [key, val] = pair.split('=');
+                        if(key && val) {
+                            const k = key.trim(); const v = val.trim();
+                            if (k === 'alt_milks') ALT_MILKS = v.split(',');
+                            if (k === 'syrup_names') SYRUPS = v.split(',');
+                            if (k === 'sauce_names') SAUCES = v.split(',');
+                            if (k.startsWith('price_') || k.startsWith('hd_') || k === 'br_egg') PRICES[k.replace('price_', '')] = parsePrice(v);
+                            if (k === 'price_cinnamon') PRICES.cinnamon = parsePrice(v);
+                            if (k === 'enable_promos') PROMOS_ENABLED = (v.toLowerCase() === 'true');
+                            if (k === 'open_time') OPEN_HOUR = parseInt(v.split(':')[0]);
+                            if (k === 'close_time') CLOSE_HOUR = parseInt(v.split(':')[0]);
+                        }
+                    });
+                }
+                
+                const promoContainer = document.getElementById('promo-container');
+                if (promoContainer) promoContainer.style.display = PROMOS_ENABLED ? 'flex' : 'none';
+
+                if (SYRUPS[0] !== "Нет") SYRUPS.unshift("Нет");
+                if (SAUCES[0] !== "Нет") SAUCES.unshift("Нет");
+
+                let rawData = results.data.map(item => {
+                    let pid = getVal(item, ['id', 'Идентификатор']).trim();
+                    if (!pid || pid.toUpperCase() === 'SETTINGS') return null;
+                    let cat = (getVal(item, ['category', 'Категория']).trim() || "Прочее").toUpperCase();
+                    let name = getVal(item, ['name', 'Название']).trim().toUpperCase();
+                    let priceVal = getVal(item, ['price', 'Цена']);
+                    let desc = getVal(item, ['description', 'Короткое описание']).trim();
+                    let fullDesc = getVal(item, ['fullDesc', 'Описание', 'full_description', 'Полное описание']); 
+                    if (!fullDesc) fullDesc = desc;
+                    let availVal = getVal(item, ['available', 'В наличии']);
+                    let imgUrl = getVal(item, ['image', 'Фото']).trim();
+                    let popularVal = getVal(item, ['popular', 'Популярный товар']);
+                    let volumeStr = getVal(item, ['volumes', 'Варианты', 'Volumes']);
+                    let badgeText = getVal(item, ['badge', 'Метка']);
+                    let modsStr = getVal(item, ['modifiers', 'Модификаторы', 'mods']);
+
+                    let isAvailable = (String(availVal).trim().toLowerCase() === 'true' || String(availVal).trim().toLowerCase() === 'да');
+                    let isPopular = (String(popularVal).trim().toLowerCase() === 'true' || String(popularVal).trim().toLowerCase() === 'да');
+                    let cleanPrice = parsePrice(priceVal);
+                    
+                    let mods = {};
+                    if (modsStr) {
+                        modsStr.split(/[,;]/).forEach(m => {
+                            let [k, p] = m.split('=');
+                            if (k) {
+                                k = k.trim();
+                                if (k === 'alt_milk' && p && p.includes('|')) { mods[k] = p.split('|').map(val => parsePrice(val)); } 
+                                else {
+                                    let val = p ? parsePrice(p) : (PRICES[k] || PRICES['add_'+k] || 0);
+                                    if (!p && k==='alt_milk') val = PRICES.alt_milk;
+                                    if (!p && k==='shot') val = PRICES.shot;
+                                    if (!p && k==='syrup') val = PRICES.syrup;
+                                    if (!p && k==='sauce') val = PRICES.sauce_paid;
+                                    if (!p && k==='egg') val = PRICES.breakfast_add_egg;
+                                    if (!p && k==='milk') val = PRICES.add_milk;
+                                    if (!p && k==='cream') val = PRICES.add_cream;
+                                    if (!p && k==='honey') val = PRICES.add_honey;
+                                    if (!p && k==='lemon') val = PRICES.add_lemon;
+                                    if (!p && k==='cinnamon') val = PRICES.cinnamon;
+                                    mods[k] = val;
+                                }
+                            }
+                        });
+                    }
+
+                    if (cat.toLowerCase().includes('лимонад')) cat = 'ХОЛОДНЫЕ НАПИТКИ';
+                    
+                    let product = {
+                        id: pid, cat: cat, name: name, desc: desc, fullDesc: fullDesc, 
+                        img: imgUrl, available: isAvailable, popular: isPopular,
+                        price: cleanPrice, basePrice: cleanPrice, badge: badgeText,
+                        type: 'simple', hasVolumes: false, hasMilk: false, volumes: [], mods: mods
+                    };
+
+                    if (volumeStr && volumeStr.includes('=')) {
+                        product.type = 'complex'; product.hasVolumes = true;
+                        product.volumes = volumeStr.split(';').map(v => { let parts = v.split('='); return { n: parts[0].trim(), p: parsePrice(parts[1]) }; });
+                    }
+                    if ('alt_milk' in mods) product.hasMilk = true;
+                    return product;
+                }).filter(item => item !== null);
+
+                let popularItems = [];
+                rawData.forEach(p => { if (p.popular) { let clone = {...p}; clone.cat = "ПОПУЛЯРНОЕ"; popularItems.push(clone); } });
+                menuData = [...popularItems, ...rawData];
+
+                document.getElementById('loading-screen').style.display = 'none';
+                renderMenu();
+                
+                // Force update header height after loading
+                setTimeout(() => {
+                     const headerEl = document.querySelector('.header-container');
+                     document.documentElement.style.setProperty('--header-height', headerEl.offsetHeight + 'px');
+                }, 100);
+            },
+            error: function(err) { console.error("CSV Error:", err); showErrorScreen(); }
+        });
+    }
+
+    function checkWorkingHours() {
+        const now = new Date(); const hour = now.getHours();
+        const isOpen = hour >= OPEN_HOUR && hour < CLOSE_HOUR;
+        const badge = document.getElementById('work-status');
+        if(isOpen) { 
+            const o = OPEN_HOUR < 10 ? '0' + OPEN_HOUR : OPEN_HOUR;
+            const c = CLOSE_HOUR < 10 ? '0' + CLOSE_HOUR : CLOSE_HOUR;
+            badge.innerText = `Открыто (${o}:00 - ${c}:00)`; 
+            badge.style.background = "#e6fffa"; 
+            badge.style.color = "#047857"; 
+        } else { 
+            const o = OPEN_HOUR < 10 ? '0' + OPEN_HOUR : OPEN_HOUR;
+            badge.innerText = `Закрыто (с ${o}:00)`; 
+            badge.style.background = "#fee2e2"; 
+            badge.style.color = "#991b1b"; 
+        }
+        return isOpen; 
+    }
+    function isPizzaAvailable() { const hour = new Date().getHours(); return hour >= 11; }
+
+    function filterMenu() {
+        const query = document.getElementById('search-input').value.toLowerCase();
+        const cards = document.querySelectorAll('.card');
+        let visibleCount = 0;
+        cards.forEach(card => {
+            const name = card.querySelector('h3').innerText.toLowerCase();
+            if (name.includes(query)) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        const noRes = document.getElementById('no-results');
+        const sections = document.querySelectorAll('.category-section');
+        
+        if (visibleCount === 0) {
+            noRes.style.display = 'block';
+            sections.forEach(s => s.style.display = 'none');
+        } else {
+            noRes.style.display = 'none';
+            sections.forEach(section => {
+               const visibleInSec = [...section.querySelectorAll('.card')].filter(c => c.style.display !== 'none').length;
+               section.style.display = visibleInSec > 0 ? 'block' : 'none';
+            });
+        }
+    }
+
+    function renderNav() {
+        const navContainer = document.getElementById('nav-container');
+        const displayData = getDisplayData();
+        const uniqueCats = [...new Set(displayData.map(p => p.cat))];
+        const CATEGORY_ORDER_UPPER = CATEGORY_ORDER.map(c => c.toUpperCase());
+        const sortedCats = uniqueCats.sort((a, b) => {
+            const idxA = CATEGORY_ORDER_UPPER.indexOf(a); const idxB = CATEGORY_ORDER_UPPER.indexOf(b);
+            return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+        });
+        
+        navContainer.innerHTML = '';
+        sortedCats.forEach((cat, index) => {
+            const btn = document.createElement('a'); btn.className = 'nav-btn'; 
+            btn.innerText = cat; btn.href = `#cat-${cat.replace(/\s+/g, '-')}`;
+            btn.onclick = (e) => { e.preventDefault(); const section = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`); if(section) { const y = section.getBoundingClientRect().top + window.scrollY - 140; window.scrollTo({top: y, behavior: 'smooth'}); } };
+            navContainer.appendChild(btn);
+        });
+    }
+
+    function renderMenu() {
+        const app = document.getElementById('app'); if (!app) return;
+        renderNav(); checkWorkingHours();
+        
+        const displayData = getDisplayData();
+        const uniqueCats = [...new Set(displayData.map(p => p.cat))];
+        const CATEGORY_ORDER_UPPER = CATEGORY_ORDER.map(c => c.toUpperCase());
+        const sortedCats = uniqueCats.sort((a, b) => {
+            const idxA = CATEGORY_ORDER_UPPER.indexOf(a); const idxB = CATEGORY_ORDER_UPPER.indexOf(b);
+            return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+        });
+        app.innerHTML = '';
+
+        sortedCats.forEach(cat => {
+            const section = document.createElement('div'); section.className = 'category-section'; section.id = `cat-${cat.replace(/\s+/g, '-')}`; 
+            // УБРАН ЗАГОЛОВОК КАТЕГОРИИ (Sticky удален)
+            section.innerHTML = `<div class="category-separator">${cat}</div>`;
+            const grid = document.createElement('div'); grid.className = 'grid';
+            
+            displayData.filter(p => p.cat === cat).forEach((p, index) => {
+                const card = document.createElement('div'); card.className = 'card'; card.style.animationDelay = `${index * 0.05}s`;
+                let isOutOfStock = !p.available; let isDisabled = isOutOfStock; let btnText = "ВЫБРАТЬ";
+                if (isOutOfStock) { btnText = "НЕТ В НАЛИЧИИ"; card.classList.add('unavailable'); }
+                
+                let displayPrice = 0;
+                if (p.hasVolumes && p.volumes.length > 0) displayPrice = `от ${p.volumes[0].p}`;
+                else displayPrice = p.price || p.basePrice;
+                
+                let itemImage = p.img;
+                if (!itemImage) {
+                    if (cat === "ИЗБРАННОЕ") itemImage = "https://cdn-icons-png.flaticon.com/512/210/210545.png"; 
+                    else itemImage = getImageByCategory(p.cat);
+                }
+                
+                const badgeHtml = isOutOfStock ? `<div class="unavailable-badge">Закончилось</div>` : '';
+                let cardBadgeHtml = '';
+                if (p.badge && !isOutOfStock) {
+                    let bClass = 'card-badge'; const txt = p.badge.toLowerCase();
+                    if(txt.includes('хит') || txt.includes('hot')) bClass += ' badge-hot';
+                    else if(txt.includes('new') || txt.includes('новинка')) bClass += ' badge-new';
+                    else bClass += ' badge-green';
+                    cardBadgeHtml = `<div class="${bClass}">${p.badge}</div>`;
+                }
+
+                const isFav = favorites.includes(String(p.id));
+                const favHtml = `<div class="fav-btn ${isFav ? 'active' : ''}" data-id="${p.id}" onclick="toggleFavorite(event, '${p.id}')">${isFav ? '♥' : '♡'}</div>`;
+                
+                card.onclick = () => handleItemClick(p.id);
+                
+                card.innerHTML = `
+                <div class="card-img-container card-skeleton">
+                    <img src="${itemImage}" alt="${p.name}" loading="lazy" decoding="async" onload="this.classList.add('loaded'); this.parentElement.classList.remove('card-skeleton')">
+                    ${badgeHtml}${cardBadgeHtml}${favHtml}
+                </div>
+                <h3>${p.name}</h3>
+                ${p.desc ? `<div class="desc">${p.desc}</div>` : ''}
+                <div class="price-row"><div class="price">${displayPrice} ₸</div><button class="add-btn" ${isDisabled ? 'disabled' : ''}>${btnText}</button></div>`;
+                grid.appendChild(card);
+            });
+            section.appendChild(grid); app.appendChild(section);
+        });
+    }
+
+    function handleItemClick(id) {
+        const product = menuData.find(p => String(p.id) === String(id));
+        if (!product || !product.available) return;
+        openComplexModal(product);
+    }
+
+    function checkUpsell(triggerProduct) {
+        if (upsellShown) return;
+        const triggerCat = triggerProduct.cat.toUpperCase();
+        let targetCats = [];
+        for (const [key, targets] of Object.entries(UPSELL_RULES)) {
+            if (triggerCat.includes(key)) { targetCats = targets; break; }
+        }
+        if (targetCats.length === 0) return;
+        const potential = menuData.filter(p => p.available && targetCats.some(tc => p.cat.toUpperCase().includes(tc)) && p.id !== triggerProduct.id);
+        if (potential.length === 0) return;
+
+        currentUpsellItem = potential[Math.floor(Math.random() * potential.length)];
+        document.querySelector('.upsell-title').innerText = "К ЭТОМУ ОТЛИЧНО ПОДОЙДЕТ!";
+        document.querySelector('.upsell-img').src = currentUpsellItem.img || getImageByCategory(currentUpsellItem.cat);
+        document.querySelector('.upsell-product').innerText = currentUpsellItem.name;
+        let price = currentUpsellItem.price || currentUpsellItem.basePrice;
+        if (currentUpsellItem.hasVolumes && currentUpsellItem.volumes.length > 0) price = currentUpsellItem.volumes[0].p;
+        document.getElementById('upsell-price').innerText = price + " ₸";
+        setTimeout(() => { document.getElementById('upsell-modal').style.display = 'flex'; upsellShown = true; }, 500);
+    }
+
+    function closeUpsell() { document.getElementById('upsell-modal').style.display = 'none'; }
+    
+    function acceptUpsell() {
+        if (!currentUpsellItem) return;
+        closeUpsell();
+        if (currentUpsellItem.type === 'complex' || currentUpsellItem.hasMilk || Object.keys(currentUpsellItem.mods).length > 0) {
+            setTimeout(() => { openComplexModal(currentUpsellItem); }, 100);
+        } else {
+             let price = currentUpsellItem.price || currentUpsellItem.basePrice;
+             addToCart({ name: currentUpsellItem.name, price: price, options: [], cat: currentUpsellItem.cat });
+        }
+    }
+
+    function loadUserData() {
+        const n=localStorage.getItem('coffee_username'); if(n)document.getElementById('client-name').value=n;
+        const p=localStorage.getItem('coffee_phone'); if(p)document.getElementById('client-phone').value=p;
+        const a=localStorage.getItem('coffee_address'); if(a)document.getElementById('delivery-address').value=a;
+    }
+    function saveUserData(n,p,a) { localStorage.setItem('coffee_username',n); localStorage.setItem('coffee_phone',p); if(a)localStorage.setItem('coffee_address',a); }
+
+    function toggleAltMilk() {
+        const altRadio = document.querySelector('input[name="milk"][value="alt"]');
+        const selector = document.getElementById('alt-milk-selector');
+        if (!selector) return;
+        selector.style.display = (altRadio && altRadio.checked) ? 'block' : 'none';
+        recalcPrice();
+    }
+    
+    function toggleAccordion() {
+        const acc = document.getElementById('extras-accordion');
+        acc.classList.toggle('open');
+    }
+
+    function openComplexModal(product) {
+        currentModalProduct = product;
+        const content = document.getElementById('product-modal-content');
+        let imgHtml = ''; if (product.img) { imgHtml = `<div class="modal-img-wrapper"><img src="${product.img}" class="modal-img"></div>`; }
+        let html = `<div class="modal-header"><div class="modal-title-block">${imgHtml}<div class="modal-title">${product.name}</div> <div class="modal-desc">${product.fullDesc || product.desc || ""}</div></div><div class="close-icon" onclick="closeProductModal(true)">✕</div></div>`;
+        
+        if (product.hasVolumes && product.volumes.length > 0) {
+            html += `<div class="option-group"><label class="option-label">Порция</label><div class="radio-group">`;
+            product.volumes.forEach((v, i) => { html += `<input type="radio" name="vol" id="v${i}" value="${i}" class="radio-input" ${i===0?'checked':''} onchange="recalcPrice()"><label for="v${i}" class="radio-label">${v.n}<br>${v.p}₸</label>`; });
+            html += `</div></div>`;
+        } else if (product.fixedVolume) { html += `<div class="option-group"><label class="option-label">Объем: ${product.fixedVolume}</label></div>`; }
+
+        if(product.hasMilk) {
+            // Determine alt milk price for display
+            let altMilkDisplayPrice = PRICES.alt_milk; // Default
+            if (product.mods && product.mods.alt_milk !== undefined) {
+                if (Array.isArray(product.mods.alt_milk)) {
+                    // If array, we show first one or range. Let's show first one.
+                    altMilkDisplayPrice = product.mods.alt_milk[0];
+                } else {
+                    altMilkDisplayPrice = product.mods.alt_milk;
+                }
+            }
+            const altMilkText = altMilkDisplayPrice > 0 ? `+${altMilkDisplayPrice}` : '';
+
+            html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group">
+                <input type="radio" name="milk" id="m1" value="std" class="radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label">Обычное</label>
+                <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label"><div>Безлакт.<br>+${PRICES.milk_lf_price || 0}</div></label>
+                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label"><div>Альтерн.<br><span id="alt-milk-price-display">${altMilkText}</span></div></label>
+            </div><div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
+            ALT_MILKS.forEach(m => html += `<option value="${m}">${m}</option>`);
+            html += `</select></div></div>`;
+        }
+
+        if ('sauce' in product.mods) {
+             let price = product.mods['sauce']; let displayPrice = price > 0 ? `+${price}` : 'Бесплатно';
+             html += `<div class="option-group"><label class="option-label">Соус (${displayPrice})</label><select id="sauce-select" onchange="recalcPrice()">`;
+             SAUCES.forEach(s => html += `<option value="${s}">${s}</option>`);
+             html += `</select></div>`;
+        }
+
+        let extrasHtml = '';
+        let hasExtras = false;
+        const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
+        checkboxes.forEach(key => {
+             if (key in product.mods) {
+                 hasExtras = true; let price = product.mods[key];
+                 extrasHtml += `<div class="checkbox-row"><span>${MOD_LABELS[key]} (+${price})</span><label class="toggle-switch"><input type="checkbox" id="mod-${key}" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
+             }
+        });
+
+        if ('sugar' in product.mods) {
+            hasExtras = true;
+            extrasHtml += `<div style="margin-top:10px"><label class="option-label">Сахар</label><input type="number" id="sug" placeholder="0" min="0"></div>`;
+        }
+        if ('syrup' in product.mods) {
+             hasExtras = true;
+             let price = product.mods['syrup']; let displayPrice = price > 0 ? `+${price}` : 'Бесплатно';
+             let sOpts = SYRUPS.map(s=>`<option value="${s}">${s}</option>`).join('');
+             extrasHtml += `<div style="margin-top:10px"><label class="option-label">Сироп (${displayPrice})</label><select id="syr" onchange="recalcPrice()">${sOpts}</select></div>`;
+        }
+
+        if (hasExtras) {
+            html += `<div class="accordion" id="extras-accordion">
+                <div class="accordion-header" onclick="toggleAccordion()">
+                    <span>Дополнительно</span> <span class="accordion-arrow">▼</span>
+                </div>
+                <div class="accordion-content">${extrasHtml}</div>
+            </div>`;
+        }
+
+        html += `<div class="modal-footer"><button class="modal-add-btn" id="modal-btn" onclick="addComplexToCart()">Добавить</button></div>`;
+        content.innerHTML = html;
+        document.getElementById('product-modal').style.display = 'flex';
+        if(product.hasMilk) toggleAltMilk();
+        recalcPrice();
+    }
+
+    function recalcPrice() {
+        let p = 0; const prod = currentModalProduct;
+        if(prod.hasVolumes && prod.volumes.length > 0) {
+            const el = document.querySelector('input[name="vol"]:checked');
+            p += el ? prod.volumes[el.value].p : prod.volumes[0].p; 
+        } else { p += (prod.basePrice || prod.price || 0); }
+
+        if(prod.hasMilk) {
+            const el = document.querySelector('input[name="milk"]:checked');
+            
+            // Update alt milk label if price depends on volume
+            let milkPrice = PRICES.alt_milk;
+            if (prod.mods && prod.mods.alt_milk !== undefined) {
+                 if (Array.isArray(prod.mods.alt_milk)) {
+                    const volEl = document.querySelector('input[name="vol"]:checked');
+                    const volIndex = volEl ? parseInt(volEl.value) : 0;
+                    milkPrice = prod.mods.alt_milk[volIndex] !== undefined ? prod.mods.alt_milk[volIndex] : prod.mods.alt_milk[0];
+                 } else { milkPrice = prod.mods.alt_milk; }
+            }
+            const labelSpan = document.getElementById('alt-milk-price-display');
+            if(labelSpan) labelSpan.innerText = milkPrice > 0 ? `+${milkPrice}` : '';
+
+            if(el && el.value === 'alt') {
+                p += milkPrice;
+            }
+        }
+        const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
+        checkboxes.forEach(key => { const el = document.getElementById(`mod-${key}`); if (el && el.checked) p += prod.mods[key]; });
+        if(document.getElementById('sauce-select')) { const val = document.getElementById('sauce-select').value; if (val && val !== "Нет") p += prod.mods['sauce']; }
+        if(document.getElementById('syr')) { const val = document.getElementById('syr').value; if (val && val !== "Нет") p += prod.mods['syrup']; }
+
+        const btn = document.getElementById('modal-btn');
+        if(btn) { btn.innerText = `Добавить за ${p} ₸`; btn.dataset.price = p; }
+    }
+
+    function addComplexToCart() {
+        const btn = document.getElementById('modal-btn'); if(!btn) return;
+        const price = parseInt(btn.dataset.price);
+        const opts = []; const prod = currentModalProduct;
+
+        if(prod.hasVolumes && prod.volumes.length > 0) { const v = document.querySelector('input[name="vol"]:checked').value; opts.push(`Порция: ${prod.volumes[v].n}`); }
+        if(prod.hasMilk) {
+            const m = document.querySelector('input[name="milk"]:checked').value;
+            if(m==='lf') opts.push("Молоко: Безлакт.");
+            if(m==='alt') { const t = document.getElementById('alt-milk-type').value; opts.push(`Молоко: Альтерн. (${t})`); }
+        }
+        const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
+        checkboxes.forEach(key => { const el = document.getElementById(`mod-${key}`); if (el && el.checked) opts.push(`Доп: ${MOD_LABELS[key]}`); });
+
+        if(document.getElementById('sauce-select')) { const val = document.getElementById('sauce-select').value; if (val && val !== "Нет") opts.push(`Соус: ${val}`); }
+        if(document.getElementById('sug')) { const s = document.getElementById('sug').value; if (s) opts.push(`Сахар: ${s}`); }
+        if(document.getElementById('syr')) { const val = document.getElementById('syr').value; if (val && val !== "Нет") opts.push(`Сироп: ${val}`); }
+
+        // 1. ГРУППИРОВКА: Используем addToCart
+        addToCart({ name: prod.name, price: price, options: opts, cat: prod.cat });
+        
+        closeProductModal(true); 
+        checkUpsell(prod);
+    }
+    
+    // 1. НОВАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ В КОРЗИНУ (С ГРУППИРОВКОЙ)
+    function addToCart(item) {
+        // Ищем такой же товар (имя + опции)
+        const existingItem = cart.find(i => i.name === item.name && JSON.stringify(i.options) === JSON.stringify(item.options));
+        
+        if (existingItem) {
+            existingItem.qty = (existingItem.qty || 1) + 1;
+            existingItem.priceTotal = existingItem.price * existingItem.qty; // Обновляем общую цену позиции
+        } else {
+            cart.push({
+                ...item,
+                qty: 1,
+                priceTotal: item.price // Инициализируем цену
+            });
+        }
+        updateCartButton();
+        tg.HapticFeedback.notificationOccurred('success');
+        showToast("Добавлено в корзину");
+    }
+    
+    // ФУНКЦИИ ИЗМЕНЕНИЯ КОЛИЧЕСТВА
+    function incQty(i) {
+        cart[i].qty++;
+        cart[i].priceTotal = cart[i].price * cart[i].qty;
+        renderCartItems();
+        updateCartButton();
+        calculateCheckoutTotal();
+    }
+    
+    function decQty(i) {
+        if (cart[i].qty > 1) {
+            cart[i].qty--;
+            cart[i].priceTotal = cart[i].price * cart[i].qty;
+        } else {
+            cart.splice(i, 1);
+        }
+        renderCartItems();
+        updateCartButton();
+        calculateCheckoutTotal();
+        if (cart.length === 0) closeCheckout();
+    }
+
+    function closeProductModal(force) { if (force === true) { document.getElementById('product-modal').style.display = 'none'; return; } const e = force; if (e && e.target.id === 'product-modal') document.getElementById('product-modal').style.display = 'none'; }
+    
+    function updateCartButton() { 
+        const btn = document.getElementById('cart-btn'); 
+        const counter = document.getElementById('cart-count');
+        const txt = document.getElementById('cart-text');
+        
+        if (cart.length > 0) { 
+            // Считаем сумму всех priceTotal
+            const total = cart.reduce((s, i) => s + (i.priceTotal || i.price), 0); 
+            const count = cart.reduce((c, i) => c + (i.qty || 1), 0);
+            
+            btn.style.display = 'block'; 
+            txt.innerText = `Оформить: ${total} ₸`;
+            counter.innerText = count;
+            
+            counter.style.animation = 'none';
+            counter.offsetHeight; 
+            counter.style.animation = 'pop 0.3s';
+        } else { 
+            btn.style.display = 'none'; 
+        } 
+    }
+
+    // 1. ОБНОВЛЕННЫЙ РЕНДЕР КОРЗИНЫ
+    function renderCartItems() { 
+        const c = document.getElementById('cart-list-container'); 
+        c.innerHTML = ''; 
+        cart.forEach((item, i) => { 
+            const vOpts = item.options ? item.options.filter(o=>o&&o!=="Без сахара").join(', ') : ''; 
+            const priceToShow = item.priceTotal || item.price;
+            const qty = item.qty || 1;
+            
+            c.innerHTML += `
+            <div class="cart-item">
+                <div class="cart-item-info">
+                    <div class="cart-item-title">${item.name.toUpperCase()}</div>
+                    <div class="cart-item-opts">${vOpts}</div>
+                    <div class="cart-item-price-total">${priceToShow} ₸</div>
+                </div>
+                <div class="cart-qty-controls">
+                    <div class="cart-qty-btn" onclick="decQty(${i})">−</div>
+                    <div class="cart-qty-val">${qty}</div>
+                    <div class="cart-qty-btn" onclick="incQty(${i})">+</div>
+                </div>
+            </div>`; 
+        }); 
+    }
+    
+    function removeFromCart(i) { cart.splice(i, 1); renderCartItems(); updateCartButton(); calculateCheckoutTotal(); }
+    
+    function openCheckout() { 
+        if (cart.length === 0) return; 
+        document.getElementById('checkout-modal').style.display = 'flex'; 
+        loadUserData(); 
+        if(tg.initDataUnsafe?.user && !document.getElementById('client-name').value) document.getElementById('client-name').value = tg.initDataUnsafe.user.first_name; 
+        renderCartItems(); 
+        appliedDiscount = 0; 
+        calculateCheckoutTotal(); 
+        
+        const isOpen = checkWorkingHours();
+        const hasPizza = cart.some(i => i.cat && i.cat.toLowerCase().includes('пицца'));
+        const pizzaTime = isPizzaAvailable();
+        document.getElementById('closed-warning').style.display = isOpen ? 'none' : 'block';
+        document.getElementById('pizza-warning').style.display = (hasPizza && !pizzaTime) ? 'block' : 'none';
+    }
+    function closeCheckout() { document.getElementById('checkout-modal').style.display = 'none'; }
+    function toggleDelivery() { const isDel = document.getElementById('d-delivery').checked; document.getElementById('address-block').style.display = isDel ? 'block' : 'none'; document.getElementById('delivery-msg').style.display = isDel ? 'block' : 'none'; calculateCheckoutTotal(); }
+    function togglePayment() { const isCash = document.getElementById('p-cash').checked || document.getElementById('p-card').checked; document.getElementById('payment-phone-block').style.display = isCash ? 'none' : 'block'; }
+    function toggleTimePicker() { const isTime = document.getElementById('t-time').checked; document.getElementById('time-picker-container').style.display = isTime ? 'block' : 'none'; }
+    
+    function calculateCheckoutTotal() { 
+        // Считаем по priceTotal
+        let t = cart.reduce((s, i) => s + (i.priceTotal || i.price), 0); 
+        if(appliedDiscount > 0) {
+            const discountAmount = Math.round(t * appliedDiscount);
+            t = t - discountAmount;
+            document.getElementById('checkout-total-sum').innerText = `Итого: ${t} ₸ (Скидка -${discountAmount})`;
+        } else {
+            document.getElementById('checkout-total-sum').innerText = `Итого: ${t} ₸`; 
+        }
+        return t; 
+    }
+    
+    function submitOrder() { 
+        if (document.activeElement) { document.activeElement.blur(); }
+        const btn = document.getElementById('submit-btn'); 
+        btn.disabled = true; btn.innerText = "Отправка..."; 
+        const name = document.getElementById('client-name').value.trim(); 
+        const phone = document.getElementById('client-phone').value.trim(); 
+        const address = document.getElementById('delivery-address').value.trim(); 
+        const delTypeEl = document.querySelector('input[name="deliveryType"]:checked');
+        const delType = delTypeEl ? delTypeEl.value : 'pickup';
+        let prettyDelivery = 'Самовывоз'; if(delType==='delivery') prettyDelivery='Доставка'; if(delType==='dinein') prettyDelivery='В зале';
+        const payTypeEl = document.querySelector('input[name="paymentType"]:checked');
+        const payType = payTypeEl ? payTypeEl.value : 'Наличными';
+        const payPhone = document.getElementById('payment-phone').value.trim(); 
+        let comment = document.getElementById('order-comment').value.trim(); 
+        
+        const timeTypeEl = document.querySelector('input[name="orderTimeType"]:checked');
+        if(timeTypeEl && timeTypeEl.value === 'time') {
+            const specTime = document.getElementById('specific-time').value;
+            if(!specTime) { showToast("Выберите время", 'error'); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; }
+            comment = `⏰ К ${specTime}. ${comment}`;
+        } else { comment = `⚡ Как можно скорее. ${comment}`; }
+
+        if (!name || !phone) { showToast("Заполните имя и телефон", 'error'); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
+        if (delType === 'delivery' && !address) { showToast("Укажите адрес", 'error'); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
+        if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) { showToast("Укажите номер счета", 'error'); btn.disabled = false; btn.innerText = "Подтвердить заказ"; return; } 
+        
+        saveUserData(name, phone, address); 
+        const total = calculateCheckoutTotal(); 
+        const orderData = { 
+            cart: cart, 
+            total: total, 
+            info: { 
+                name, phone, 
+                deliveryType: prettyDelivery, 
+                address: (delType==='delivery'?address:''), 
+                paymentType: payType, 
+                paymentPhone: payPhone, 
+                comment, 
+                discount: appliedDiscount, 
+                promoCode: appliedPromoCode 
+            } 
+        }; 
+        
+        // 2. СОХРАНЯЕМ ЗАКАЗ ДЛЯ ПОВТОРА
+        localStorage.setItem('coffee_last_order', JSON.stringify(cart));
+        
+        tg.sendData(JSON.stringify(orderData)); 
+        setTimeout(function() { cart = []; updateCartButton(); closeCheckout(); tg.close(); }, 100);
+    }
+    
+    // 2. ФУНКЦИИ ДЛЯ ПОВТОРА ЗАКАЗА
+    function checkRepeatOrder() {
+        const lastOrder = localStorage.getItem('coffee_last_order');
+        if (lastOrder) {
+            try {
+                const items = JSON.parse(lastOrder);
+                if (items.length > 0) {
+                    // Берем только уникальные имена для описания
+                    const uniqueNames = [...new Set(items.map(i => i.name))];
+                    const desc = uniqueNames.join(', ') + (items.length > uniqueNames.length ? ` (+ еще ${items.length - uniqueNames.length})` : '');
+                    const price = items.reduce((s, i) => s + (i.priceTotal || i.price), 0);
+                    
+                    document.getElementById('repeat-desc').innerText = desc;
+                    document.getElementById('repeat-price').innerText = price + " ₸";
+                    document.getElementById('repeat-order-container').style.display = 'block';
+                }
+            } catch(e) { console.error(e); }
+        }
+    }
+
+    function loadLastOrder() {
+        const lastOrder = localStorage.getItem('coffee_last_order');
+        if (lastOrder) {
+            const items = JSON.parse(lastOrder);
+            // Добавляем к текущей корзине
+            items.forEach(item => addToCart(item)); // Используем addToCart для группировки
+            
+            // Скрываем кнопку, чтобы не нажать дважды случайно
+            document.getElementById('repeat-order-container').style.display = 'none';
+        }
+    }
+    
+    function getImageByCategory(cat) { const map = { "Кофе": "https://cdn-icons-png.flaticon.com/512/751/751621.png", "Завтраки": "https://cdn-icons-png.flaticon.com/512/2771/2771406.png", "Круассаны": "https://cdn-icons-png.flaticon.com/512/3014/3014528.png", "Салаты": "https://cdn-icons-png.flaticon.com/512/2062/2062296.png", "Чай": "https://cdn-icons-png.flaticon.com/512/3054/3054889.png", "Лимонады": "https://cdn-icons-png.flaticon.com/512/2447/2447137.png", "Коктейли": "https://cdn-icons-png.flaticon.com/512/3081/3081986.png", "Хот-доги": "https://cdn-icons-png.flaticon.com/512/1980/1980788.png", "Пицца": "https://cdn-icons-png.flaticon.com/512/3132/3132693.png", "Закуски": "https://cdn-icons-png.flaticon.com/512/5787/5787016.png", "Сезонное": "https://cdn-icons-png.flaticon.com/512/4421/4421089.png", "Смузи": "https://cdn-icons-png.flaticon.com/512/1147/1147588.png", "Холодные напитки": "https://cdn-icons-png.flaticon.com/512/956/956850.png", "Пасты": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png" }; return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png"; }
+
+    // 5. ЛОГИКА КНОПКИ НАВЕРХ
+    window.addEventListener('scroll', () => {
+        const btn = document.getElementById('scroll-top');
+        if (window.scrollY > 300) btn.classList.add('visible');
+        else btn.classList.remove('visible');
+    });
+
+    // Слушатель изменения размера окна для обновления высоты хедера
+    window.addEventListener('resize', updateHeaderHeight);
+    
+    // PHONE MASK
+    function applyPhoneMask(event) {
+        const input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        let formattedValue = '';
+        
+        if (!value) {
+            input.value = '';
+            return;
+        }
+
+        // Force 7 at start if inputting
+        if (['7', '8'].includes(value[0])) value = value.substring(1);
+        if (value.length > 10) value = value.substring(0, 10);
+
+        formattedValue = '+7 ';
+        if (value.length > 0) formattedValue += '(' + value.substring(0, 3);
+        if (value.length >= 4) formattedValue += ') ' + value.substring(3, 6);
+        if (value.length >= 7) formattedValue += '-' + value.substring(6, 8);
+        if (value.length >= 9) formattedValue += '-' + value.substring(8, 10);
+
+        input.value = formattedValue;
+    }
+
+    document.getElementById('client-phone').addEventListener('input', applyPhoneMask);
+    document.getElementById('payment-phone').addEventListener('input', applyPhoneMask);
+
+    window.addEventListener('offline', () => { showErrorScreen(); });
+    window.addEventListener('online', () => { location.reload(); });
+
+    try { initMenu(); } catch (e) { console.error(e); showErrorScreen(); }
+</script>
+</body>
+</html>
+
