@@ -526,27 +526,15 @@
     const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
     const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ", "ДЕСЕРТЫ"], "СЕЗОННОЕ": ["КРУАССАНЫ", "ДЕСЕРТЫ"], "КРУАССАНЫ": ["СЕЗОННОЕ"], "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ЗАВТРАКИ": ["КОФЕ", "СЕЗОННОЕ"] };
 
-    let menuData = [];
-    let cart = [];
-    let currentModalProduct = null;
-    let upsellShown = false;
-    let currentUpsellItem = null;
-    let appliedDiscount = 0; 
-    let appliedPromoCode = ""; 
+      let menuData = []; let cart = []; let currentModalProduct = null; let upsellShown = false; let currentUpsellItem = null; let appliedDiscount = 0; let appliedPromoCode = ""; 
     let favorites = JSON.parse(localStorage.getItem('coffee_favorites')) || [];
+    let currentRating = 0;
 
-    // Loading messages logic
-    const loadingTexts = [
-        "Загружаем зерно в кофемолку...",
-        "Настраиваем помол...",
-        "Рисуем сердечко на пенке...",
-        "Протираем столики...",
-        "Достаем свежие круассаны..."
-    ];
+    // Loading
+    const loadingTexts = ["Загружаем зерно...", "Греем холдер...", "Взбиваем молоко...", "Настраиваем помол...", "Рисуем сердечко...", "Протираем столики...", "Достаем круассаны..."];
     let textIdx = 0;
     const mottoEl = document.querySelector('.loading-motto');
     if(mottoEl) mottoEl.innerText = loadingTexts[0];
-
     const loadingInterval = setInterval(() => {
         if(!mottoEl) return;
         mottoEl.style.opacity = 0;
@@ -557,61 +545,48 @@
         }, 150);
     }, 2000);
 
-    // 3. TOAST NOTIFICATIONS
     function showToast(msg, type = 'normal') {
         const cont = document.getElementById('toast-container');
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = msg;
-        
-        // ПЛАВНОЕ ПОЯВЛЕНИЕ (УЖЕ В CSS)
-        cont.appendChild(toast);
-        
-        if(type === 'error') tg.HapticFeedback.notificationOccurred('error');
-        else tg.HapticFeedback.impactOccurred('light');
-        
-        setTimeout(() => {
-            // ПЛАВНОЕ ИСЧЕЗНОВЕНИЕ ЧЕРЕЗ КЛАСС
-            toast.classList.add('hide');
-            setTimeout(() => toast.remove(), 400); // Ждем пока пройдет transition
-        }, 3000);
+        const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.innerHTML = msg; cont.appendChild(toast);
+        if(type === 'error') tg.HapticFeedback.notificationOccurred('error'); else tg.HapticFeedback.impactOccurred('light');
+        setTimeout(() => { toast.classList.add('hide'); setTimeout(() => toast.remove(), 400); }, 3000);
     }
 
     function toggleFavorite(e, id) {
-        e.stopPropagation(); 
-        id = String(id);
+        e.stopPropagation(); id = String(id);
         const idx = favorites.indexOf(id);
-        if(idx > -1) favorites.splice(idx, 1);
-        else favorites.push(id);
+        if(idx > -1) favorites.splice(idx, 1); else favorites.push(id);
         localStorage.setItem('coffee_favorites', JSON.stringify(favorites));
-        renderMenu();
-        tg.HapticFeedback.impactOccurred('medium');
+        renderMenu(); tg.HapticFeedback.impactOccurred('medium');
     }
 
-    // --- ЛОГИКА ЛОЯЛЬНОСТИ (БОНУСЫ) ---
+    // --- LOYALTY LOGIC ---
     async function loadLoyalty() {
-        // Если лояльность выключена в таблице, скрываем блок и выходим
-        if (!LOYALTY_ENABLED) { 
-            document.getElementById('loyalty-container').style.display = 'none'; 
-            return; 
-        }
+        if (!LOYALTY_ENABLED) { document.getElementById('loyalty-container').style.display = 'none'; return; }
         
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/get_user_info`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    userId: tg.initDataUnsafe?.user?.id || 0 
-                })
-            });
+        // Визуальная индикация обновления (полупрозрачность)
+        const textEl = document.getElementById('loyalty-text');
+        if(textEl) textEl.style.opacity = '0.5';
 
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/get_user_info?t=${Date.now()}`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                },
+                cache: 'no-store',
+                body: JSON.stringify({ userId: tg.initDataUnsafe?.user?.id || 0 })
+            });
             if (response.ok) {
                 const data = await response.json();
-                const points = data.points || 0;
-                renderLoyalty(points);
+                renderLoyalty(data.points || 0);
             }
-        } catch (e) {
-            console.error("Loyalty fetch error:", e);
+        } catch (e) { console.error("Loyalty error", e); }
+        finally {
+             if(textEl) textEl.style.opacity = '1';
         }
     }
 
@@ -624,23 +599,21 @@
         cupsContainer.innerHTML = '';
         textEl.innerText = `${points}/${LOYALTY_TARGET}`;
 
-        // Рисуем чашечки
         for (let i = 0; i < LOYALTY_TARGET; i++) {
             const span = document.createElement('span');
             if (i < points) {
-                span.className = 'cup-icon filled'; // Заполненная
+                span.className = 'cup-icon filled';
                 span.innerHTML = '☕';
             } else if (i === LOYALTY_TARGET - 1 && points >= LOYALTY_TARGET) {
-                 span.className = 'cup-icon gift'; // Подарок (если накопил)
+                 span.className = 'cup-icon gift'; // Подарок если накоплено
                  span.innerHTML = '🎁';
             } else {
-                span.className = 'cup-icon'; // Пустая
+                span.className = 'cup-icon';
                 span.innerHTML = '☕';
             }
             cupsContainer.appendChild(span);
         }
     }
-
     // --- АСИНХРОННАЯ ПРОВЕРКА ПРОМОКОДА ---
     async function applyPromo() {
         const codeInput = document.getElementById('promo-code');
@@ -896,10 +869,8 @@
                 menuData = [...popularItems, ...rawData];
 
                 document.getElementById('loading-screen').style.display = 'none';
-                renderMenu();
-                
-               loadLoyalty();
-                
+                renderMenu(); 
+                loadLoyalty();
                 setTimeout(() => {
                      const headerEl = document.querySelector('.header-container');
                      document.documentElement.style.setProperty('--header-height', headerEl.offsetHeight + 'px');
@@ -1392,6 +1363,10 @@
         
         saveUserData(name, phone, address); 
         const total = calculateCheckoutTotal(); 
+        
+        // ИСПРАВЛЕНО: Принудительно конвертируем цель в число
+        const safeLoyaltyTarget = Number(LOYALTY_TARGET) || 0;
+        
         const orderData = { 
             cart: cart, 
             total: total, 
@@ -1403,14 +1378,12 @@
                 paymentPhone: payPhone, 
                 comment, 
                 discount: appliedDiscount, 
-                promoCode: appliedPromoCode,
-                loyaltyTarget: LOYALTY_TARGET // Передаем цель для проверки на сервере
+                promoCode: appliedPromoCode, 
+                loyaltyTarget: safeLoyaltyTarget 
             } 
         }; 
         
-        // 2. СОХРАНЯЕМ ЗАКАЗ ДЛЯ ПОВТОРА
         localStorage.setItem('coffee_last_order', JSON.stringify(cart));
-        
         tg.sendData(JSON.stringify(orderData)); 
         setTimeout(function() { cart = []; updateCartButton(); closeCheckout(); tg.close(); }, 100);
     }
@@ -1511,6 +1484,7 @@
 </script>
 </body>
 </html>
+
 
 
 
