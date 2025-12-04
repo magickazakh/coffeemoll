@@ -4,6 +4,7 @@ import logging
 import sys
 import os
 import re 
+import time
 from datetime import datetime
 from aiohttp import web
 
@@ -36,7 +37,7 @@ KASPI_NUMBER = "+7 747 240 20 02"
 
 # --- НАСТРОЙКА БАРИСТА ---
 BARISTAS = {
-    "1": {"name": "Анара", "phone": "+7 747 240 2002 (только Kaspi)"},
+    "1": {"name": "Анара", "phone": "+7 747 240 20 02 (только Kaspi)"},
     "2": {"name": "Карина", "phone": "+7 776 962 28 14"},
     "3": {"name": "Павел", "phone": "+7 771 904 44 55"}
 }
@@ -263,8 +264,16 @@ def get_skip_comment_kb(): return InlineKeyboardMarkup(inline_keyboard=[[InlineK
 
 @dp.message(CommandStart())
 async def cmd_start(m: types.Message):
-    await m.answer("Добро пожаловать в CoffeeMoll! 🥐", reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=WEB_APP_URL))]], resize_keyboard=True))
+     unique_url = f"{WEB_APP_URL}?v={int(time.time())}"
 
+    await m.answer(
+        "Добро пожаловать в CoffeeMoll! 🥐", 
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=unique_url))]], 
+            resize_keyboard=True
+        )
+    )
+    
 @dp.message(F.web_app_data)
 async def web_app_data_handler(m: types.Message):
     try:
@@ -547,4 +556,5 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
