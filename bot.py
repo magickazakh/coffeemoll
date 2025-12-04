@@ -24,7 +24,12 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 
 # --- НАСТРОЙКИ ---
-TOKEN = os.getenv("BOT_TOKEN", "8444027240:AAFEiACM5x-OPmR9CFgk1zyrmU24PgovyCY") 
+# ВАЖНО: Никогда не храните токен в коде. Используйте переменные окружения.
+TOKEN = os.getenv("BOT_TOKEN") 
+if not TOKEN:
+    logging.critical("❌ BOT_TOKEN is not set!")
+    sys.exit(1)
+
 ADMIN_CHAT_ID = -1003356844624
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
 
@@ -71,19 +76,28 @@ def init_firebase():
         return _db_client
 
     if not firebase_admin._apps:
-        cred_path = "firebase_creds.json"
-        if os.path.exists("/etc/secrets/firebase_creds.json"):
-            cred_path = "/etc/secrets/firebase_creds.json"
+        # Попытка найти файл кредов в разных местах (локально или в Docker volume)
+        possible_paths = ["firebase_creds.json", "/etc/secrets/firebase_creds.json"]
+        cred_path = None
+        
+        for path in possible_paths:
+            if os.path.exists(path):
+                cred_path = path
+                break
             
-        if os.path.exists(cred_path):
-            cred = credentials.Certificate(cred_path)
-            firebase_admin.initialize_app(cred)
-            logging.info("🔥 Firebase Connected!")
+        if cred_path:
+            try:
+                cred = credentials.Certificate(cred_path)
+                firebase_admin.initialize_app(cred)
+                logging.info(f"🔥 Firebase Connected using {cred_path}!")
+                _db_client = firestore.client()
+            except Exception as e:
+                logging.error(f"❌ Firebase Init Error: {e}")
+                return None
         else:
-            logging.error("❌ Firebase credentials file not found!")
+            logging.warning("⚠️ Firebase credentials file not found! Database features will be disabled.")
             return None
     
-    _db_client = firestore.client()
     return _db_client
 
 db = init_firebase()
@@ -266,11 +280,15 @@ def get_skip_comment_kb(): return InlineKeyboardMarkup(inline_keyboard=[[InlineK
 async def cmd_start(m: types.Message):
     await m.answer("Добро пожаловать в CoffeeMoll! 🥐", reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=WEB_APP_URL))]], resize_keyboard=True))
 
+   
 @dp.message(F.web_app_data)
 async def web_app_data_handler(m: types.Message):
     try:
+        if not m.web_app_data.data: return
+
         d = json.loads(m.web_app_data.data)
         if d.get('type') == 'review': return
+        
         cart, total, info = d.get('cart', []), d.get('total', 0), d.get('info', {})
         promo, disc = info.get('promoCode', ''), info.get('discount', 0)
         d_txt, warn = "", ""
@@ -294,11 +312,15 @@ async def web_app_data_handler(m: types.Message):
                 warn = f"\n⚠️ <b>Промокод {promo} {user_reasons.get(res, 'не сработал')}!</b>\nСкидка отменена."
 
         is_del = (info.get('deliveryType') == 'Доставка')
-        txt = f"{'🚗' if is_del else '🏃'} <b>НОВЫЙ ЗАКАЗ</b>\n➖➖➖➖➖➖➖➖➖➖\n👤 {info.get('name')} (<a href='tel:{info.get('phone')}'>{info.get('phone')}</a>)\n"
+        # Экранирование HTML в пользовательском вводе для безопасности
+        safe_name = str(info.get('name', '')).replace('<', '&lt;').replace('>', '&gt;')
+        safe_comment = str(info.get('comment', '')).replace('<', '&lt;').replace('>', '&gt;')
+        
+        txt = f"{'🚗' if is_del else '🏃'} <b>НОВЫЙ ЗАКАЗ</b>\n➖➖➖➖➖➖➖➖➖➖\n👤 {safe_name} (<a href='tel:{info.get('phone')}'>{info.get('phone')}</a>)\n"
         txt += f"📍 {'Адрес: ' + info.get('address') if is_del else info.get('deliveryType')}\n💳 {info.get('paymentType')}\n"
         if info.get('paymentType') in ['Kaspi', 'Halyk']: txt += f"📱 <b>Счет:</b> <code>{info.get('paymentPhone')}</code>\n"
-        if info.get('comment'): txt += f"💬 <i>{info.get('comment')}</i>\n"
-        if "Ко времени" in str(info.get('comment')): txt += "⏰ <b>КО ВРЕМЕНИ!</b>\n"
+        if safe_comment: txt += f"💬 <i>{safe_comment}</i>\n"
+        if "Ко времени" in str(safe_comment): txt += "⏰ <b>КО ВРЕМЕНИ!</b>\n"
         txt += f"➖➖➖➖➖➖➖➖➖➖\n"
         for i, item in enumerate(cart, 1):
             opts = [o for o in item.get('options', []) if o and o != "Без сахара"]
@@ -313,7 +335,9 @@ async def web_app_data_handler(m: types.Message):
         if warn: response_text += f"\n{warn}"
         response_text += "\n\nОжидайте удаленного счета. Начнем готовить только после оплаты."
         await m.answer(response_text)
-    except Exception as e: logging.error(f"Order Error: {e}")
+    except Exception as e: 
+        logging.error(f"Order Error: {e}")
+        await m.answer("⚠️ Произошла ошибка при обработке заказа. Пожалуйста, попробуйте еще раз.")
 
 @dp.callback_query(F.data.startswith("dec_"))
 async def decision(c: CallbackQuery):
