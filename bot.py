@@ -308,9 +308,9 @@ async def web_app_data_handler(m: types.Message):
 
         await bot.send_message(ADMIN_CHAT_ID, txt, reply_markup=get_decision_kb(m.chat.id), message_thread_id=TOPIC_ID_ORDERS)
         
-        response_text = f"✅ Заказ принят!\nСумма: {total} ₸"
+        response_text = f"✅ Заказ отправлен!\nСумма: {total} ₸"
         if warn: response_text += f"\n{warn}"
-        response_text += "\n\nЖдите подтверждения времени."
+        response_text += "\n\nОжидайте удаленного счета. Начнем готовить только после оплаты."
         await m.answer(response_text)
     except Exception as e: logging.error(f"Order Error: {e}")
 
@@ -340,7 +340,7 @@ async def set_time(c: CallbackQuery, state: FSMContext):
     t_val = f"{act} мин"
     clean_text = c.message.text.split("\n\n✅")[0]
     await c.message.edit_text(f"{clean_text}\n\n✅ <b>ПРИНЯТ</b> ({t_val})", reply_markup=get_ready_kb(uid))
-    msg = f"👨‍🍳 Принят! Готовность: <b>{t_val}</b>.\n📞Телефон для связи: +77006437303"
+    msg = f"👨‍🍳Оплата принята! Готовность: <b>{t_val}</b>.\n📞Телефон для связи: +77006437303"
     if "🚗" in c.message.text: msg += "\n<i>(Время приготовления, без учета доставки)</i>"
     try: await bot.send_message(uid, msg)
     except: pass
@@ -392,7 +392,7 @@ async def custom_time(m: types.Message, state: FSMContext):
         
         await bot.send_message(
             chat_id=user_id, 
-            text=f"👨‍🍳 Принят! Готовность: <b>{final_time}</b>.\n📞Телефон для связи: +77006437303\n<i>(Если это доставка, время пути не учтено)</i>"
+            text=f"👨‍🍳 Оплата принята! Готовность: <b>{final_time}</b>.\n📞Телефон для связи: +77006437303\n<i>(Если это доставка, время пути не учтено)</i>"
         )
     except Exception as e:
         logging.error(f"Custom time error: {e}")
@@ -505,7 +505,7 @@ async def barista_choice(c: CallbackQuery, state: FSMContext):
             barista = BARISTAS[b_id]
             await state.update_data(tips=f"Выбрано: {barista['name']}")
             await c.message.edit_text(
-                f"💳 Kaspi ({barista['name']}):\n<code>{barista['phone']}</code>\n\nСпасибо за поддержку! ❤️\n\nНапишите ваш отзыв:", 
+                f"💳 Kaspi\Halyk ({barista['name']}):\n<code>{barista['phone']}</code>\n\nСпасибо за поддержку! ❤️\n\nНапишите ваш отзыв:", 
                 reply_markup=get_skip_comment_kb()
             )
         else:
@@ -547,3 +547,4 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
