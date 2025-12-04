@@ -30,12 +30,12 @@ if not TOKEN:
     logging.critical("❌ BOT_TOKEN is not set!")
     sys.exit(1)
 
-ADMIN_CHAT_ID = -1003472248648
+ADMIN_CHAT_ID = -1003356844624
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
 
 # --- НАСТРОЙКИ ТЕМ (TOPICS) ---
-TOPIC_ID_ORDERS = 20
-TOPIC_ID_REVIEWS = 3
+TOPIC_ID_ORDERS = 68
+TOPIC_ID_REVIEWS = 69
 # ------------------------------
 
 KASPI_NUMBER = "+7 747 240 20 02" 
@@ -574,3 +574,4 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
