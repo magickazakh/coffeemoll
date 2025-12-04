@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CoffeeMoll</title>
 
+    <!-- Предзагрузка и шрифты -->
     <link rel="preload" href="https://telegram.org/js/telegram-web-app.js" as="script">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" as="style" crossorigin>
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Библиотеки -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <script>window.onerror = function(msg, url, line) { return false; };</script>
 
@@ -28,10 +29,7 @@
             --text-secondary: #6b7280;      
             --input-bg: #ffffff;
             --border-color: #eee;
-            
-            /* Высота навигации для скролла */
             --nav-height: 60px; 
-            
             --font-logo: 'Bebas Neue', cursive;
             --font-title: 'Oswald', sans-serif;
             --font-body: 'Montserrat', sans-serif;
@@ -51,7 +49,7 @@
             .status-badge { background: #064e3b !important; color: #a7f3d0 !important; }
             .radio-label, .checkout-radio-label { background: #333 !important; border-color: #444 !important; color: #fff !important; }
             .radio-input:checked + .radio-label, .checkout-radio-input:checked + .checkout-radio-label { background: #064e3b !important; border-color: var(--primary-color) !important; }
-            .category-title { background: #1a1a1a !important; border-bottom: 1px solid #333 !important; }
+            .category-separator { border-bottom: 1px solid #333 !important; }
             .accordion-header { background: #333 !important; color: #fff !important; }
             .repeat-card { background: #333 !important; border-color: #444 !important; }
             .upsell-no { background: #444 !important; color: #ccc !important; }
@@ -61,59 +59,31 @@
         /* --- БАЗОВЫЕ СТИЛИ --- */
         body { font-family: var(--font-body); margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); padding-bottom: 100px; -webkit-tap-highlight-color: transparent; font-weight: 500; transition: background-color 0.3s, color 0.3s; }
         
-        /* ШАПКА С АНИМАЦИЕЙ TRANSITION */
+        /* ШАПКА С АНИМАЦИЕЙ */
         .header-container { 
             background: white; 
             position: sticky; 
             top: 0; 
             z-index: 40; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Плавное скрытие */
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        /* Скрываем верхнюю часть при скролле */
-        .header-container.header-hidden {
-            transform: translateY(-75px); /* Сдвигаем вверх на высоту лого и поиска */
-        }
+        .header-container.header-hidden { transform: translateY(-75px); }
 
-        /* ИСПРАВЛЕНО: убрана фиксированная высота height: 60px, теперь она автоматическая */
-        header { 
-            padding: 12px 15px 10px 15px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: flex-start; 
-            height: auto; 
-            min-height: 60px;
-            box-sizing: border-box;
-        }
-        
+        header { padding: 12px 15px 10px 15px; display: flex; justify-content: space-between; align-items: flex-start; height: auto; min-height: 60px; box-sizing: border-box; }
         .header-left { display: flex; flex-direction: column; }
-        
         h1 { margin: 0; font-family: var(--font-logo); font-size: 34px; letter-spacing: 1px; line-height: 1; text-transform: uppercase; }
-        .logo-coffee { color: #000000; }
-        .logo-moll { color: #88d100; }
-
+        .logo-coffee { color: #000000; } .logo-moll { color: #88d100; }
         .separator-line { width: 141px; height: 3px; background-color: var(--primary-color); margin: 3px 0 3px 0; border-radius: 2px; }
         .motto { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-weight: 600; max-width: 180px; line-height: 1.2; }
         .status-badge { font-family: var(--font-body); font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; transition: 0.3s; white-space: nowrap; margin-left: 10px;}
 
-        /* ПОИСК И ПОВТОР ЗАКАЗА (АНИМАЦИЯ СКРЫТИЯ) */
-        .search-wrapper { 
-            padding: 0 15px 10px 15px; 
-            transition: all 0.3s ease-in-out;
-            max-height: 60px;
-            opacity: 1;
-        }
+        /* ПОИСК И ПОВТОР ЗАКАЗА */
+        .search-wrapper { padding: 0 15px 10px 15px; transition: all 0.3s ease-in-out; max-height: 60px; opacity: 1; }
         #search-input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; transition: 0.2s; margin: 0; box-sizing: border-box; font-family: var(--font-body); }
         #search-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(136, 209, 0, 0.1); }
         
-        #repeat-order-container { 
-            padding: 0 15px 10px 15px; 
-            display: none; 
-            transition: all 0.3s ease-in-out;
-            max-height: 100px;
-            opacity: 1;
-        }
+        #repeat-order-container { padding: 0 15px 10px 15px; display: none; transition: all 0.3s ease-in-out; max-height: 100px; opacity: 1; }
         .repeat-card { background: #fff; border: 1px solid var(--primary-color); border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 5px rgba(136, 209, 0, 0.1); transition: transform 0.1s; }
         .repeat-card:active { transform: scale(0.98); background: #f9f9f9; }
         .repeat-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
@@ -122,14 +92,7 @@
         .repeat-icon { font-size: 20px; color: var(--primary-color); margin-left: 10px; }
 
         .header-container.mini-header .search-wrapper,
-        .header-container.mini-header #repeat-order-container {
-            max-height: 0;
-            opacity: 0;
-            padding-top: 0;
-            padding-bottom: 0;
-            margin: 0;
-            overflow: hidden;
-        }
+        .header-container.mini-header #repeat-order-container { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; margin: 0; overflow: hidden; }
 
         /* НАВИГАЦИЯ */
         .nav-scroller { overflow-x: auto; white-space: nowrap; padding: 10px 15px; -webkit-overflow-scrolling: touch; scrollbar-width: none; background: inherit; }
@@ -139,23 +102,8 @@
 
         /* КАРТОЧКИ */
         .category-section { margin-bottom: 10px; scroll-margin-top: 130px; padding-top: 10px; }
-        
-        /* ЛИПКИЕ ЗАГОЛОВКИ */
-        .category-title { 
-            position: sticky; 
-            top: var(--header-height, 135px); 
-            background: var(--bg-color); 
-            z-index: 30; 
-            padding: 10px 15px; 
-            font-family: var(--font-title); 
-            font-size: 24px; 
-            color: var(--text-main); 
-            letter-spacing: 0.5px; 
-            font-weight: 700; 
-            border-bottom: 1px solid rgba(0,0,0,0.05); 
-            transition: top 0.3s, background 0.3s;
-        }
-        
+        .category-separator { padding: 0 15px; margin-bottom: 10px; font-size: 22px; font-weight: 700; color: var(--text-main); font-family: var(--font-title); text-transform: uppercase; padding-left: 25px; } 
+
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 10px; }
         .card { background: var(--card-bg); border-radius: 16px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.1s; position: relative; cursor: pointer; border: 1px solid transparent;}
         .card:active { transform: scale(0.98); border-color: var(--primary-color); }
@@ -167,16 +115,7 @@
         .card.unavailable { opacity: 0.6; pointer-events: none; }
         .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
         
-        /* ИЗБРАННОЕ */
-        .fav-btn { 
-            position: absolute; 
-            top: 8px; left: 8px; z-index: 25; 
-            font-size: 18px; color: #9ca3af; 
-            transition: 0.2s; background: rgba(255,255,255,0.95); 
-            border-radius: 50%; width: 28px; height: 28px; 
-            display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2); 
-        }
+        .fav-btn { position: absolute; top: 8px; left: 8px; z-index: 25; font-size: 18px; color: #9ca3af; transition: 0.2s; background: rgba(255,255,255,0.95); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
         .fav-btn.active { color: #ef4444; }
         .card-badge { position: absolute; top: 8px; right: 8px; background: var(--primary-color); color: var(--primary-text); font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-family: var(--font-title); letter-spacing: 0.5px; }
         
@@ -237,14 +176,12 @@
         .radio-input { display: none; }
         .radio-input:checked + .radio-label { background-color: #f0fdf4; border-color: var(--primary-color); color: #000; box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15); }
         .radio-input:checked + .radio-label::before { border-color: var(--primary-color); background-color: var(--primary-color); box-shadow: inset 0 0 0 3px #fff; }
-        
         .checkout-radio-group { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; width: 100% !important; }
         .checkout-radio-label { display: flex !important; align-items: center !important; justify-content: flex-start !important; padding: 10px 12px !important; background: #fff !important; border: 1px solid #e5e7eb !important; border-radius: 10px !important; cursor: pointer !important; font-size: 14px !important; font-weight: 500 !important; color: #374151 !important; transition: all 0.2s !important; min-height: 44px !important; width: 100% !important; box-sizing: border-box !important; position: relative !important; font-family: var(--font-body) !important; }
         .checkout-radio-label::before { content: '' !important; display: inline-block !important; width: 16px !important; height: 16px !important; border: 2px solid #9ca3af !important; border-radius: 50% !important; margin-right: 10px !important; box-sizing: border-box !important; flex-shrink: 0 !important; transition: 0.2s !important; }
         .checkout-radio-input { display: none !important; }
         .checkout-radio-input:checked + .checkout-radio-label { background-color: #f0fdf4 !important; border-color: var(--primary-color) !important; color: #000 !important; box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15) !important; }
         .checkout-radio-input:checked + .checkout-radio-label::before { border-color: var(--primary-color) !important; background-color: var(--primary-color) !important; box-shadow: inset 0 0 0 3px #fff !important; }
-        
         input[type="text"], input[type="number"], input[type="tel"], textarea, input[type="time"] { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 14px; box-sizing: border-box; background: var(--input-bg); margin-bottom: 10px; font-family: var(--font-body); transition: all 0.2s; color: var(--text-main); }
         input:focus, textarea:focus, select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(136, 209, 0, 0.1); outline: none; }
         select { width: 100%; padding: 12px 15px; padding-right: 40px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 14px; font-family: var(--font-body); color: var(--text-main); background-color: var(--input-bg); box-sizing: border-box; margin-bottom: 10px; outline: none; transition: all 0.2s; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2388d100' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 15px center; background-size: 16px; font-weight: 500; cursor: pointer; }
@@ -259,7 +196,6 @@
         .modal-footer { margin-top: 20px; display: flex; gap: 10px; }
         .modal-add-btn { background: var(--primary-color); color: var(--primary-text); width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; font-family: var(--font-title); letter-spacing: 0.5px; }
         .modal-add-btn:disabled { background: #ccc; cursor: not-allowed; }
-        
         .cart-item { background: var(--input-bg); border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
         .cart-item-info { flex: 1; padding-right: 10px; }
         .cart-item-title { font-family: var(--font-title); font-size: 15px; margin-bottom: 2px; letter-spacing: 0.3px; font-weight: 700; color: var(--text-main); }
@@ -274,7 +210,6 @@
         .info-box { background: #e0f2fe; color: #075985; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; display: none; border: 1px solid #bae6fd; line-height: 1.4; font-family: var(--font-body); }
         .promo-section { margin: 15px 0; display: flex; gap: 8px; }
         .promo-btn { background: #f0f0f0; border: none; padding: 0 15px; border-radius: 12px; cursor: pointer; font-weight: 600; color: #333; }
-        
         .upsell-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1100; align-items: center; justify-content: center; }
         .upsell-content { background: var(--card-bg); width: 85%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; animation: popIn 0.3s; }
         .upsell-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
@@ -292,19 +227,6 @@
         @keyframes pop { 0% { transform: scale(0); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes fadeUp { from { opacity:0; transform: translate(-50%, 20px); } to { opacity:1; transform: translate(-50%, 0); } }
-
-        .category-separator {
-    padding-top: 20px;      /* Отступ сверху */
-    padding-bottom: 10px;   /* Отступ снизу */
-    padding-left: 25px;     /* ОТСТУП СЛЕВА (увеличьте это число, если нужно больше) */
-    padding-right: 15px;
-    
-    font-family: var(--font-title);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text-main);
-    text-transform: uppercase; /* Делает все буквы ЗАГЛАВНЫМИ */
-}
     </style>
 </head>
 <body>
@@ -434,13 +356,7 @@
     <div class="option-group">
         <label class="option-label">Способ оплаты</label>
         <div class="checkout-radio-group">
-            <input type="radio" name="paymentType" id="p-cash" value="Наличными" class="checkout-radio-input" checked onchange="togglePayment()">
-            <label for="p-cash" class="checkout-radio-label">💵 Наличные</label>
-            
-            <input type="radio" name="paymentType" id="p-card" value="Картой" class="checkout-radio-input" onchange="togglePayment()">
-            <label for="p-card" class="checkout-radio-label">💳 Картой</label>
-            
-            <input type="radio" name="paymentType" id="p-kaspi" value="Kaspi" class="checkout-radio-input" onchange="togglePayment()">
+            <input type="radio" name="paymentType" id="p-kaspi" value="Kaspi" class="checkout-radio-input" checked onchange="togglePayment()">
             <label for="p-kaspi" class="checkout-radio-label">🔴 Kaspi</label>
             
             <input type="radio" name="paymentType" id="p-halyk" value="Halyk" class="checkout-radio-input" onchange="togglePayment()">
@@ -448,10 +364,12 @@
         </div>
     </div>
     
-    <div id="payment-phone-block" style="display: none;">
+    <!-- Блок всегда видим, т.к. остались только удаленные способы оплаты -->
+    <div id="payment-phone-block">
         <div class="option-group">
-            <label class="option-label">Номер для удаленного счета</label>
+            <label class="option-label" id="payment-phone-label">Номер Kaspi Gold</label>
             <input type="tel" id="payment-phone" placeholder="Номер привязанный к карте">
+            <div class="contact-note" id="payment-hint" style="margin-top: 5px;">Вам придет счет на оплату в приложение Kaspi.kz</div>
         </div>
     </div>
     
@@ -465,7 +383,10 @@
     <img src="" alt="Upsell" class="upsell-img">
     <div class="upsell-product">ТОВАР</div>
     <div class="upsell-desc" id="upsell-price">0 ₸</div>
-    <div class="upsell-btn-row"><button class="upsell-no" onclick="closeUpsell()">Нет, спасибо</button><button class="upsell-yes" onclick="acceptUpsell()">Добавить</button></div>
+    <div class="upsell-btn-row">
+        <button class="upsell-no" onclick="closeUpsell()">Нет, спасибо</button>
+        <button class="upsell-yes" onclick="acceptUpsell()">Добавить</button>
+    </div>
 </div></div>
 
 <script>
@@ -477,7 +398,7 @@
     const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv"; 
     
     // --- ВАЖНО: УКАЖИТЕ URL ВАШЕГО БОТА НА RENDER ---
-    const BACKEND_URL = "https://coffeemoll.onrender.com"; 
+    const BACKEND_URL = "https://coffeemoll-bot.onrender.com"; 
     // ------------------------------------------------
 
     // Cache Busting
@@ -495,7 +416,7 @@
     let CLOSE_HOUR = 23;
 
     const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
-    const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ"], "КРУАССАНЫ": ["СЕЗОННОЕ"], "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ", "ЛИМОНАДЫ"], "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ", "ЛИМОНАДЫ"], "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ", "ЛИМОНАДЫ"], "ЗАВТРАКИ": ["КОФЕ", "СЕЗОННОЕ"] };
+    const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ", "ЗАКУСКИ"], "ЧАЙ": ["КРУАССАНЫ", "ЗАКУСКИ"], "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "ЛИМОНАДЫ"], "ЗАВТРАКИ": ["КОФЕ", "ЧАЙ"] };
 
     let menuData = [];
     let cart = [];
@@ -509,8 +430,9 @@
     // Loading messages logic
     const loadingTexts = [
         "Загружаем зерно в кофемолку...",
-        "Настраиваем помол...",
+        "Греем холдер...",
         "Взбиваем молоко...",
+        "Настраиваем помол...",
         "Рисуем сердечко на пенке...",
         "Протираем столики...",
         "Достаем свежие круассаны..."
@@ -1041,8 +963,8 @@
 
             html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group">
                 <input type="radio" name="milk" id="m1" value="std" class="radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label">Обычное</label>
-                <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label"><div>Безлакт.<br>+${PRICES.milk_lf_price || 0}</div></label>
-                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label"><div>Альтерн.<br><span id="alt-milk-price-display">${altMilkText}</span></div></label>
+                <input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label"><div>Безлактозное<br>+${PRICES.milk_lf_price || 0}</div></label>
+                <input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label"><div>Растительное<br><span id="alt-milk-price-display">${altMilkText}</span></div></label>
             </div><div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
             ALT_MILKS.forEach(m => html += `<option value="${m}">${m}</option>`);
             html += `</select></div></div>`;
@@ -1136,7 +1058,7 @@
         if(prod.hasMilk) {
             const m = document.querySelector('input[name="milk"]:checked').value;
             if(m==='lf') opts.push("Молоко: Безлакт.");
-            if(m==='alt') { const t = document.getElementById('alt-milk-type').value; opts.push(`Молоко: Альтерн. (${t})`); }
+            if(m==='alt') { const t = document.getElementById('alt-milk-type').value; opts.push(`Молоко: Растительное (${t})`); }
         }
         const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
         checkboxes.forEach(key => { const el = document.getElementById(`mod-${key}`); if (el && el.checked) opts.push(`Доп: ${MOD_LABELS[key]}`); });
@@ -1402,10 +1324,25 @@
     window.addEventListener('offline', () => { showErrorScreen(); });
     window.addEventListener('online', () => { location.reload(); });
 
-    try { initMenu(); } catch (e) { console.error(e); showErrorScreen(); }
+    try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e); showErrorScreen(); }
+</script>
+<script>
+    // Дополнительная логика UI для переключения подписей оплаты
+    function togglePayment() { 
+        const isKaspi = document.getElementById('p-kaspi').checked;
+        const isHalyk = document.getElementById('p-halyk').checked;
+        
+        const label = document.getElementById('payment-phone-label');
+        const hint = document.getElementById('payment-hint');
+        
+        if (isKaspi) {
+            label.innerText = "Номер Kaspi Gold";
+            hint.innerText = "Вам придет счет на оплату в приложение Kaspi.kz";
+        } else if (isHalyk) {
+            label.innerText = "Номер Halyk/Homebank";
+            hint.innerText = "Вам придет счет на оплату в приложение Halyk";
+        }
+    }
 </script>
 </body>
 </html>
-
-
-
