@@ -4,7 +4,7 @@ tg.expand();
 
 // === КОНСТАНТЫ И НАСТРОЙКИ ===
 const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv"; 
-const BACKEND_URL = "https://coffeemoll-bot.onrender.com"; 
+const BACKEND_URL = "https://coffeemoll.onrender.com"; 
 // Cache Busting
 const cacheBuster = new Date().getTime();
 const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL + "&t=" + cacheBuster);
