@@ -132,42 +132,29 @@ def check_promo_firebase(code, user_id):
     logging.info(f"Checking promo: {code} for user {uid}")
     
     try:
-        # 1. Данные промокода
         doc = db.collection('promocodes').document(code).get()
-        
-        if not doc.exists: 
-            return "NOT_FOUND", 0
-            
+        if not doc.exists: return "NOT_FOUND", 0
         promo_data = doc.to_dict()
 
-        # Безопасное приведение типов
         try:
             limit = int(promo_data.get('limit', 0))
             discount = float(promo_data.get('discount', 0))
-        except:
-            return "ERROR", 0
+        except: return "ERROR", 0
         
         if limit <= 0: return "LIMIT", 0
 
-        # 2. Проверяем историю использования (Тройная проверка)
         if uid and uid != '0':
-            # А. Проверка по ID документа (быстрая)
             history_ref = db.collection('promo_history').document(f"{uid}_{code}")
             if history_ref.get().exists: return "USED", 0
 
-            # Б. Проверка поиском (Query) по строковому ID
             query = db.collection('promo_history').where('user_id', '==', uid).where('code', '==', code).limit(1).stream()
-            for _ in query:
-                return "USED", 0
+            for _ in query: return "USED", 0
                 
-            # В. Проверка поиском (Query) по числовому ID (на случай несоответствия типов)
             if uid.isdigit():
                 query_int = db.collection('promo_history').where('user_id', '==', int(uid)).where('code', '==', code).limit(1).stream()
-                for _ in query_int:
-                    return "USED", 0
+                for _ in query_int: return "USED", 0
         
         return "OK", discount
-            
     except Exception as e:
         logging.error(f"Check Error: {e}")
         return "ERROR", 0
@@ -180,10 +167,8 @@ def use_promo_transaction(transaction, code, uid):
     snapshot = promo_ref.get(transaction=transaction)
     if not snapshot.exists: return "NOT_FOUND"
     
-    try:
-        current_limit = int(snapshot.get('limit'))
-    except:
-        return "ERROR"
+    try: current_limit = int(snapshot.get('limit'))
+    except: return "ERROR"
         
     if current_limit <= 0: return "LIMIT"
         
@@ -212,25 +197,18 @@ def process_promo_firebase(code, user_id):
         logging.error(f"Transaction Error: {e}")
         return "ERROR"
 
-# --- ЛОГИКА ОТМЕНЫ ПРОМОКОДА (ROLLBACK) ---
+# --- ЛОГИКА ОТМЕНЫ ПРОМОКОДА ---
 
 @firestore.transactional
 def revert_promo_transaction(transaction, promo_ref, history_ref):
     snapshot = promo_ref.get(transaction=transaction)
     hist_snap = history_ref.get(transaction=transaction)
-    
-    # Если записи в истории нет, значит отменять нечего
-    if not hist_snap.exists:
-        return "NOT_USED"
-    
-    # Возвращаем лимит (+1)
+    if not hist_snap.exists: return "NOT_USED"
     if snapshot.exists:
         try:
             current_limit = int(snapshot.get('limit'))
             transaction.update(promo_ref, {'limit': current_limit + 1})
         except: pass
-    
-    # Удаляем запись об использовании
     transaction.delete(history_ref)
     return "OK"
 
@@ -241,16 +219,11 @@ def cancel_promo_firebase(code, user_id):
     try:
         promo_ref = db.collection('promocodes').document(code)
         history_ref = db.collection('promo_history').document(f"{uid}_{code}")
-        
         transaction = db.transaction()
         res = revert_promo_transaction(transaction, promo_ref, history_ref)
-        
-        if res == "OK" and code in PROMO_CACHE:
-             PROMO_CACHE[code]['limit'] += 1
-             
+        if res == "OK" and code in PROMO_CACHE: PROMO_CACHE[code]['limit'] += 1
         logging.info(f"Reverted promo {code} for {uid}: {res}")
-    except Exception as e:
-        logging.error(f"Revert Error: {e}")
+    except Exception as e: logging.error(f"Revert Error: {e}")
 
 # --- СОХРАНЕНИЕ ДАННЫХ ---
 
@@ -267,8 +240,7 @@ async def save_order_background(user_id, order_data, total_price):
                     'phone': user_info.get('phone', ''),
                     'last_order': firestore.SERVER_TIMESTAMP
                 })
-            else:
-                user_ref.update({'last_order': firestore.SERVER_TIMESTAMP})
+            else: user_ref.update({'last_order': firestore.SERVER_TIMESTAMP})
 
             db.collection('orders').add({
                 'user_id': str(user_id),
@@ -279,7 +251,6 @@ async def save_order_background(user_id, order_data, total_price):
                 'date_str': datetime.now().strftime("%Y-%m-%d")
             })
         except Exception as e: logging.error(f"Save Order Error: {e}")
-
     loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, _save)
 
@@ -298,7 +269,6 @@ async def save_review_background(user_id, name, service_rate, food_rate, tips, c
                 'date_str': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             })
         except Exception as e: logging.error(f"Save Review Error: {e}")
-
     loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, _save)
 
@@ -312,18 +282,14 @@ async def api_check_promo(request):
         "Access-Control-Max-Age": "86400"
     }
     if request.method == 'OPTIONS': return web.Response(headers=headers)
-
     try:
         data = await request.json()
         code = data.get('code', '')
         user_id = data.get('userId')
-        
         loop = asyncio.get_running_loop()
         status, discount = await loop.run_in_executor(None, check_promo_firebase, code, user_id)
-        
         return web.json_response({'status': status, 'discount': discount}, headers=headers)
     except Exception as e:
-        logging.error(f"API Error: {e}")
         return web.json_response({'status': 'ERROR', 'error': str(e)}, headers=headers)
 
 async def health_check(request): return web.Response(text="OK")
@@ -363,36 +329,23 @@ def get_baristas_kb():
     return InlineKeyboardMarkup(inline_keyboard=b)
 def get_skip_comment_kb(): return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="⏩ Пропустить", callback_data="skip_comment")]])
 
-
 # --- ОБРАБОТЧИКИ ---
 
 @dp.message(CommandStart())
 async def cmd_start(m: types.Message):
-    # ВАЖНО: Добавляем &uid={m.from_user.id} в URL, чтобы передать ID явно
     unique_url = f"{WEB_APP_URL}?v={int(time.time())}&uid={m.from_user.id}"
-
     if m.chat.id == ADMIN_CHAT_ID:
         await m.answer(f"Привет, Админ! 👋\nКоманды:\n/stats - Статистика\n/broadcast - Рассылка")
-
-    await m.answer(
-        "Добро пожаловать в CoffeeMoll! 🥐", 
-        reply_markup=ReplyKeyboardMarkup(
-            keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=unique_url))]], 
-            resize_keyboard=True
-        )
-    )
+    await m.answer("Добро пожаловать в CoffeeMoll! 🥐", reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=unique_url))]], resize_keyboard=True))
 
 @dp.message(Command("stats"))
 async def cmd_stats(m: types.Message):
     if m.chat.id != ADMIN_CHAT_ID: return
-    if not db:
-        await m.answer("❌ База данных не подключена.")
-        return
+    if not db: return await m.answer("❌ База данных не подключена.")
     await m.answer("📊 Считаем статистику...")
     try:
         today_str = datetime.now().strftime("%Y-%m-%d")
-        orders_ref = db.collection('orders')
-        docs = orders_ref.stream()
+        docs = db.collection('orders').stream()
         total_count, total_sum, today_count, today_sum = 0, 0, 0, 0
         for doc in docs:
             d = doc.to_dict()
@@ -402,15 +355,13 @@ async def cmd_stats(m: types.Message):
             if d.get('date_str') == today_str:
                 today_count += 1
                 today_sum += price
-        msg = f"📅 <b>Статистика на {today_str}</b>\n\n🔹 <b>За сегодня:</b>\nЗаказов: {today_count}\nВыручка: {today_sum} ₸\n\n🔸 <b>За все время:</b>\nЗаказов: {total_count}\nОборот: {total_sum} ₸"
-        await m.answer(msg)
-    except Exception as e:
-        await m.answer(f"❌ Ошибка: {e}")
+        await m.answer(f"📅 <b>Статистика на {today_str}</b>\n\n🔹 <b>За сегодня:</b>\nЗаказов: {today_count}\nВыручка: {today_sum} ₸\n\n🔸 <b>За все время:</b>\nЗаказов: {total_count}\nОборот: {total_sum} ₸")
+    except Exception as e: await m.answer(f"❌ Ошибка: {e}")
 
 @dp.message(Command("broadcast"))
 async def cmd_broadcast(m: types.Message, state: FSMContext):
     if m.chat.id != ADMIN_CHAT_ID: return
-    await m.answer("📢 Введите текст сообщения для рассылки.")
+    await m.answer("📢 Введите текст для рассылки.")
     await state.set_state(OrderState.waiting_for_broadcast)
 
 @dp.message(OrderState.waiting_for_broadcast)
@@ -420,8 +371,7 @@ async def process_broadcast(m: types.Message, state: FSMContext):
     await m.answer("⏳ Рассылка...")
     count = 0
     try:
-        users_ref = db.collection('users').stream()
-        for doc in users_ref:
+        for doc in db.collection('users').stream():
             uid = doc.to_dict().get('id')
             if uid:
                 try:
@@ -443,7 +393,6 @@ async def web_app_data_handler(m: types.Message):
         cart, total, info = d.get('cart', []), d.get('total', 0), d.get('info', {})
         promo, disc = info.get('promoCode', ''), info.get('discount', 0)
         d_txt, warn = "", ""
-
         client_name = info.get('name')
         if client_name: NAMES_CACHE[str(m.from_user.id)] = client_name
         
@@ -453,12 +402,15 @@ async def web_app_data_handler(m: types.Message):
             loop = asyncio.get_running_loop()
             res = await loop.run_in_executor(None, process_promo_firebase, promo, m.from_user.id)
             if res == "OK":
-                d_txt = f"\n🎁 <b>Промокод:</b> {promo}"
+                try:
+                    if 1 - disc > 0:
+                        saving = int(round(total / (1 - disc)) - total)
+                        d_txt = f"\n🎁 <b>Промокод:</b> {promo} (-{saving} ₸)"
+                    else: d_txt = f"\n🎁 <b>Промокод:</b> {promo}"
+                except: d_txt = f"\n🎁 <b>Промокод:</b> {promo}"
             else:
-                reasons = {"USED": "Повтор", "LIMIT": "Лимит"}
-                user_reasons = {"USED": "уже использован вами", "LIMIT": "исчерпан"}
-                d_txt = f"\n❌ <b>Промокод:</b> {promo} ({reasons.get(res, 'Ошибка')})"
-                warn = f"\n⚠️ <b>Промокод {promo} {user_reasons.get(res, 'не сработал')}!</b>"
+                d_txt = f"\n❌ <b>Промокод:</b> {promo} (Ошибка)"
+                warn = f"\n⚠️ <b>Промокод {promo} не сработал!</b>"
 
         is_del = (info.get('deliveryType') == 'Доставка')
         safe_name = str(info.get('name', '')).replace('<', '&lt;')
@@ -493,18 +445,14 @@ async def decision(c: CallbackQuery):
     if act == "accept": 
         await c.message.edit_reply_markup(reply_markup=get_time_kb(uid))
     else:
-        # ЛОГИКА ВОЗВРАТА ПРОМОКОДА
         try:
             text = c.message.text or c.message.caption or ""
-            # Ищем слово Промокод: КОД
             match = re.search(r"Промокод:\s*([A-Za-z0-9]+)", text)
             if match:
                 code = match.group(1)
                 loop = asyncio.get_running_loop()
                 await loop.run_in_executor(None, cancel_promo_firebase, code, uid)
-        except Exception as e:
-            logging.error(f"Auto-revert error: {e}")
-
+        except: pass
         await c.message.edit_text(f"{c.message.text}\n\n❌ <b>ОТКЛОНЕН</b>")
         try: await bot.send_message(uid, "❌ Заказ отклонен.")
         except: pass
@@ -524,15 +472,11 @@ async def set_time(c: CallbackQuery, state: FSMContext):
         return
     
     t_val = f"{act} мин"
-    # Исправленная логика: сначала чистим текст от прошлых статусов, потом редактируем сообщение
     clean_text = c.message.text.split("\n\n")[0]
-    
-    await c.message.edit_text(
-        f"{clean_text}\n\n✅ <b>ПРИНЯТ</b> ({t_val})", 
-        reply_markup=get_ready_kb(uid)
-    )
+    await c.message.edit_text(f"{clean_text}\n\n✅ <b>ПРИНЯТ</b> ({t_val})", reply_markup=get_ready_kb(uid))
     
     msg = f"👨‍🍳Оплата принята! Готовность: <b>{t_val}</b>.\n📞Телефон: +77006437303"
+    if "🚗" in clean_text or "Доставка" in clean_text: msg += "\n<i>(Время приготовления, без учета доставки)</i>"
     try: await bot.send_message(uid, msg)
     except: pass
     await c.answer()
@@ -549,7 +493,10 @@ async def custom_time(m: types.Message, state: FSMContext):
     try:
         await bot.edit_message_reply_markup(chat_id=m.chat.id, message_id=data['msg_id'], reply_markup=get_ready_kb(data['uid']))
         await bot.send_message(chat_id=m.chat.id, text=f"✅ Время: <b>{final_time}</b>", reply_to_message_id=data['msg_id'], message_thread_id=TOPIC_ID_ORDERS)
-        await bot.send_message(chat_id=data['uid'], text=f"👨‍🍳 Оплата принята! Готовность: <b>{final_time}</b>.")
+        
+        msg = f"👨‍🍳 Оплата принята! Готовность: <b>{final_time}</b>."
+        # Проверка на доставку здесь сложнее, так как нет текста заказа. Можно добавить его в state ранее, но для простоты оставим универсальное.
+        await bot.send_message(chat_id=data['uid'], text=msg)
     except: pass
     await state.clear()
 
@@ -559,7 +506,12 @@ async def ready(c: CallbackQuery):
     old = c.message.text
     clean = old.split("\n\n")[0] if "ПРИНЯТ" in old else old
     await c.message.edit_text(f"{clean}\n\n🏁 <b>ГОТОВ</b>", reply_markup=get_given_kb(uid))
-    try: await bot.send_message(uid, "🎉 <b>Ваш заказ готов!</b>")
+    
+    client_msg = "🎉 <b>Ваш заказ готов!</b>\nЖдем вас на выдаче ☕️"
+    if "🚗" in old or "Доставка" in old:
+        client_msg = "📦 <b>Заказ готов и упакован!</b>\nОжидаем курьера."
+        
+    try: await bot.send_message(uid, client_msg)
     except: pass
     await c.answer()
 
@@ -568,13 +520,15 @@ async def given(c: CallbackQuery, state: FSMContext):
     uid = int(c.data.split("_")[2])
     old = c.message.text
     clean = old.split("\n\n")[0]
-    status_text = "🚗 <b>КУРЬЕР ВЫЕХАЛ</b>" if "Доставка" in clean else "🤝 <b>ВЫДАН</b>"
+    is_del = "🚗" in clean or "Доставка" in clean
+    
+    status_text = "🚗 <b>КУРЬЕР ВЫЕХАЛ</b>" if is_del else "🤝 <b>ВЫДАН</b>"
     await c.message.edit_text(f"{clean}\n\n{status_text}")
     try:
-        if "Доставка" in clean:
-            await bot.send_message(uid, "🚗 Курьер выехал!", reply_markup=get_received_kb())
+        if is_del:
+            await bot.send_message(uid, "🚗 Курьер выехал!\nКак только получите заказ, нажмите кнопку:", reply_markup=get_received_kb())
         else:
-            await bot.send_message(uid, "Как вам наше <b>обслуживание</b>?", reply_markup=get_stars_kb("service"))
+            await start_review_process(uid, state)
     except: pass
     await c.answer()
 
@@ -582,8 +536,11 @@ async def given(c: CallbackQuery, state: FSMContext):
 async def delivery_received(c: CallbackQuery, state: FSMContext):
     await c.message.edit_reply_markup(reply_markup=None) 
     await c.message.answer("Приятного аппетита! 😋")
-    await bot.send_message(c.from_user.id, "Как вам наше <b>обслуживание</b>?", reply_markup=get_stars_kb("service"))
+    await start_review_process(c.from_user.id, state)
     await c.answer()
+
+async def start_review_process(uid, state):
+    await bot.send_message(uid, "Как вам наше <b>обслуживание</b>?", reply_markup=get_stars_kb("service"))
 
 @dp.callback_query(F.data.startswith("rate_service_"))
 async def rate_service(c: CallbackQuery, state: FSMContext):
@@ -646,18 +603,10 @@ async def finalize_review(message, state, comment_text, user):
     msg = f"⭐ <b>НОВЫЙ ОТЗЫВ</b>\n👤 {c_name}\n💁‍♂️ Сервис: {data.get('service_rate')} ⭐\n🍔 Еда: {data.get('food_rate')} ⭐\n💰 Чаевые: {data.get('tips')}\n💬 <i>{comment_text}</i>"
     await bot.send_message(ADMIN_CHAT_ID, msg, message_thread_id=TOPIC_ID_REVIEWS)
     
-    s_rate = int(data.get('service_rate', 5))
-    f_rate = int(data.get('food_rate', 5))
-    avg = (s_rate + f_rate) / 2
-
-    if avg == 5:
-        resp = "Вау! 😍 Спасибо за высокую оценку!\nМы счастливы, что вам понравилось. Ждем вас снова за лучшим кофе! ☕️"
-    elif avg >= 4:
-        resp = "Спасибо за ваш отзыв! 👍\nМы рады, что вы с нами. Будем стараться стать еще лучше для вас!"
-    elif avg >= 3:
-        resp = "Спасибо за отзыв.\nНам жаль, что не всё прошло идеально. Мы учтем ваши замечания. 🙏"
-    else:
-        resp = "Нам очень жаль, что мы вас расстроили. 😔\nСпасибо за честность, мы обязательно примем меры и исправимся."
+    avg = (int(data.get('service_rate', 5)) + int(data.get('food_rate', 5))) / 2
+    if avg >= 5: resp = "Вау! 😍 Спасибо за высокую оценку!\nМы счастливы, что вам понравилось. Ждем вас снова за лучшим кофе! ☕️"
+    elif avg >= 4: resp = "Спасибо за отзыв! 👍\nМы рады, что вы с нами. Будем стараться стать еще лучше!"
+    else: resp = "Нам жаль, что мы вас расстроили. 😔\nМы обязательно примем меры."
     
     if isinstance(message, types.Message): await message.answer(resp)
     else: await message.edit_text(resp)
@@ -666,4 +615,3 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
-
