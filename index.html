@@ -14,7 +14,7 @@
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" as="style" crossorigin>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <!-- PapaParse удален, используем встроенный -->
     
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     
@@ -56,6 +56,7 @@
             .repeat-card { background: #333 !important; border-color: #444 !important; }
             .upsell-no { background: #444 !important; color: #ccc !important; }
             .cart-qty-btn { background: #444 !important; color: #fff !important; }
+            .qty-control-btn { background: #444 !important; color: #fff !important; }
         }
 
         /* --- БАЗОВЫЕ СТИЛИ --- */
@@ -157,12 +158,20 @@
         /* КНОПКИ */
         .main-btn { position: fixed; bottom: 20px; left: 15px; right: 15px; background: #000000; color: var(--primary-color); padding: 18px; border-radius: 16px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: none; z-index: 900; font-family: var(--font-title); letter-spacing: 1px; transition: transform 0.1s; }
         .main-btn:active { transform: scale(0.98); }
-        .modal-add-btn { background: var(--primary-color); color: #000; width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: var(--font-title); letter-spacing: 0.5px; }
-        .modal-footer { margin-top: 20px; }
+        .modal-add-btn { background: var(--primary-color); color: #000; width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: var(--font-title); letter-spacing: 0.5px; transition: opacity 0.3s; }
+        .modal-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .modal-footer { margin-top: 20px; display: flex; gap: 10px; align-items: center; }
+        
+        /* УПРАВЛЕНИЕ КОЛИЧЕСТВОМ В МОДАЛКЕ */
+        .qty-control-modal { display: flex; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 5px; height: 52px; box-sizing: border-box; }
+        .qty-control-btn { width: 36px; height: 100%; border: none; background: transparent; font-size: 18px; font-weight: bold; cursor: pointer; color: var(--text-main); display: flex; align-items: center; justify-content: center; }
+        .qty-control-val { width: 30px; text-align: center; font-weight: bold; font-size: 16px; color: var(--text-main); }
 
         /* КОРЗИНА */
         .cart-item { background: var(--input-bg); border-radius: 12px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); }
         .cart-qty-btn { width: 32px; height: 32px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: #333; }
+        .cart-del-btn { color: #ef4444; padding: 0 10px; cursor: pointer; font-size: 18px; display: flex; align-items: center; height: 32px; }
         
         /* Loading & Toast */
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-color); z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction: column; text-align: center;}
@@ -186,7 +195,8 @@
         @keyframes popIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
 
         /* INPUTS & CONTROLS */
-        input, textarea, select { font-family: var(--font-body); width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 14px; box-sizing: border-box; background: var(--input-bg); margin-bottom: 10px; color: var(--text-main); }
+        input, textarea, select { font-family: var(--font-body); width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 14px; box-sizing: border-box; background: var(--input-bg); margin-bottom: 10px; color: var(--text-main); transition: border-color 0.2s; }
+        input:focus, textarea:focus, select:focus { border-color: var(--primary-color); outline: none; }
         select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2388d100' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 15px center; background-size: 16px; }
         
         .checkbox-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--border-color); font-family: var(--font-body); color: var(--text-main); }
@@ -250,7 +260,6 @@
             <div class="repeat-info">
                 <div class="repeat-title">↻ Повторить прошлый заказ</div>
                 <div class="repeat-desc" id="repeat-desc">...</div>
-                <div id="repeat-price" style="font-weight:bold; font-size:13px; color: var(--text-main);"></div>
             </div>
             <div style="font-weight:bold; color:var(--primary-color);">➔</div>
         </div>
@@ -285,6 +294,7 @@
         </div>
         
         <div id="closed-warning" class="warning-box" style="display:none;">🌙 <b>Мы сейчас закрыты.</b><br>Приготовим ваш заказ в рабочее время (с 09:00).</div>
+        <div id="closing-soon-warning" class="warning-box" style="display:none; background:#fef3c7; color:#b45309; border-color:#fcd34d;">⚠️ <b>Скоро закрытие!</b><br>Успейте сделать заказ до конца рабочего дня.</div>
         <div id="pizza-warning" class="info-box" style="display:none;">🍕 <b>Пицца доступна с 11:00.</b></div>
 
         <div id="cart-list-container"></div>
@@ -302,8 +312,8 @@
         <h3 style="font-family: var(--font-title); margin-bottom: 15px;">ДЕТАЛИ ЗАКАЗА</h3>
         
         <div class="option-group">
-            <input type="text" id="client-name" placeholder="Ваше имя">
-            <input type="tel" id="client-phone" placeholder="Телефон">
+            <input type="text" id="client-name" placeholder="Ваше имя" oninput="validateForm()">
+            <input type="tel" id="client-phone" placeholder="Телефон" oninput="maskPhone(event); validateForm();">
         </div>
         
         <div class="option-group">
@@ -333,7 +343,7 @@
         </div>
         
         <div id="address-block" style="display: none;">
-            <textarea id="delivery-address" placeholder="Адрес доставки..." style="height: 60px;"></textarea>
+            <textarea id="delivery-address" placeholder="Адрес доставки..." style="height: 60px;" oninput="validateForm()"></textarea>
         </div>
         
         <div class="option-group">
@@ -345,7 +355,8 @@
                 <label for="p-halyk" class="checkout-radio-label">🟢 Halyk</label>
             </div>
             <div id="payment-phone-block" style="margin-top: 10px;">
-                <input type="tel" id="payment-phone" placeholder="Номер привязанный к карте">
+                <input type="tel" id="payment-phone" placeholder="Номер привязанный к карте" oninput="maskPhone(event); validateForm();">
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:5px;">Счет на оплату придет в приложение банка</div>
             </div>
         </div>
         
@@ -375,6 +386,55 @@
     tg.ready();
     tg.expand(); 
     
+    // MICRO-PAPA PARSER (Lightweight CSV parser)
+    const Papa = {
+        parse: function(url, config) {
+            // Simplified fetch logic for Google Sheets CSV
+            fetch(url)
+                .then(response => response.text())
+                .then(text => {
+                    const data = this.parseCSV(text);
+                    if (config.complete) config.complete({ data: data });
+                })
+                .catch(err => {
+                    if (config.error) config.error(err);
+                });
+        },
+        parseCSV: function(str) {
+            const arr = [];
+            let quote = false;  // 'true' means we're inside a quoted field
+            for (let row = 0, col = 0, c = 0; c < str.length; c++) {
+                let cc = str[c], nc = str[c+1];
+                arr[row] = arr[row] || [];
+                arr[row][col] = arr[row][col] || '';
+                if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; }
+                else if (cc == '"') { quote = !quote; }
+                else if (cc == ',' && !quote) { ++col; }
+                else if (cc == '\r' && !quote && nc == '\n') { ++row; col = 0; ++c; }
+                else if (cc == '\n' && !quote) { ++row; col = 0; }
+                else { arr[row][col] += cc; }
+            }
+            
+            // Convert to array of objects (Header: true logic)
+            if (arr.length < 2) return arr;
+            const headers = arr[0].map(h => h.trim());
+            const result = [];
+            for(let i=1; i<arr.length; i++) {
+                const row = arr[i];
+                if(row.length < headers.length) continue;
+                let obj = {};
+                let hasData = false;
+                headers.forEach((h, idx) => {
+                    const val = row[idx] || "";
+                    if(val.trim()) hasData = true;
+                    obj[h] = val;
+                });
+                if(hasData) result.push(obj);
+            }
+            return result;
+        }
+    };
+
     // Config
     const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv"; 
     const BACKEND_URL = "https://coffeemoll.onrender.com"; 
@@ -399,6 +459,7 @@
     let cart = [];
     let favorites = JSON.parse(localStorage.getItem('coffee_favorites')) || [];
     let currentModalProduct = null;
+    let modalQty = 1;
     let appliedDiscount = 0; 
     let appliedPromoCode = ""; 
     let upsellShown = false;
@@ -662,7 +723,7 @@
 
                 card.innerHTML = `
                     <div class="card-img-container card-skeleton">
-                        <img src="${imgUrl}" onload="this.classList.add('loaded'); this.parentElement.classList.remove('card-skeleton')">
+                        <img src="${imgUrl}" onload="this.classList.add('loaded'); this.parentElement.classList.remove('card-skeleton')" onerror="this.onerror=null;this.src='${getImageByCategory(p.cat)}';">
                         ${badgeHtml}
                         ${favHtml}
                     </div>
@@ -715,10 +776,10 @@
     function addToCart(item) {
         const existing = cart.find(i => i.name === item.name && JSON.stringify(i.options) === JSON.stringify(item.options));
         if (existing) {
-            existing.qty = (existing.qty || 1) + 1;
+            existing.qty = (existing.qty || 1) + (item.qty || 1);
             existing.priceTotal = existing.price * existing.qty;
         } else {
-            cart.push({ ...item, qty: 1, priceTotal: item.price });
+            cart.push({ ...item, qty: (item.qty || 1), priceTotal: item.price * (item.qty || 1) });
         }
         updateCartUI();
         tg.HapticFeedback.notificationOccurred('success');
@@ -731,6 +792,16 @@
             updateCartUI();
             closeCheckout();
             tg.HapticFeedback.notificationOccurred('warning');
+        }
+    }
+    
+    function removeFromCart(idx) {
+        if(confirm('Удалить позицию?')) {
+            cart.splice(idx, 1);
+            if(cart.length === 0) closeCheckout();
+            else renderCartList();
+            calculateTotal();
+            updateCartUI();
         }
     }
 
@@ -780,10 +851,29 @@
         acc.classList.toggle('open');
     }
 
+    function changeModalQty(delta) {
+        let newQty = modalQty + delta;
+        if(newQty < 1) newQty = 1;
+        modalQty = newQty;
+        document.getElementById('modal-qty').innerText = modalQty;
+        recalcPrice();
+    }
+
+    function handleSyrupAmount(type) {
+        if(type === 'more' && document.getElementById('syrup-more').checked) {
+            document.getElementById('syrup-less').checked = false;
+        }
+        if(type === 'less' && document.getElementById('syrup-less').checked) {
+            document.getElementById('syrup-more').checked = false;
+        }
+    }
+
     function openComplexModal(product) {
         currentModalProduct = product;
+        modalQty = 1; // Reset quantity
         const content = document.getElementById('product-modal-content');
-        let imgHtml = ''; if (product.img) { imgHtml = `<div class="modal-img-wrapper"><img src="${product.img}" class="modal-img"></div>`; }
+        
+        let imgHtml = ''; if (product.img) { imgHtml = `<div class="modal-img-wrapper"><img src="${product.img}" class="modal-img" onerror="this.onerror=null;this.src='${getImageByCategory(product.cat)}';"></div>`; }
         let html = `<div class="modal-header"><div class="modal-title-block">${imgHtml}<div class="modal-title">${product.name}</div> <div class="modal-desc">${product.fullDesc || product.desc || ""}</div></div><div class="close-icon" onclick="closeProductModal(true)">✕</div></div>`;
         
         if (product.hasVolumes && product.volumes.length > 0) {
@@ -838,6 +928,25 @@
              let price = product.mods['syrup']; let displayPrice = price > 0 ? `+${price}` : 'Бесплатно';
              let sOpts = SYRUPS.map(s=>`<option value="${s}">${s}</option>`).join('');
              extrasHtml += `<div style="margin-top:10px"><label class="option-label">Сироп (${displayPrice})</label><select id="syr" onchange="recalcPrice()">${sOpts}</select></div>`;
+             
+             // NEW: Syrup amount sliders container
+             extrasHtml += `
+             <div id="syrup-amount-options" style="display:none; padding-left: 10px; margin-top: 5px; border-left: 2px solid var(--primary-color);">
+                <div class="checkbox-row">
+                    <span>Побольше сиропа</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="syrup-more" onchange="handleSyrupAmount('more')">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="checkbox-row">
+                    <span>Поменьше сиропа</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="syrup-less" onchange="handleSyrupAmount('less')">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+             </div>`;
         }
 
         if (hasExtras) {
@@ -849,7 +958,16 @@
             </div>`;
         }
 
-        html += `<div class="modal-footer"><button class="modal-add-btn" id="modal-btn" onclick="addComplexToCart()">Добавить</button></div>`;
+        html += `
+        <div class="modal-footer">
+            <div class="qty-control-modal">
+                <button class="qty-control-btn" onclick="changeModalQty(-1)">−</button>
+                <div class="qty-control-val" id="modal-qty">1</div>
+                <button class="qty-control-btn" onclick="changeModalQty(1)">+</button>
+            </div>
+            <button class="modal-add-btn" id="modal-btn" onclick="addComplexToCart()">Добавить</button>
+        </div>`;
+        
         content.innerHTML = html;
         document.getElementById('product-modal').style.display = 'flex';
         if(product.hasMilk) toggleAltMilk();
@@ -884,10 +1002,32 @@
         const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
         checkboxes.forEach(key => { const el = document.getElementById(`mod-${key}`); if (el && el.checked) p += prod.mods[key]; });
         if(document.getElementById('sauce-select')) { const val = document.getElementById('sauce-select').value; if (val && val !== "Нет") p += prod.mods['sauce']; }
-        if(document.getElementById('syr')) { const val = document.getElementById('syr').value; if (val && val !== "Нет") p += prod.mods['syrup']; }
+        
+        // SYRUP LOGIC
+        if(document.getElementById('syr')) { 
+            const val = document.getElementById('syr').value; 
+            const amountContainer = document.getElementById('syrup-amount-options');
+            
+            if (val && val !== "Нет") {
+                p += prod.mods['syrup'];
+                // Show amount options
+                if(amountContainer) amountContainer.style.display = 'block';
+            } else {
+                // Hide and reset amount options
+                if(amountContainer) {
+                    amountContainer.style.display = 'none';
+                    document.getElementById('syrup-more').checked = false;
+                    document.getElementById('syrup-less').checked = false;
+                }
+            }
+        }
 
         const btn = document.getElementById('modal-btn');
-        if(btn) { btn.innerText = `Добавить за ${p} ₸`; btn.dataset.price = p; }
+        if(btn) { 
+            const total = p * modalQty;
+            btn.innerText = `Добавить за ${total} ₸`; 
+            btn.dataset.price = p; 
+        }
     }
 
     function addComplexToCart() {
@@ -906,9 +1046,19 @@
 
         if(document.getElementById('sauce-select')) { const val = document.getElementById('sauce-select').value; if (val && val !== "Нет") opts.push(`Соус: ${val}`); }
         if(document.getElementById('sug')) { const s = document.getElementById('sug').value; if (s) opts.push(`Сахар: ${s}`); }
-        if(document.getElementById('syr')) { const val = document.getElementById('syr').value; if (val && val !== "Нет") opts.push(`Сироп: ${val}`); }
+        
+        // SYRUP ADD LOGIC
+        if(document.getElementById('syr')) { 
+            const val = document.getElementById('syr').value; 
+            if (val && val !== "Нет") {
+                let syrupStr = `Сироп: ${val}`;
+                if(document.getElementById('syrup-more').checked) syrupStr += " (Побольше)";
+                if(document.getElementById('syrup-less').checked) syrupStr += " (Поменьше)";
+                opts.push(syrupStr); 
+            }
+        }
 
-        addToCart({ name: prod.name, price: price, options: opts, cat: prod.cat });
+        addToCart({ name: prod.name, price: price, options: opts, cat: prod.cat, qty: modalQty });
         closeProductModal(true); 
         checkUpsell(prod);
     }
@@ -920,6 +1070,7 @@
         document.getElementById('checkout-modal').style.display = 'flex';
         renderCartList();
         calculateTotal();
+        validateForm();
         
         // Auto-fill user data
         const u = tg.initDataUnsafe?.user;
@@ -938,12 +1089,13 @@
                 <div style="flex:1">
                     <div style="font-weight:700; font-family: var(--font-title);">${item.name}</div>
                     <div style="font-size:11px; color:var(--text-secondary);">${item.options ? item.options.join(', ') : ''}</div>
-                    <div style="font-weight:bold; color:var(--primary-color); margin-top:4px;">${item.priceTotal || item.price} ₸</div>
+                    <div style="font-weight:bold; color:var(--primary-color); margin-top:4px;">${item.priceTotal} ₸</div>
                 </div>
-                <div style="display:flex; align-items:center; gap:10px;">
+                <div style="display:flex; align-items:center; gap:8px;">
                     <div class="cart-qty-btn" onclick="modQty(${i}, -1)">-</div>
-                    <div style="font-weight:bold; width:20px; text-align:center;">${item.qty || 1}</div>
+                    <div style="font-weight:bold; width:20px; text-align:center;">${item.qty}</div>
                     <div class="cart-qty-btn" onclick="modQty(${i}, 1)">+</div>
+                    <div class="cart-del-btn" onclick="removeFromCart(${i})">🗑️</div>
                 </div>
             </div>`;
         });
@@ -952,15 +1104,16 @@
     function modQty(idx, delta) {
         const item = cart[idx];
         item.qty = (item.qty || 1) + delta;
-        item.priceTotal = item.price * item.qty;
         
-        if(item.qty <= 0) cart.splice(idx, 1);
-        
-        if(cart.length === 0) closeCheckout();
-        else {
-            renderCartList();
-            calculateTotal();
+        if(item.qty <= 0) {
+            // Confirm delete handled in separate function, here we just stop at 1 usually, 
+            // or we can allow drop to 0 to remove. Let's force min 1 for +/- buttons and use trash for delete.
+            item.qty = 1; 
         }
+        
+        item.priceTotal = item.price * item.qty;
+        renderCartList();
+        calculateTotal();
         updateCartUI();
     }
 
@@ -971,18 +1124,47 @@
         return total;
     }
     
+    function validateForm() {
+        const name = document.getElementById('client-name').value.trim();
+        const phone = document.getElementById('client-phone').value.trim();
+        const address = document.getElementById('delivery-address').value.trim();
+        const payPhone = document.getElementById('payment-phone').value.trim();
+        
+        const isDel = document.getElementById('d-delivery').checked;
+        const isCard = document.getElementById('p-kaspi').checked || document.getElementById('p-halyk').checked;
+        
+        let valid = name.length > 0 && phone.length > 5;
+        if(isDel && address.length < 5) valid = false;
+        if(isCard && payPhone.length < 5) valid = false;
+        
+        document.getElementById('submit-btn').disabled = !valid;
+    }
+    
     function closeCheckout() { document.getElementById('checkout-modal').style.display = 'none'; }
     
     // --- HELPER FUNCTIONS ---
     function checkWorkingHours() {
-        const h = new Date().getHours();
+        const now = new Date();
+        const h = now.getHours();
+        const m = now.getMinutes();
+        
         const isOpen = h >= OPEN_HOUR && h < CLOSE_HOUR;
         const b = document.getElementById('work-status');
+        
         if(b){
             b.innerText = isOpen ? `Открыто (${OPEN_HOUR}:00 - ${CLOSE_HOUR}:00)` : "Закрыто";
             b.style.background = isOpen ? '#e6fffa' : '#fee2e2';
             b.style.color = isOpen ? '#047857' : '#991b1b';
         }
+        
+        // Closing soon logic
+        if (isOpen && h === (CLOSE_HOUR - 1)) {
+             document.getElementById('closing-soon-warning').style.display = 'block';
+        } else {
+             document.getElementById('closing-soon-warning').style.display = 'none';
+        }
+        
+        document.getElementById('closed-warning').style.display = isOpen ? 'none' : 'block';
         return isOpen;
     }
     
@@ -996,6 +1178,12 @@
             else c.style.display = 'none';
         });
         document.getElementById('no-results').style.display = found ? 'none' : 'block';
+        
+        // Hide empty categories
+        document.querySelectorAll('.category-section').forEach(sec => {
+            const visibleCards = sec.querySelectorAll('.card[style="display: flex;"]');
+            sec.style.display = visibleCards.length > 0 ? 'block' : 'none';
+        });
     }
 
     // --- REPEAT ORDER & UPSELL ---
@@ -1056,7 +1244,7 @@
             setTimeout(() => { openComplexModal(currentUpsellItem); }, 100);
         } else {
              let price = currentUpsellItem.price || currentUpsellItem.basePrice;
-             addToCart({ name: currentUpsellItem.name, price: price, options: [], cat: currentUpsellItem.cat });
+             addToCart({ name: currentUpsellItem.name, price: price, options: [], cat: currentUpsellItem.cat, qty: 1 });
         }
     }
     
@@ -1122,10 +1310,6 @@
             comment = `⏰ К ${specTime}. ${comment}`;
         } else { comment = `⚡ Как можно скорее. ${comment}`; }
 
-        if (!name || !phone) { showToast("Укажите имя и телефон.", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; } 
-        if (delType === 'delivery' && !address) { showToast("Укажите адрес доставки.", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; } 
-        if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) { showToast("Укажите номер для счета.", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; } 
-        
         saveUserData(name, phone, address); 
         const total = calculateTotal(); 
         const orderData = { 
@@ -1152,9 +1336,10 @@
         const isDel = document.getElementById('d-delivery').checked; 
         document.getElementById('address-block').style.display = isDel ? 'block' : 'none'; 
         document.getElementById('delivery-msg').style.display = isDel ? 'block' : 'none'; 
+        validateForm();
     }
     function togglePayment() { 
-        // Logic to show/hide payment phone block if needed, current design shows it always for cards
+        validateForm();
     }
     function toggleTimePicker() { 
         const isTime = document.getElementById('t-time').checked; 
@@ -1163,56 +1348,50 @@
 
     // Phone Mask
     function maskPhone(e) {
-        const input = e.target;
-        let value = input.value.replace(/\D/g, ''); // Убираем всё кроме цифр
-        
-        // 1. Обработка удаления (если пусто)
-        if (!value) {
-            input.value = '';
+        let val = e.target.value.replace(/\D/g, '');
+        if (!val) {
+            e.target.value = '';
             validateForm();
             return;
         }
-
-        // 2. Замена 8 на 7 (только если это первая цифра)
-        if (value[0] === '8') {
-            value = '7' + value.substring(1);
-        }
         
-        // 3. Если первая цифра 9 (опечатка), добавляем 7
-        if (value[0] === '9') {
-            value = '7' + value;
-        }
-
-        // 4. Форматирование +7 (XXX) XXX-XX-XX
-        if (value[0] === '7') {
+        if (['7', '8'].includes(val[0])) {
+            if (val[0] === '8') val = '7' + val.slice(1);
+            
             let formatted = '+7';
-            if (value.length > 1) formatted += ' (' + value.substring(1, 4);
-            if (value.length >= 5) formatted += ') ' + value.substring(4, 7);
-            if (value.length >= 8) formatted += '-' + value.substring(7, 9);
-            if (value.length >= 10) formatted += '-' + value.substring(9, 11);
-            input.value = formatted;
+            if (val.length > 1) {
+                formatted += ' (' + val.substring(1, 4);
+            }
+            if (val.length >= 5) {
+                formatted += ') ' + val.substring(4, 7);
+            }
+            if (val.length >= 8) {
+                formatted += '-' + val.substring(7, 9);
+            }
+            if (val.length >= 10) {
+                formatted += '-' + val.substring(9, 11);
+            }
+            e.target.value = formatted;
         } else {
-            // Для иностранных номеров просто +
-            input.value = '+' + value;
+            e.target.value = '+' + val;
         }
-        
         validateForm();
     }
     
-    // Удаляем предыдущие обработчики (которые не работают) и ставим стандартные
-    // Важно: oninput теперь прописан в JS, в HTML его быть не должно.
-    document.getElementById('client-phone').addEventListener('input', maskPhone);
-    document.getElementById('payment-phone').addEventListener('input', maskPhone);
-    
-    // Специальный обработчик для Backspace, чтобы можно было удалить префикс +7
-    function handleBackspace(e) {
-        if (e.key === 'Backspace' && e.target.value.length <= 4) {
-             e.target.value = '';
-             validateForm();
+    // Add specific keydown handler to allow deleting the prefix easily
+    document.getElementById('client-phone').addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && this.value.length <= 4) {
+             this.value = '';
+             validateForm(); // Update button state
         }
-    }
-    document.getElementById('client-phone').addEventListener('keydown', handleBackspace);
-    document.getElementById('payment-phone').addEventListener('keydown', handleBackspace);
+    });
+    
+    document.getElementById('payment-phone').addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && this.value.length <= 4) {
+             this.value = '';
+             validateForm(); // Update button state
+        }
+    });
 
     window.addEventListener('offline', () => { document.getElementById('error-screen').style.display = 'flex'; });
     window.addEventListener('online', () => { location.reload(); });
@@ -1222,4 +1401,3 @@
 </script>
 </body>
 </html>
-
