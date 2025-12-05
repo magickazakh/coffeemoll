@@ -395,10 +395,11 @@
     const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
     const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ", "ДЕСЕРТЫ"], "СЕЗОННОЕ": ["КРУАССАНЫ", "ДЕСЕРТЫ"], "КРУАССАНЫ": ["СЕЗОННОЕ"], "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ЗАВТРАКИ": ["КОФЕ", "СЕЗОННОЕ"] };
 
-    let menuData = [];
+  let menuData = [];
     let cart = [];
     let favorites = JSON.parse(localStorage.getItem('coffee_favorites')) || [];
     let currentModalProduct = null;
+    let modalQty = 1;
     let appliedDiscount = 0; 
     let appliedPromoCode = ""; 
     let upsellShown = false;
@@ -662,7 +663,7 @@
 
                 card.innerHTML = `
                     <div class="card-img-container card-skeleton">
-                        <img src="${imgUrl}" onload="this.classList.add('loaded'); this.parentElement.classList.remove('card-skeleton')">
+                        <img src="${imgUrl}" onload="this.classList.add('loaded'); this.parentElement.classList.remove('card-skeleton')" onerror="this.onerror=null;this.src='${getImageByCategory(p.cat)}';">
                         ${badgeHtml}
                         ${favHtml}
                     </div>
@@ -715,10 +716,10 @@
     function addToCart(item) {
         const existing = cart.find(i => i.name === item.name && JSON.stringify(i.options) === JSON.stringify(item.options));
         if (existing) {
-            existing.qty = (existing.qty || 1) + 1;
+            existing.qty = (existing.qty || 1) + (item.qty || 1);
             existing.priceTotal = existing.price * existing.qty;
         } else {
-            cart.push({ ...item, qty: 1, priceTotal: item.price });
+            cart.push({ ...item, qty: (item.qty || 1), priceTotal: item.price * (item.qty || 1) });
         }
         updateCartUI();
         tg.HapticFeedback.notificationOccurred('success');
@@ -731,6 +732,16 @@
             updateCartUI();
             closeCheckout();
             tg.HapticFeedback.notificationOccurred('warning');
+        }
+    }
+    
+    function removeFromCart(idx) {
+        if(confirm('Удалить позицию?')) {
+            cart.splice(idx, 1);
+            if(cart.length === 0) closeCheckout();
+            else renderCartList();
+            calculateTotal();
+            updateCartUI();
         }
     }
 
@@ -780,10 +791,29 @@
         acc.classList.toggle('open');
     }
 
+    function changeModalQty(delta) {
+        let newQty = modalQty + delta;
+        if(newQty < 1) newQty = 1;
+        modalQty = newQty;
+        document.getElementById('modal-qty').innerText = modalQty;
+        recalcPrice();
+    }
+
+    function handleSyrupAmount(type) {
+        if(type === 'more' && document.getElementById('syrup-more').checked) {
+            document.getElementById('syrup-less').checked = false;
+        }
+        if(type === 'less' && document.getElementById('syrup-less').checked) {
+            document.getElementById('syrup-more').checked = false;
+        }
+    }
+
     function openComplexModal(product) {
         currentModalProduct = product;
+        modalQty = 1; // Reset quantity
         const content = document.getElementById('product-modal-content');
-        let imgHtml = ''; if (product.img) { imgHtml = `<div class="modal-img-wrapper"><img src="${product.img}" class="modal-img"></div>`; }
+        
+        let imgHtml = ''; if (product.img) { imgHtml = `<div class="modal-img-wrapper"><img src="${product.img}" class="modal-img" onerror="this.onerror=null;this.src='${getImageByCategory(product.cat)}';"></div>`; }
         let html = `<div class="modal-header"><div class="modal-title-block">${imgHtml}<div class="modal-title">${product.name}</div> <div class="modal-desc">${product.fullDesc || product.desc || ""}</div></div><div class="close-icon" onclick="closeProductModal(true)">✕</div></div>`;
         
         if (product.hasVolumes && product.volumes.length > 0) {
@@ -838,6 +868,25 @@
              let price = product.mods['syrup']; let displayPrice = price > 0 ? `+${price}` : 'Бесплатно';
              let sOpts = SYRUPS.map(s=>`<option value="${s}">${s}</option>`).join('');
              extrasHtml += `<div style="margin-top:10px"><label class="option-label">Сироп (${displayPrice})</label><select id="syr" onchange="recalcPrice()">${sOpts}</select></div>`;
+             
+             // NEW: Syrup amount sliders container
+             extrasHtml += `
+             <div id="syrup-amount-options" style="display:none; padding-left: 10px; margin-top: 5px; border-left: 2px solid var(--primary-color);">
+                <div class="checkbox-row">
+                    <span>Побольше сиропа</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="syrup-more" onchange="handleSyrupAmount('more')">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="checkbox-row">
+                    <span>Поменьше сиропа</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="syrup-less" onchange="handleSyrupAmount('less')">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+             </div>`;
         }
 
         if (hasExtras) {
@@ -849,7 +898,16 @@
             </div>`;
         }
 
-        html += `<div class="modal-footer"><button class="modal-add-btn" id="modal-btn" onclick="addComplexToCart()">Добавить</button></div>`;
+        html += `
+        <div class="modal-footer">
+            <div class="qty-control-modal">
+                <button class="qty-control-btn" onclick="changeModalQty(-1)">−</button>
+                <div class="qty-control-val" id="modal-qty">1</div>
+                <button class="qty-control-btn" onclick="changeModalQty(1)">+</button>
+            </div>
+            <button class="modal-add-btn" id="modal-btn" onclick="addComplexToCart()">Добавить</button>
+        </div>`;
+        
         content.innerHTML = html;
         document.getElementById('product-modal').style.display = 'flex';
         if(product.hasMilk) toggleAltMilk();
@@ -884,10 +942,32 @@
         const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
         checkboxes.forEach(key => { const el = document.getElementById(`mod-${key}`); if (el && el.checked) p += prod.mods[key]; });
         if(document.getElementById('sauce-select')) { const val = document.getElementById('sauce-select').value; if (val && val !== "Нет") p += prod.mods['sauce']; }
-        if(document.getElementById('syr')) { const val = document.getElementById('syr').value; if (val && val !== "Нет") p += prod.mods['syrup']; }
+        
+        // SYRUP LOGIC
+        if(document.getElementById('syr')) { 
+            const val = document.getElementById('syr').value; 
+            const amountContainer = document.getElementById('syrup-amount-options');
+            
+            if (val && val !== "Нет") {
+                p += prod.mods['syrup'];
+                // Show amount options
+                if(amountContainer) amountContainer.style.display = 'block';
+            } else {
+                // Hide and reset amount options
+                if(amountContainer) {
+                    amountContainer.style.display = 'none';
+                    document.getElementById('syrup-more').checked = false;
+                    document.getElementById('syrup-less').checked = false;
+                }
+            }
+        }
 
         const btn = document.getElementById('modal-btn');
-        if(btn) { btn.innerText = `Добавить за ${p} ₸`; btn.dataset.price = p; }
+        if(btn) { 
+            const total = p * modalQty;
+            btn.innerText = `Добавить за ${total} ₸`; 
+            btn.dataset.price = p; 
+        }
     }
 
     function addComplexToCart() {
@@ -906,9 +986,19 @@
 
         if(document.getElementById('sauce-select')) { const val = document.getElementById('sauce-select').value; if (val && val !== "Нет") opts.push(`Соус: ${val}`); }
         if(document.getElementById('sug')) { const s = document.getElementById('sug').value; if (s) opts.push(`Сахар: ${s}`); }
-        if(document.getElementById('syr')) { const val = document.getElementById('syr').value; if (val && val !== "Нет") opts.push(`Сироп: ${val}`); }
+        
+        // SYRUP ADD LOGIC
+        if(document.getElementById('syr')) { 
+            const val = document.getElementById('syr').value; 
+            if (val && val !== "Нет") {
+                let syrupStr = `Сироп: ${val}`;
+                if(document.getElementById('syrup-more').checked) syrupStr += " (Побольше)";
+                if(document.getElementById('syrup-less').checked) syrupStr += " (Поменьше)";
+                opts.push(syrupStr); 
+            }
+        }
 
-        addToCart({ name: prod.name, price: price, options: opts, cat: prod.cat });
+        addToCart({ name: prod.name, price: price, options: opts, cat: prod.cat, qty: modalQty });
         closeProductModal(true); 
         checkUpsell(prod);
     }
@@ -920,6 +1010,7 @@
         document.getElementById('checkout-modal').style.display = 'flex';
         renderCartList();
         calculateTotal();
+        validateForm();
         
         // Auto-fill user data
         const u = tg.initDataUnsafe?.user;
@@ -938,12 +1029,13 @@
                 <div style="flex:1">
                     <div style="font-weight:700; font-family: var(--font-title);">${item.name}</div>
                     <div style="font-size:11px; color:var(--text-secondary);">${item.options ? item.options.join(', ') : ''}</div>
-                    <div style="font-weight:bold; color:var(--primary-color); margin-top:4px;">${item.priceTotal || item.price} ₸</div>
+                    <div style="font-weight:bold; color:var(--primary-color); margin-top:4px;">${item.priceTotal} ₸</div>
                 </div>
-                <div style="display:flex; align-items:center; gap:10px;">
+                <div style="display:flex; align-items:center; gap:8px;">
                     <div class="cart-qty-btn" onclick="modQty(${i}, -1)">-</div>
-                    <div style="font-weight:bold; width:20px; text-align:center;">${item.qty || 1}</div>
+                    <div style="font-weight:bold; width:20px; text-align:center;">${item.qty}</div>
                     <div class="cart-qty-btn" onclick="modQty(${i}, 1)">+</div>
+                    <div class="cart-del-btn" onclick="removeFromCart(${i})">🗑️</div>
                 </div>
             </div>`;
         });
@@ -952,15 +1044,16 @@
     function modQty(idx, delta) {
         const item = cart[idx];
         item.qty = (item.qty || 1) + delta;
-        item.priceTotal = item.price * item.qty;
         
-        if(item.qty <= 0) cart.splice(idx, 1);
-        
-        if(cart.length === 0) closeCheckout();
-        else {
-            renderCartList();
-            calculateTotal();
+        if(item.qty <= 0) {
+            // Confirm delete handled in separate function, here we just stop at 1 usually, 
+            // or we can allow drop to 0 to remove. Let's force min 1 for +/- buttons and use trash for delete.
+            item.qty = 1; 
         }
+        
+        item.priceTotal = item.price * item.qty;
+        renderCartList();
+        calculateTotal();
         updateCartUI();
     }
 
@@ -971,18 +1064,47 @@
         return total;
     }
     
+    function validateForm() {
+        const name = document.getElementById('client-name').value.trim();
+        const phone = document.getElementById('client-phone').value.trim();
+        const address = document.getElementById('delivery-address').value.trim();
+        const payPhone = document.getElementById('payment-phone').value.trim();
+        
+        const isDel = document.getElementById('d-delivery').checked;
+        const isCard = document.getElementById('p-kaspi').checked || document.getElementById('p-halyk').checked;
+        
+        let valid = name.length > 0 && phone.length > 5;
+        if(isDel && address.length < 5) valid = false;
+        if(isCard && payPhone.length < 5) valid = false;
+        
+        document.getElementById('submit-btn').disabled = !valid;
+    }
+    
     function closeCheckout() { document.getElementById('checkout-modal').style.display = 'none'; }
     
     // --- HELPER FUNCTIONS ---
     function checkWorkingHours() {
-        const h = new Date().getHours();
+        const now = new Date();
+        const h = now.getHours();
+        const m = now.getMinutes();
+        
         const isOpen = h >= OPEN_HOUR && h < CLOSE_HOUR;
         const b = document.getElementById('work-status');
+        
         if(b){
             b.innerText = isOpen ? `Открыто (${OPEN_HOUR}:00 - ${CLOSE_HOUR}:00)` : "Закрыто";
             b.style.background = isOpen ? '#e6fffa' : '#fee2e2';
             b.style.color = isOpen ? '#047857' : '#991b1b';
         }
+        
+        // Closing soon logic
+        if (isOpen && h === (CLOSE_HOUR - 1)) {
+             document.getElementById('closing-soon-warning').style.display = 'block';
+        } else {
+             document.getElementById('closing-soon-warning').style.display = 'none';
+        }
+        
+        document.getElementById('closed-warning').style.display = isOpen ? 'none' : 'block';
         return isOpen;
     }
     
@@ -996,6 +1118,12 @@
             else c.style.display = 'none';
         });
         document.getElementById('no-results').style.display = found ? 'none' : 'block';
+        
+        // Hide empty categories
+        document.querySelectorAll('.category-section').forEach(sec => {
+            const visibleCards = sec.querySelectorAll('.card[style="display: flex;"]');
+            sec.style.display = visibleCards.length > 0 ? 'block' : 'none';
+        });
     }
 
     // --- REPEAT ORDER & UPSELL ---
@@ -1056,7 +1184,7 @@
             setTimeout(() => { openComplexModal(currentUpsellItem); }, 100);
         } else {
              let price = currentUpsellItem.price || currentUpsellItem.basePrice;
-             addToCart({ name: currentUpsellItem.name, price: price, options: [], cat: currentUpsellItem.cat });
+             addToCart({ name: currentUpsellItem.name, price: price, options: [], cat: currentUpsellItem.cat, qty: 1 });
         }
     }
     
@@ -1122,10 +1250,6 @@
             comment = `⏰ К ${specTime}. ${comment}`;
         } else { comment = `⚡ Как можно скорее. ${comment}`; }
 
-        if (!name || !phone) { showToast("Укажите имя и телефон.", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; } 
-        if (delType === 'delivery' && !address) { showToast("Укажите адрес доставки.", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; } 
-        if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) { showToast("Укажите номер для счета.", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; } 
-        
         saveUserData(name, phone, address); 
         const total = calculateTotal(); 
         const orderData = { 
@@ -1152,9 +1276,10 @@
         const isDel = document.getElementById('d-delivery').checked; 
         document.getElementById('address-block').style.display = isDel ? 'block' : 'none'; 
         document.getElementById('delivery-msg').style.display = isDel ? 'block' : 'none'; 
+        validateForm();
     }
     function togglePayment() { 
-        // Logic to show/hide payment phone block if needed, current design shows it always for cards
+        validateForm();
     }
     function toggleTimePicker() { 
         const isTime = document.getElementById('t-time').checked; 
@@ -1222,4 +1347,3 @@
 </script>
 </body>
 </html>
-
