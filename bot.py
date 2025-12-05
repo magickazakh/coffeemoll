@@ -134,31 +134,44 @@ def check_promo_firebase(code, user_id):
     code = code.strip().upper()
     uid = clean_id(user_id)
     
+    logging.info(f"Checking promo: {code} for user {uid}")
+    
     try:
-        # 1. Кеш
-        promo_data = PROMO_CACHE.get(code)
-        if not promo_data:
-            doc = db.collection('promocodes').document(code).get()
-            if not doc.exists: return "NOT_FOUND", 0
-            promo_data = doc.to_dict()
+        # 1. Читаем НАПРЯМУЮ из базы (минуя кеш)
+        doc = db.collection('promocodes').document(code).get()
+        
+        if not doc.exists: 
+            return "NOT_FOUND", 0
+            
+        promo_data = doc.to_dict()
 
-        limit = promo_data.get('limit', 0)
-        discount = promo_data.get('discount', 0)
-        try: discount = float(discount)
-        except: discount = 0
+        # Безопасное приведение типов
+        try:
+            limit = int(promo_data.get('limit', 0))
+            discount = float(promo_data.get('discount', 0))
+        except:
+            return "ERROR", 0
         
         if limit <= 0: return "LIMIT", 0
 
-        # 2. История
-        history_ref = db.collection('promo_history').document(f"{uid}_{code}")
-        if history_ref.get().exists: return "USED", 0
+        # 2. Проверяем историю через ЗАПРОС (Query) по полю user_id
+        if uid and uid != '0':
+            # Ищем запись, где user_id совпадает с текущим пользователем и промокод совпадает
+            history_query = db.collection('promo_history')\
+                .where('user_id', '==', uid)\
+                .where('code', '==', code)\
+                .limit(1).stream()
+            
+            # Если найден хоть один документ — значит промокод использован
+            for _ in history_query:
+                return "USED", 0
         
         return "OK", discount
             
     except Exception as e:
         logging.error(f"Check Error: {e}")
         return "ERROR", 0
-
+        
 @firestore.transactional
 def use_promo_transaction(transaction, code, uid):
     promo_ref = db.collection('promocodes').document(code)
@@ -574,5 +587,6 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
