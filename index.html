@@ -228,7 +228,7 @@
     <div class="spinner"></div>
     <div class="loading-title"><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></div>
     <div class="separator-line"></div>
-    <div class="loading-motto">Загружаем меню...</div>
+    <div class="loading-motto">Загружаем зерно в кофемолку...</div>
 </div>
 
 <div id="toast-container"></div>
@@ -304,7 +304,7 @@
         <!-- Promo Code -->
         <div class="promo-section" id="promo-container" style="display:flex; gap:10px; margin: 15px 0;">
              <input type="text" id="promo-code" placeholder="Промокод" style="margin-bottom: 0; flex:1;">
-             <button class="promo-btn" id="apply-promo-btn" onclick="applyPromo()" style="background: #f0f0f0; border:none; border-radius:12px; font-weight:bold; padding:0 20px; cursor:pointer;">Прим.</button>
+             <button class="promo-btn" id="apply-promo-btn" onclick="applyPromo()" style="background: #f0f0f0; border:none; border-radius:12px; font-weight:bold; padding:0 20px; cursor:pointer;">ОК</button>
         </div>
 
         <div class="checkout-total" id="checkout-total-sum" style="text-align: right; font-size: 18px; font-weight: 800; margin: 20px 0;">Итого: 0 ₸</div>
@@ -455,7 +455,7 @@
     let OPEN_HOUR = 9;
     let CLOSE_HOUR = 23;
     
-    const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Альт. молоко", cinnamon: "Корица" };
+    const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Растительное молоко", cinnamon: "Корица" };
     const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ", "ДЕСЕРТЫ"], "СЕЗОННОЕ": ["КРУАССАНЫ", "ДЕСЕРТЫ"], "КРУАССАНЫ": ["СЕЗОННОЕ"], "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ЗАВТРАКИ": ["КОФЕ", "СЕЗОННОЕ"] };
 
     let menuData = [];
@@ -470,7 +470,6 @@
 
     // Loading Texts Logic (RESTORED)
     const loadingTexts = [
-        "Загружаем зерно в кофемолку...",
         "Настраиваем помол...",
         "Рисуем сердечко на пенке...",
         "Протираем столики...",
@@ -1076,7 +1075,7 @@
         if(prod.hasVolumes && prod.volumes.length > 0) { const v = document.querySelector('input[name="vol"]:checked').value; opts.push(`Порция: ${prod.volumes[v].n}`); }
         if(prod.hasMilk) {
             const m = document.querySelector('input[name="milk"]:checked').value;
-            if(m==='lf') opts.push("Молоко: Безлакт.");
+            if(m==='lf') opts.push("Молоко: Безлактозное");
             if(m==='alt') { const t = document.getElementById('alt-milk-type').value; opts.push(`Молоко: Растительное (${t})`); }
         }
         const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
@@ -1465,3 +1464,4 @@
 </script>
 </body>
 </html>
+
