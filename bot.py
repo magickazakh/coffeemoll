@@ -327,7 +327,7 @@ async def web_app_data_handler(m: types.Message):
         for i, item in enumerate(cart, 1):
             opts = [o for o in item.get('options', []) if o and o != "Без сахара"]
             q = item.get('qty', 1)
-            txt += f"{i}. <b>{item.get('name')}</b> {'('+ ', '.join(opts) +')' if opts else ''}{f' <b>x {q}</b>' if q > 1 else ''}\n"
+            txt += f"{i}. <b>{item.get('name')}</b> {'('+ ', '.join(opts) +')' if opts else ''}{f' <b>x {q} шт.</b>' if q > 1 else ''}\n"
         txt += f"{d_txt}\n💰 <b>ИТОГО: {total} ₸</b>"
         if is_del: txt += "\n⚠️ <i>+ Доставка</i>"
 
@@ -574,4 +574,5 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
