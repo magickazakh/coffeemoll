@@ -28,7 +28,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 TOKEN = os.getenv("BOT_TOKEN") 
 if not TOKEN:
     logging.critical("❌ BOT_TOKEN is not set!")
-    # Не прерываем выполнение сразу, чтобы логи успели записаться, но бот работать не будет без токена
+    # Не прерываем выполнение сразу, чтобы логи успели записаться
 
 ADMIN_CHAT_ID = -1003356844624
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
@@ -136,7 +136,7 @@ def check_promo_firebase(code, user_id):
     logging.info(f"Checking promo: {code} for user {uid}")
     
     try:
-        # 1. Данные промокода (читаем напрямую из базы для точности)
+        # 1. Данные промокода
         doc = db.collection('promocodes').document(code).get()
         
         if not doc.exists: 
@@ -152,7 +152,7 @@ def check_promo_firebase(code, user_id):
         
         if limit <= 0: return "LIMIT", 0
 
-        # 2. Проверяем историю использования (Тройная проверка: ID, String query, Int query)
+        # 2. Проверяем историю использования (Тройная проверка)
         if uid and uid != '0':
             # А. Проверка по ID документа
             history_ref = db.collection('promo_history').document(f"{uid}_{code}")
@@ -222,18 +222,15 @@ def revert_promo_transaction(transaction, promo_ref, history_ref):
     snapshot = promo_ref.get(transaction=transaction)
     hist_snap = history_ref.get(transaction=transaction)
     
-    # Если записи в истории нет, значит отменять нечего
     if not hist_snap.exists:
         return "NOT_USED"
     
-    # Возвращаем лимит (+1)
     if snapshot.exists:
         try:
             current_limit = int(snapshot.get('limit'))
             transaction.update(promo_ref, {'limit': current_limit + 1})
         except: pass
     
-    # Удаляем запись об использовании
     transaction.delete(history_ref)
     return "OK"
 
@@ -371,7 +368,6 @@ def get_skip_comment_kb(): return InlineKeyboardMarkup(inline_keyboard=[[InlineK
 
 @dp.message(CommandStart())
 async def cmd_start(m: types.Message):
-    # ВАЖНО: Добавляем &uid={m.from_user.id} в URL, чтобы передать ID явно
     unique_url = f"{WEB_APP_URL}?v={int(time.time())}&uid={m.from_user.id}"
 
     if m.chat.id == ADMIN_CHAT_ID:
@@ -395,7 +391,6 @@ async def cmd_stats(m: types.Message):
     try:
         today_str = datetime.now().strftime("%Y-%m-%d")
         orders_ref = db.collection('orders')
-        # В продакшене лучше использовать .where, но для малого объема stream() допустим
         docs = orders_ref.stream()
         total_count, total_sum, today_count, today_sum = 0, 0, 0, 0
         for doc in docs:
@@ -458,7 +453,6 @@ async def web_app_data_handler(m: types.Message):
             res = await loop.run_in_executor(None, process_promo_firebase, promo, m.from_user.id)
             if res == "OK":
                 try:
-                    # Защита от деления на ноль и ошибок расчета
                     if 1 - disc > 0:
                         saving = int(round(total / (1 - disc)) - total)
                         d_txt = f"\n🎁 <b>Промокод:</b> {promo} (-{saving} ₸)"
@@ -473,7 +467,6 @@ async def web_app_data_handler(m: types.Message):
                 warn = f"\n⚠️ <b>Промокод {promo} {user_reasons.get(res, 'не сработал')}!</b>"
 
         is_del = (info.get('deliveryType') == 'Доставка')
-        # Безопасное экранирование
         safe_name = str(info.get('name', '')).replace('<', '&lt;').replace('>', '&gt;')
         safe_comment = str(info.get('comment', '')).replace('<', '&lt;').replace('>', '&gt;')
         
@@ -506,10 +499,8 @@ async def decision(c: CallbackQuery):
     if act == "accept": 
         await c.message.edit_reply_markup(reply_markup=get_time_kb(uid))
     else:
-        # ЛОГИКА ВОЗВРАТА ПРОМОКОДА
         try:
             text = c.message.text or c.message.caption or ""
-            # Ищем слово Промокод: КОД
             match = re.search(r"Промокод:\s*([A-Za-z0-9]+)", text)
             if match:
                 code = match.group(1)
@@ -519,7 +510,7 @@ async def decision(c: CallbackQuery):
             logging.error(f"Auto-revert error: {e}")
 
         await c.message.edit_text(f"{c.message.text}\n\n❌ <b>ОТКЛОНЕН</b>")
-        try: await bot.send_message(uid, "❌ Заказ отклонен. Скоро свяжемся с вами для уточнения.")
+        try: await bot.send_message(uid, "❌ Заказ отклонен.")
         except: pass
     await c.answer()
 
@@ -537,8 +528,7 @@ async def set_time(c: CallbackQuery, state: FSMContext):
         return
     
     t_val = f"{act} мин"
-    # Чистим текст от предыдущих статусов перед добавлением нового
-    clean_text = c.message.text.split("\n\n")[0]
+    clean_text = c.message.text.split("\n\n✅")[0]
     
     await c.message.edit_text(
         f"{clean_text}\n\n✅ <b>ПРИНЯТ</b> ({t_val})", 
@@ -565,7 +555,6 @@ async def custom_time(m: types.Message, state: FSMContext):
         await bot.send_message(chat_id=m.chat.id, text=f"✅ Время: <b>{final_time}</b>", reply_to_message_id=data['msg_id'], message_thread_id=TOPIC_ID_ORDERS)
         
         msg = f"👨‍🍳 Оплата принята! Готовность: <b>{final_time}</b>."
-        # Проверка на доставку здесь сложнее, так как нет текста заказа. Можно добавить его в state ранее, но для простоты оставим универсальное.
         await bot.send_message(chat_id=data['uid'], text=msg)
     except: pass
     await state.clear()
@@ -574,7 +563,6 @@ async def custom_time(m: types.Message, state: FSMContext):
 async def ready(c: CallbackQuery):
     uid = c.data.split("_")[2]
     old = c.message.text
-    # Очищаем текст, чтобы не дублировать статусы
     clean = old.split("\n\n")[0] if "ПРИНЯТ" in old else old
     await c.message.edit_text(f"{clean}\n\n🏁 <b>ГОТОВ</b>", reply_markup=get_given_kb(uid))
     
@@ -616,16 +604,23 @@ async def start_review_process(uid, state):
 @dp.callback_query(F.data.startswith("rate_service_"))
 async def rate_service(c: CallbackQuery, state: FSMContext):
     await state.update_data(service_rate=int(c.data.split("_")[2]))
-    await c.message.edit_text("Как оцените <b>еду и напитки</b>?", reply_markup=get_stars_kb("food"))
+    await c.message.edit_text(
+        f"Обслуживание: {c.data.split('_')[2]} ⭐\n\nКак оцените <b>еду и напитки</b>?", 
+        reply_markup=get_stars_kb("food")
+    )
     await state.set_state(ReviewState.waiting_for_food_rate)
     await c.answer()
 
 @dp.callback_query(F.data.startswith("rate_food_"), ReviewState.waiting_for_food_rate)
 async def rate_food(c: CallbackQuery, state: FSMContext):
-    await state.update_data(food_rate=int(c.data.split("_")[2]))
+    rating = int(c.data.split("_")[2])
+    await state.update_data(food_rate=rating)
     data = await state.get_data()
     if data.get('service_rate', 0) >= 4:
-        await c.message.edit_text("Желаете оставить <b>чаевые</b>?", reply_markup=get_yes_no_kb())
+        await c.message.edit_text(
+            f"Еда: {rating} ⭐\n\nЖелаете оставить <b>чаевые</b> бариста?", 
+            reply_markup=get_yes_no_kb()
+        )
         await state.set_state(ReviewState.waiting_for_tips_decision)
     else:
         await state.update_data(tips="Нет")
@@ -636,26 +631,39 @@ async def rate_food(c: CallbackQuery, state: FSMContext):
 @dp.callback_query(F.data.startswith("tips_"), ReviewState.waiting_for_tips_decision)
 async def tips_decision(c: CallbackQuery, state: FSMContext):
     if c.data.split("_")[1] == "yes":
-        await c.message.edit_text("Кому?", reply_markup=get_baristas_kb())
+        await c.message.edit_text("Кому вы хотите оставить чаевые?", reply_markup=get_baristas_kb())
         await state.set_state(ReviewState.waiting_for_barista_choice)
     else:
         await state.update_data(tips="Нет")
-        await c.message.edit_text("Отзыв:", reply_markup=get_skip_comment_kb())
+        await c.message.edit_text("Напишите отзыв:", reply_markup=get_skip_comment_kb())
         await state.set_state(ReviewState.waiting_for_comment)
     await c.answer()
 
 @dp.callback_query(F.data.startswith("barista_"))
 async def barista_choice(c: CallbackQuery, state: FSMContext):
-    b_id = c.data.split("_")[1]
-    if b_id in BARISTAS:
-        b = BARISTAS[b_id]
-        await state.update_data(tips=f"Выбрано: {b['name']}")
-        await c.message.edit_text(f"Номер для перевода ({b['name']}):\n<code>{b['phone']}</code>\n\nОтзыв:", reply_markup=get_skip_comment_kb())
-    else:
-        await state.update_data(tips="Нет")
-        await c.message.edit_text("Отзыв:", reply_markup=get_skip_comment_kb())
-    await state.set_state(ReviewState.waiting_for_comment)
-    await c.answer()
+    try:
+        b_id = c.data.split("_")[1]
+        if b_id == "cancel":
+             await state.update_data(tips="Нет")
+             await c.message.edit_text("Напишите отзыв:", reply_markup=get_skip_comment_kb())
+             await state.set_state(ReviewState.waiting_for_comment)
+             return
+
+        if b_id in BARISTAS:
+            b = BARISTAS[b_id]
+            await state.update_data(tips=f"Выбрано: {b['name']}")
+            await c.message.edit_text(
+                f"💳 Номер телефона для перевода ({b['name']}):\n<code>{b['phone']}</code>\n\nСпасибо за поддержку! ❤️\n\nНапишите ваш отзыв:", 
+                reply_markup=get_skip_comment_kb()
+            )
+        else:
+            await c.message.edit_text("Напишите отзыв:", reply_markup=get_skip_comment_kb())
+        
+        await state.set_state(ReviewState.waiting_for_comment)
+    except Exception as e:
+        logging.error(f"Error in barista_choice: {e}")
+    finally:
+        await c.answer()
 
 @dp.callback_query(F.data == "skip_comment", ReviewState.waiting_for_comment)
 async def skip_comment(c: CallbackQuery, state: FSMContext):
@@ -674,18 +682,11 @@ async def finalize_review(message, state, comment_text, user):
     msg = f"⭐ <b>НОВЫЙ ОТЗЫВ</b>\n👤 {c_name}\n💁‍♂️ Сервис: {data.get('service_rate')} ⭐\n🍔 Еда: {data.get('food_rate')} ⭐\n💰 Чаевые: {data.get('tips')}\n💬 <i>{comment_text}</i>"
     await bot.send_message(ADMIN_CHAT_ID, msg, message_thread_id=TOPIC_ID_REVIEWS)
     
-    s_rate = int(data.get('service_rate', 5))
-    f_rate = int(data.get('food_rate', 5))
-    avg = (s_rate + f_rate) / 2
-
-    if avg == 5:
-        resp = "Вау! 😍 Спасибо за высокую оценку!\nМы счастливы, что вам понравилось. Ждем вас снова за лучшим кофе! ☕️"
-    elif avg >= 4:
-        resp = "Спасибо за ваш отзыв! 👍\nМы рады, что вы с нами. Будем стараться стать еще лучше!"
-    elif avg >= 3:
-        resp = "Спасибо за отзыв.\nНам жаль, что не всё прошло идеально. Мы учтем ваши замечания. 🙏"
-    else:
-        resp = "Нам очень жаль, что мы вас расстроили. 😔\nСпасибо за честность, мы обязательно примем меры и исправимся."
+    avg = (int(data.get('service_rate', 5)) + int(data.get('food_rate', 5))) / 2
+    if avg >= 5: resp = "Вау! 😍 Спасибо за высокую оценку!\nМы счастливы, что вам понравилось. Ждем вас снова за лучшим кофе! ☕️"
+    elif avg >= 4: resp = "Спасибо за ваш отзыв! 👍\nМы рады, что вы с нами. Будем стараться стать еще лучше!"
+    elif avg >= 3: resp = "Спасибо за отзыв.\nНам жаль, что не всё прошло идеально. Мы учтем ваши замечания. 🙏"
+    else: resp = "Нам очень жаль, что мы вас расстроили. 😔\nСпасибо за честность, мы обязательно примем меры и исправимся."
     
     if isinstance(message, types.Message): await message.answer(resp)
     else: await message.edit_text(resp)
