@@ -524,7 +524,14 @@ async def set_time(c: CallbackQuery, state: FSMContext):
         return
     
     t_val = f"{act} мин"
-    clean_text = c.message.text.split("\n\n✅ <b>ПРИНЯТ</b> ({t_val})", reply_markup=get_ready_kb(uid))
+    # Исправленная логика: сначала чистим текст от прошлых статусов, потом редактируем сообщение
+    clean_text = c.message.text.split("\n\n")[0]
+    
+    await c.message.edit_text(
+        f"{clean_text}\n\n✅ <b>ПРИНЯТ</b> ({t_val})", 
+        reply_markup=get_ready_kb(uid)
+    )
+    
     msg = f"👨‍🍳Оплата принята! Готовность: <b>{t_val}</b>.\n📞Телефон: +77006437303"
     try: await bot.send_message(uid, msg)
     except: pass
@@ -659,3 +666,4 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
