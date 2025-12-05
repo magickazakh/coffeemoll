@@ -154,17 +154,11 @@ def check_promo_firebase(code, user_id):
         
         if limit <= 0: return "LIMIT", 0
 
-        # 2. Проверяем историю через ЗАПРОС (Query) по полю user_id
+        # 2. Проверяем историю по ID документа (Синхронизировано с транзакцией)
+        # Это самый надежный способ, так как use_promo_transaction создает документ именно с таким ID
         if uid and uid != '0':
-            # Ищем запись, где user_id совпадает с текущим пользователем и промокод совпадает
-            history_query = db.collection('promo_history')\
-                .where('user_id', '==', uid)\
-                .where('code', '==', code)\
-                .limit(1).stream()
-            
-            # Если найден хоть один документ — значит промокод использован
-            for _ in history_query:
-                return "USED", 0
+            history_ref = db.collection('promo_history').document(f"{uid}_{code}")
+            if history_ref.get().exists: return "USED", 0
         
         return "OK", discount
             
@@ -587,6 +581,7 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
 
