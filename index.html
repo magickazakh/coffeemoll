@@ -68,21 +68,10 @@
             top: 0; 
             z-index: 40; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             padding-bottom: 5px;
         }
-        /* .header-container.header-hidden { transform: translateY(-75px); } - Убрали старый сдвиг */
-
-        /* Анимация скрытия элементов */
-        .header-container.minimized .search-wrapper,
-        .header-container.minimized #repeat-order-container {
-            max-height: 0;
-            opacity: 0;
-            padding-top: 0;
-            padding-bottom: 0;
-            margin: 0;
-            transform: scaleY(0);
-        }
+        .header-container.header-hidden { transform: translateY(-75px); }
 
         header { padding: 12px 15px 10px 15px; display: flex; justify-content: space-between; align-items: flex-start; }
         .header-left { display: flex; flex-direction: column; }
@@ -93,25 +82,12 @@
         .status-badge { font-family: var(--font-body); font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; margin-left: 10px;}
 
         /* ПОИСК */
-        .search-wrapper { 
-            padding: 0 15px 10px 15px; 
-            transition: all 0.3s ease-in-out; 
-            max-height: 60px; 
-            opacity: 1; 
-            transform-origin: top;
-        }
+        .search-wrapper { padding: 0 15px 10px 15px; }
         #search-input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 15px; outline: none; box-sizing: border-box; font-family: var(--font-body); transition: all 0.2s;}
         #search-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(136, 209, 0, 0.2); }
         
         /* КНОПКА ПОВТОРА */
-        #repeat-order-container { 
-            padding: 0 15px 10px 15px; 
-            display: none; 
-            transition: all 0.3s ease-in-out; 
-            max-height: 80px; 
-            opacity: 1;
-            transform-origin: top; 
-        }
+        #repeat-order-container { padding: 0 15px 10px 15px; display: none; }
         .repeat-card { background: var(--card-bg); border: 1px solid var(--primary-color); border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 5px rgba(136, 209, 0, 0.1); }
         .repeat-card:active { transform: scale(0.98); }
         .repeat-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
@@ -252,7 +228,7 @@
     <div class="spinner"></div>
     <div class="loading-title"><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></div>
     <div class="separator-line"></div>
-    <div class="loading-motto">Загружаем зерно в кофемолку...</div>
+    <div class="loading-motto">Загружаем меню...</div>
 </div>
 
 <div id="toast-container"></div>
@@ -328,7 +304,7 @@
         <!-- Promo Code -->
         <div class="promo-section" id="promo-container" style="display:flex; gap:10px; margin: 15px 0;">
              <input type="text" id="promo-code" placeholder="Промокод" style="margin-bottom: 0; flex:1;">
-             <button class="promo-btn" id="apply-promo-btn" onclick="applyPromo()" style="background: #f0f0f0; border:none; border-radius:12px; font-weight:bold; padding:0 20px; cursor:pointer;">ОК</button>
+             <button class="promo-btn" id="apply-promo-btn" onclick="applyPromo()" style="background: #f0f0f0; border:none; border-radius:12px; font-weight:bold; padding:0 20px; cursor:pointer;">Прим.</button>
         </div>
 
         <div class="checkout-total" id="checkout-total-sum" style="text-align: right; font-size: 18px; font-weight: 800; margin: 20px 0;">Итого: 0 ₸</div>
@@ -494,6 +470,7 @@
 
     // Loading Texts Logic (RESTORED)
     const loadingTexts = [
+        "Загружаем зерно в кофемолку...",
         "Настраиваем помол...",
         "Рисуем сердечко на пенке...",
         "Протираем столики...",
@@ -513,6 +490,19 @@
     }, 2000);
 
     // --- UTILS ---
+    function getUserId() {
+        // Try getting from Telegram first
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+            return tg.initDataUnsafe.user.id;
+        }
+        // Fallback: try getting from URL params (passed from bot.py)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('uid')) {
+            return urlParams.get('uid');
+        }
+        return 0;
+    }
+
     function showToast(msg, type = 'normal') {
         const cont = document.getElementById('toast-container');
         const toast = document.createElement('div');
@@ -555,7 +545,7 @@
         window.addEventListener('scroll', throttle(() => {
             const st = window.pageYOffset || document.documentElement.scrollTop;
             if (st > lastScrollTop && st > 50) {
-                 headerEl.classList.add('minimized');
+                 headerEl.classList.add('minimized'); // Changed to use minimized class
             } else if (st < lastScrollTop) {
                  headerEl.classList.remove('minimized');
             }
@@ -1304,7 +1294,7 @@
     }
     function saveUserData(n,p,a) { localStorage.setItem('coffee_username',n); localStorage.setItem('coffee_phone',p); if(a)localStorage.setItem('coffee_address',a); }
     
-function applyPromo() {
+    function applyPromo() {
         const codeInput = document.getElementById('promo-code');
         const btn = document.getElementById('apply-promo-btn');
         const code = codeInput.value.trim().toUpperCase();
@@ -1313,10 +1303,13 @@ function applyPromo() {
         btn.disabled = true; btn.innerText = "...";
         codeInput.style.borderColor = "#eee";
 
+        // Use our helper to get the ID
+        const uid = getUserId();
+
         fetch(`${BACKEND_URL}/api/check_promo`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: code, userId: tg.initDataUnsafe?.user?.id || 0 })
+            body: JSON.stringify({ code: code, userId: uid })
         })
         .then(res => res.json())
         .then(data => {
@@ -1326,53 +1319,27 @@ function applyPromo() {
                 codeInput.style.borderColor = "#88d100";
                 showToast(`Промокод: -${Math.round(appliedDiscount * 100)}%`);
                 calculateTotal();
-            } else if (data.status === "USED") {
-                appliedDiscount = 0; appliedPromoCode = "";
-                codeInput.style.borderColor = "red";
-                showToast("Вы уже использовали этот код", 'error');
-                calculateTotal();
-            } else if (data.status === "LIMIT") {
-                appliedDiscount = 0; appliedPromoCode = "";
-                codeInput.style.borderColor = "red";
-                showToast("Лимит промокода исчерпан", 'error');
-                calculateTotal();
             } else {
                 appliedDiscount = 0; appliedPromoCode = "";
                 codeInput.style.borderColor = "red";
-                showToast("Промокод не найден", 'error');
-                calculateTotal();
+                let errorMsg = "Ошибка промокода";
+                if(data.status === "USED") errorMsg = "Вы уже использовали этот код";
+                if(data.status === "LIMIT") errorMsg = "Лимит исчерпан";
+                if(data.status === "NOT_FOUND") errorMsg = "Код не найден";
+                showToast(errorMsg, 'error');
+                calculateTotal(); // Recalculate to remove any pending discount
             }
         })
         .catch(() => {
-            showToast("Ошибка проверки связи", 'error');
-            appliedDiscount = 0; 
+            showToast("Ошибка проверки", 'error');
+            appliedDiscount = 0;
             calculateTotal();
         })
         .finally(() => { btn.disabled = false; btn.innerText = "Прим."; });
     }
     
-    // Сброс скидки при изменении промокода
-    document.getElementById('promo-code').addEventListener('input', function() {
-        if (appliedDiscount > 0) {
-            appliedDiscount = 0;
-            appliedPromoCode = "";
-            this.style.borderColor = "#eee";
-            calculateTotal();
-        }
-    });
-    
     function submitOrder() { 
         if (document.activeElement) { document.activeElement.blur(); }
-        
-        // ВАЛИДАЦИЯ ПРОМОКОДА ПЕРЕД ОТПРАВКОЙ
-        const promoInput = document.getElementById('promo-code').value.trim().toUpperCase();
-        if (promoInput && promoInput !== appliedPromoCode) {
-            showToast("Нажмите 'Прим.', чтобы проверить промокод!", "error");
-            document.getElementById('apply-promo-btn').style.border = "1px solid red";
-            setTimeout(() => document.getElementById('apply-promo-btn').style.border = "none", 2000);
-            return;
-        }
-
         const btn = document.getElementById('submit-btn'); 
         btn.disabled = true; btn.innerText = "Отправка..."; 
         const name = document.getElementById('client-name').value.trim(); 
@@ -1498,4 +1465,3 @@ function applyPromo() {
 </script>
 </body>
 </html>
-
