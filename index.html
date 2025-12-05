@@ -1111,7 +1111,7 @@
         const delType = delTypeEl ? delTypeEl.value : 'pickup';
         let prettyDelivery = 'Самовывоз'; if(delType==='delivery') prettyDelivery='Доставка'; if(delType==='dinein') prettyDelivery='В зале';
         const payTypeEl = document.querySelector('input[name="paymentType"]:checked');
-        const payType = payTypeEl ? payTypeEl.value : 'Наличными';
+        const payType = payTypeEl ? payTypeEl.value : 'Kaspi';
         const payPhone = document.getElementById('payment-phone').value.trim(); 
         let comment = document.getElementById('order-comment').value.trim(); 
         
@@ -1122,9 +1122,9 @@
             comment = `⏰ К ${specTime}. ${comment}`;
         } else { comment = `⚡ Как можно скорее. ${comment}`; }
 
-        if (!name || !phone) { showToast("Имя и телефон?", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; } 
-        if (delType === 'delivery' && !address) { showToast("Адрес доставки?", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; } 
-        if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) { showToast("Номер для счета?", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; } 
+        if (!name || !phone) { showToast("Укажите имя и телефон.", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; } 
+        if (delType === 'delivery' && !address) { showToast("Укажите адрес доставки.", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; } 
+        if ((payType === 'Kaspi' || payType === 'Halyk') && !payPhone) { showToast("Укажите номер для счета.", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; } 
         
         saveUserData(name, phone, address); 
         const total = calculateTotal(); 
@@ -1222,3 +1222,4 @@
 </script>
 </body>
 </html>
+
