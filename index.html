@@ -1304,7 +1304,7 @@
     }
     function saveUserData(n,p,a) { localStorage.setItem('coffee_username',n); localStorage.setItem('coffee_phone',p); if(a)localStorage.setItem('coffee_address',a); }
     
-    function applyPromo() {
+function applyPromo() {
         const codeInput = document.getElementById('promo-code');
         const btn = document.getElementById('apply-promo-btn');
         const code = codeInput.value.trim().toUpperCase();
@@ -1326,18 +1326,53 @@
                 codeInput.style.borderColor = "#88d100";
                 showToast(`Промокод: -${Math.round(appliedDiscount * 100)}%`);
                 calculateTotal();
+            } else if (data.status === "USED") {
+                appliedDiscount = 0; appliedPromoCode = "";
+                codeInput.style.borderColor = "red";
+                showToast("Вы уже использовали этот код", 'error');
+                calculateTotal();
+            } else if (data.status === "LIMIT") {
+                appliedDiscount = 0; appliedPromoCode = "";
+                codeInput.style.borderColor = "red";
+                showToast("Лимит промокода исчерпан", 'error');
+                calculateTotal();
             } else {
                 appliedDiscount = 0; appliedPromoCode = "";
                 codeInput.style.borderColor = "red";
-                showToast("Ошибка промокода", 'error');
+                showToast("Промокод не найден", 'error');
+                calculateTotal();
             }
         })
-        .catch(() => showToast("Ошибка проверки", 'error'))
-        .finally(() => { btn.disabled = false; btn.innerText = "OK"; });
+        .catch(() => {
+            showToast("Ошибка проверки связи", 'error');
+            appliedDiscount = 0; 
+            calculateTotal();
+        })
+        .finally(() => { btn.disabled = false; btn.innerText = "Прим."; });
     }
+    
+    // Сброс скидки при изменении промокода
+    document.getElementById('promo-code').addEventListener('input', function() {
+        if (appliedDiscount > 0) {
+            appliedDiscount = 0;
+            appliedPromoCode = "";
+            this.style.borderColor = "#eee";
+            calculateTotal();
+        }
+    });
     
     function submitOrder() { 
         if (document.activeElement) { document.activeElement.blur(); }
+        
+        // ВАЛИДАЦИЯ ПРОМОКОДА ПЕРЕД ОТПРАВКОЙ
+        const promoInput = document.getElementById('promo-code').value.trim().toUpperCase();
+        if (promoInput && promoInput !== appliedPromoCode) {
+            showToast("Нажмите 'Прим.', чтобы проверить промокод!", "error");
+            document.getElementById('apply-promo-btn').style.border = "1px solid red";
+            setTimeout(() => document.getElementById('apply-promo-btn').style.border = "none", 2000);
+            return;
+        }
+
         const btn = document.getElementById('submit-btn'); 
         btn.disabled = true; btn.innerText = "Отправка..."; 
         const name = document.getElementById('client-name').value.trim(); 
@@ -1463,3 +1498,4 @@
 </script>
 </body>
 </html>
+
