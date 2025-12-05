@@ -128,7 +128,6 @@ async def cache_updater_task():
         await asyncio.sleep(60)
 
 # --- ЛОГИКА ПРОМОКОДОВ ---
-
 def check_promo_firebase(code, user_id):
     if not db: return "ERROR", 0
     code = code.strip().upper()
@@ -137,7 +136,7 @@ def check_promo_firebase(code, user_id):
     logging.info(f"Checking promo: {code} for user {uid}")
     
     try:
-        # 1. Читаем НАПРЯМУЮ из базы (минуя кеш)
+        # 1. Данные прфомокода
         doc = db.collection('promocodes').document(code).get()
         
         if not doc.exists: 
@@ -154,11 +153,18 @@ def check_promo_firebase(code, user_id):
         
         if limit <= 0: return "LIMIT", 0
 
-        # 2. Проверяем историю по ID документа (Синхронизировано с транзакцией)
-        # Это самый надежный способ, так как use_promo_transaction создает документ именно с таким ID
+        # 2. Проверяем историю использования (Двойная проверка)
         if uid and uid != '0':
+            # А. Проверка по ID документа (быстрая, основной метод)
             history_ref = db.collection('promo_history').document(f"{uid}_{code}")
             if history_ref.get().exists: return "USED", 0
+
+            # Б. Проверка поиском (Query) - страховка
+            # Это найдет запись, даже если ID документа сформирован иначе
+            # или если данные были мигрированы
+            query = db.collection('promo_history').where('user_id', '==', uid).where('code', '==', code).limit(1).stream()
+            for _ in query:
+                return "USED", 0
         
         return "OK", discount
             
@@ -581,6 +587,7 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
 
