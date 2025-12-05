@@ -1161,14 +1161,52 @@
         document.getElementById('time-picker-container').style.display = isTime ? 'block' : 'none'; 
     }
 
-    // Phone Mask
-    function maskPhone(e) {
-        let x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
-        e.target.value = !x[2] ? x[1] : '+7 (' + x[2] + ') ' + x[3] + (x[4] ? '-' + x[4] : '') + (x[5] ? '-' + x[5] : '');
+   function maskPhone(e) {
+        let val = e.target.value.replace(/\D/g, '');
+        if (!val) {
+            e.target.value = '';
+            validateForm();
+            return;
+        }
+        
+        if (['7', '8'].includes(val[0])) {
+            if (val[0] === '8') val = '7' + val.slice(1);
+            
+            let formatted = '+7';
+            if (val.length > 1) {
+                formatted += ' (' + val.substring(1, 4);
+            }
+            if (val.length >= 5) {
+                formatted += ') ' + val.substring(4, 7);
+            }
+            if (val.length >= 8) {
+                formatted += '-' + val.substring(7, 9);
+            }
+            if (val.length >= 10) {
+                formatted += '-' + val.substring(9, 11);
+            }
+            e.target.value = formatted;
+        } else {
+            e.target.value = '+' + val;
+        }
+        validateForm();
     }
-    document.getElementById('client-phone').addEventListener('input', maskPhone);
-    document.getElementById('payment-phone').addEventListener('input', maskPhone);
     
+    // Add specific keydown handler to allow deleting the prefix easily
+    document.getElementById('client-phone').addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && this.value.length <= 4) {
+             this.value = '';
+             validateForm(); // Update button state
+        }
+    });
+    
+    document.getElementById('payment-phone').addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && this.value.length <= 4) {
+             this.value = '';
+             validateForm(); // Update button state
+        }
+    });
+
     window.addEventListener('offline', () => { document.getElementById('error-screen').style.display = 'flex'; });
     window.addEventListener('online', () => { location.reload(); });
     
@@ -1177,3 +1215,4 @@
 </script>
 </body>
 </html>
+
