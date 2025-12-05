@@ -136,7 +136,7 @@ def check_promo_firebase(code, user_id):
     logging.info(f"Checking promo: {code} for user {uid}")
     
     try:
-        # 1. Данные прфомокода
+        # 1. Данные промокода
         doc = db.collection('promocodes').document(code).get()
         
         if not doc.exists: 
@@ -153,18 +153,22 @@ def check_promo_firebase(code, user_id):
         
         if limit <= 0: return "LIMIT", 0
 
-        # 2. Проверяем историю использования (Двойная проверка)
+        # 2. Проверяем историю использования (Тройная проверка)
         if uid and uid != '0':
-            # А. Проверка по ID документа (быстрая, основной метод)
+            # А. Проверка по ID документа (быстрая)
             history_ref = db.collection('promo_history').document(f"{uid}_{code}")
             if history_ref.get().exists: return "USED", 0
 
-            # Б. Проверка поиском (Query) - страховка
-            # Это найдет запись, даже если ID документа сформирован иначе
-            # или если данные были мигрированы
+            # Б. Проверка поиском (Query) по строковому ID
             query = db.collection('promo_history').where('user_id', '==', uid).where('code', '==', code).limit(1).stream()
             for _ in query:
                 return "USED", 0
+                
+            # В. Проверка поиском (Query) по числовому ID (на случай несоответствия типов)
+            if uid.isdigit():
+                query_int = db.collection('promo_history').where('user_id', '==', int(uid)).where('code', '==', code).limit(1).stream()
+                for _ in query_int:
+                    return "USED", 0
         
         return "OK", discount
             
@@ -291,8 +295,8 @@ def get_skip_comment_kb(): return InlineKeyboardMarkup(inline_keyboard=[[InlineK
 
 @dp.message(CommandStart())
 async def cmd_start(m: types.Message):
-    # Добавляем timestamp для обхода кеша картинок и стилей в WebApp при обновлении
-    unique_url = f"{WEB_APP_URL}?v={int(time.time())}"
+    # ВАЖНО: Добавляем &uid={m.from_user.id} в URL, чтобы передать ID явно
+    unique_url = f"{WEB_APP_URL}?v={int(time.time())}&uid={m.from_user.id}"
 
     await m.answer("Добро пожаловать в CoffeeMoll! 🥐", reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=unique_url))]], resize_keyboard=True))
     
@@ -587,6 +591,7 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
 
