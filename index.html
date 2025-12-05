@@ -14,7 +14,6 @@
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" as="style" crossorigin>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- PapaParse удален, используем встроенный -->
     
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     
@@ -79,7 +78,7 @@
         h1 { margin: 0; font-family: var(--font-logo); font-size: 34px; letter-spacing: 1px; line-height: 1; text-transform: uppercase; }
         .logo-coffee { color: var(--text-main); } .logo-moll { color: var(--primary-color); }
         .separator-line { width: 141px; height: 3px; background-color: var(--primary-color); margin: 3px 0; border-radius: 2px; }
-        .motto { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-weight: 600; max-width: 180px; }
+        .motto { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-weight: 600; max-width: 180px; transition: opacity 0.3s ease; }
         .status-badge { font-family: var(--font-body); font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; margin-left: 10px;}
 
         /* ПОИСК */
@@ -176,6 +175,7 @@
         /* Loading & Toast */
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-color); z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction: column; text-align: center;}
         .spinner { border: 4px solid #eee; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 50px; height: 50px; animation: spin 0.8s linear infinite; margin-bottom: 20px;}
+        .loading-motto { font-size: 13px; color: #666; font-style: italic; font-family: var(--font-body); transition: opacity 0.3s ease; }
         
         #toast-container { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 2100; display: flex; flex-direction: column; gap: 8px; width: auto; pointer-events: none; }
         .toast { background: rgba(30, 30, 30, 0.9); color: white; padding: 10px 20px; border-radius: 25px; font-size: 13px; font-weight: 600; text-align: center; backdrop-filter: blur(5px); animation: fadeUp 0.3s forwards; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
@@ -227,7 +227,8 @@
 <div class="loading-overlay" id="loading-screen">
     <div class="spinner"></div>
     <div class="loading-title"><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></div>
-    <div class="motto" style="margin-top: 10px;">Загружаем меню...</div>
+    <div class="separator-line"></div>
+    <div class="loading-motto">Загружаем меню...</div>
 </div>
 
 <div id="toast-container"></div>
@@ -260,8 +261,9 @@
             <div class="repeat-info">
                 <div class="repeat-title">↻ Повторить прошлый заказ</div>
                 <div class="repeat-desc" id="repeat-desc">...</div>
+                <div id="repeat-price" style="font-weight:bold; font-size:13px; color: var(--text-main); margin-top: 4px;"></div>
             </div>
-            <div style="font-weight:bold; color:var(--primary-color);">➔</div>
+            <div style="font-weight:bold; color:var(--primary-color); font-size: 20px;">➔</div>
         </div>
     </div>
 
@@ -355,8 +357,9 @@
                 <label for="p-halyk" class="checkout-radio-label">🟢 Halyk</label>
             </div>
             <div id="payment-phone-block" style="margin-top: 10px;">
+                <label class="option-label" id="payment-phone-label" style="font-size: 13px; margin-bottom: 5px;">Номер Kaspi</label>
                 <input type="tel" id="payment-phone" placeholder="Номер привязанный к карте" oninput="maskPhone(event); validateForm();">
-                <div style="font-size:11px; color:var(--text-secondary); margin-top:5px;">Счет на оплату придет в приложение банка</div>
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:5px;" id="payment-hint">Вам придет счет на оплату в приложение Kaspi.kz</div>
             </div>
         </div>
         
@@ -465,6 +468,27 @@
     let upsellShown = false;
     let currentUpsellItem = null;
 
+    // Loading Texts Logic (RESTORED)
+    const loadingTexts = [
+        "Загружаем зерно в кофемолку...",
+        "Настраиваем помол...",
+        "Рисуем сердечко на пенке...",
+        "Протираем столики...",
+        "Достаем свежие круассаны..."
+    ];
+    let textIdx = 0;
+    const mottoEl = document.querySelector('.loading-motto');
+    
+    const loadingInterval = setInterval(() => {
+        if(!mottoEl) return;
+        mottoEl.style.opacity = 0;
+        setTimeout(() => {
+            textIdx = (textIdx + 1) % loadingTexts.length;
+            mottoEl.innerText = loadingTexts[textIdx];
+            mottoEl.style.opacity = 1;
+        }, 150);
+    }, 2000);
+
     // --- UTILS ---
     function showToast(msg, type = 'normal') {
         const cont = document.getElementById('toast-container');
@@ -558,6 +582,7 @@
         Papa.parse(GOOGLE_SHEET_URL, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
+                clearInterval(loadingInterval); // Stop animation
                 document.getElementById('loading-screen').style.display = 'none';
                 if (!results.data || results.data.length === 0) { document.getElementById('error-screen').style.display = 'flex'; return; }
                 
@@ -565,7 +590,7 @@
                 renderMenu();
                 checkRepeatOrder();
             },
-            error: function() { document.getElementById('loading-screen').style.display = 'none'; document.getElementById('error-screen').style.display = 'flex'; }
+            error: function() { clearInterval(loadingInterval); document.getElementById('loading-screen').style.display = 'none'; document.getElementById('error-screen').style.display = 'flex'; }
         });
     }
 
@@ -1338,7 +1363,21 @@
         document.getElementById('delivery-msg').style.display = isDel ? 'block' : 'none'; 
         validateForm();
     }
+    // Updated togglePayment logic to switch labels
     function togglePayment() { 
+        const isKaspi = document.getElementById('p-kaspi').checked;
+        const isHalyk = document.getElementById('p-halyk').checked;
+        
+        const label = document.getElementById('payment-phone-label');
+        const hint = document.getElementById('payment-hint');
+        
+        if (isKaspi) {
+            label.innerText = "Номер Kaspi";
+            hint.innerText = "Вам придет счет на оплату в приложение Kaspi.kz";
+        } else if (isHalyk) {
+            label.innerText = "Номер Halyk";
+            hint.innerText = "Вам придет счет на оплату в приложение Halyk";
+        }
         validateForm();
     }
     function toggleTimePicker() { 
