@@ -1161,51 +1161,58 @@
         document.getElementById('time-picker-container').style.display = isTime ? 'block' : 'none'; 
     }
 
-   function maskPhone(e) {
-        let val = e.target.value.replace(/\D/g, '');
-        if (!val) {
-            e.target.value = '';
+    // Phone Mask
+    function maskPhone(e) {
+        const input = e.target;
+        let value = input.value.replace(/\D/g, ''); // Убираем всё кроме цифр
+        
+        // 1. Обработка удаления (если пусто)
+        if (!value) {
+            input.value = '';
             validateForm();
             return;
         }
-        
-        if (['7', '8'].includes(val[0])) {
-            if (val[0] === '8') val = '7' + val.slice(1);
-            
-            let formatted = '+7';
-            if (val.length > 1) {
-                formatted += ' (' + val.substring(1, 4);
-            }
-            if (val.length >= 5) {
-                formatted += ') ' + val.substring(4, 7);
-            }
-            if (val.length >= 8) {
-                formatted += '-' + val.substring(7, 9);
-            }
-            if (val.length >= 10) {
-                formatted += '-' + val.substring(9, 11);
-            }
-            e.target.value = formatted;
-        } else {
-            e.target.value = '+' + val;
+
+        // 2. Замена 8 на 7 (только если это первая цифра)
+        if (value[0] === '8') {
+            value = '7' + value.substring(1);
         }
+        
+        // 3. Если первая цифра 9 (опечатка), добавляем 7
+        if (value[0] === '9') {
+            value = '7' + value;
+        }
+
+        // 4. Форматирование +7 (XXX) XXX-XX-XX
+        if (value[0] === '7') {
+            let formatted = '+7';
+            if (value.length > 1) formatted += ' (' + value.substring(1, 4);
+            if (value.length >= 5) formatted += ') ' + value.substring(4, 7);
+            if (value.length >= 8) formatted += '-' + value.substring(7, 9);
+            if (value.length >= 10) formatted += '-' + value.substring(9, 11);
+            input.value = formatted;
+        } else {
+            // Для иностранных номеров просто +
+            input.value = '+' + value;
+        }
+        
         validateForm();
     }
     
-    // Add specific keydown handler to allow deleting the prefix easily
-    document.getElementById('client-phone').addEventListener('keydown', function(e) {
-        if (e.key === 'Backspace' && this.value.length <= 4) {
-             this.value = '';
-             validateForm(); // Update button state
-        }
-    });
+    // Удаляем предыдущие обработчики (которые не работают) и ставим стандартные
+    // Важно: oninput теперь прописан в JS, в HTML его быть не должно.
+    document.getElementById('client-phone').addEventListener('input', maskPhone);
+    document.getElementById('payment-phone').addEventListener('input', maskPhone);
     
-    document.getElementById('payment-phone').addEventListener('keydown', function(e) {
-        if (e.key === 'Backspace' && this.value.length <= 4) {
-             this.value = '';
-             validateForm(); // Update button state
+    // Специальный обработчик для Backspace, чтобы можно было удалить префикс +7
+    function handleBackspace(e) {
+        if (e.key === 'Backspace' && e.target.value.length <= 4) {
+             e.target.value = '';
+             validateForm();
         }
-    });
+    }
+    document.getElementById('client-phone').addEventListener('keydown', handleBackspace);
+    document.getElementById('payment-phone').addEventListener('keydown', handleBackspace);
 
     window.addEventListener('offline', () => { document.getElementById('error-screen').style.display = 'flex'; });
     window.addEventListener('online', () => { location.reload(); });
@@ -1215,4 +1222,3 @@
 </script>
 </body>
 </html>
-
