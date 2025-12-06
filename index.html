@@ -39,19 +39,22 @@
         /* YANDEX WIDGET STYLES */
         .yandex-widget-container {
             padding: 0 15px 10px 15px;
-            overflow: hidden; 
         }
 
-        /* Анимация скрытия при скролле */
-        .yandex-widget-container,
-        .search-wrapper,
-        #repeat-order-container {
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                        opacity 0.3s ease, 
-                        margin 0.3s ease, 
-                        padding 0.3s ease;
-            max-height: 300px; /* Достаточная высота для контента */
+        /* Общий контейнер для скрывающихся элементов */
+        #collapsible-header {
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
+            max-height: 500px; /* С запасом */
             opacity: 1;
+            will-change: max-height, opacity; /* Подсказка браузеру для оптимизации */
+        }
+
+        /* Класс скрытия */
+        #collapsible-header.collapsed {
+            max-height: 0 !important;
+            opacity: 0 !important;
+            margin: 0 !important;
         }
 
         .yandex-widget-header {
@@ -72,21 +75,33 @@
             font-size: 10px;
             transition: transform 0.2s;
         }
+        
         .yandex-widget-content {
             margin-top: 15px;
-            overflow: hidden;
+            overflow: visible; /* Важно: visible, чтобы тень или края не резались */
             animation: slideDown 0.3s ease-out;
-            /* Центрирование и фиксированная высота для масштабированного бейджа */
             display: flex;
             justify-content: center;
-            height: 80px; 
+            /* Высота подстраивается под контент */
         }
         
-        .yandex-widget-content iframe {
+        /* Обертка для iframe с фиксированными размерами ПОСЛЕ масштабирования */
+        .iframe-wrapper {
+            width: 225px; /* 150px * 1.5 */
+            height: 75px; /* 50px * 1.5 */
+            position: relative;
+            overflow: hidden; /* Обрезаем лишнее внутри самого враппера, если есть */
+        }
+
+        .iframe-wrapper iframe {
+            width: 150px;
+            height: 50px;
+            border: 0;
             transform: scale(1.5); 
-            transform-origin: top center;
-            /* Важно: scale + width 100% вызовет выход за границы. 
-               Фиксированная ширина 150px * 1.5 = 225px, что поместится везде. */
+            transform-origin: top left; /* Масштабируем от угла */
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         /* Logic for light/dark iframe switching */
@@ -135,17 +150,6 @@
             padding-bottom: 5px;
         }
         .header-container.header-hidden { transform: translateY(-75px); }
-
-        /* ПЛАВНОЕ СКРЫТИЕ ПРИ СКРОЛЛЕ (MINIMIZED) */
-        .header-container.minimized .yandex-widget-container,
-        .header-container.minimized .search-wrapper,
-        .header-container.minimized #repeat-order-container {
-            max-height: 0 !important;
-            opacity: 0 !important;
-            margin: 0 !important;
-            padding: 0 15px !important; /* Оставляем горизонтальный паддинг, чтобы контент не дергался по ширине */
-            pointer-events: none;
-        }
 
         header { padding: 12px 15px 10px 15px; display: flex; justify-content: space-between; align-items: flex-start; }
         .header-left { display: flex; flex-direction: column; }
@@ -326,36 +330,42 @@
         </div>
     </header>
     
-    <!-- YANDEX MAPS WIDGET ADDED HERE -->
-    <div class="yandex-widget-container">
-        <div class="yandex-widget-header" onclick="toggleYandexWidget(this)">
-            <span>📍 Мы есть на Яндекс.Картах</span>
-            <span class="yandex-widget-arrow">▼</span>
+    <!-- SINGLE COLLAPSIBLE CONTAINER FOR SMOOTH ANIMATION -->
+    <div id="collapsible-header">
+        <!-- YANDEX MAPS WIDGET -->
+        <div class="yandex-widget-container">
+            <div class="yandex-widget-header" onclick="toggleYandexWidget(this)">
+                <span>📍 Мы есть на Яндекс.Картах</span>
+                <span class="yandex-widget-arrow">▼</span>
+            </div>
+            <div class="yandex-widget-content" id="yandex-content" style="display: none;">
+                <!-- Fixed wrapper for scaled iframe to prevent cropping -->
+                <div class="iframe-wrapper">
+                    <!-- Light Theme Widget -->
+                    <div class="yandex-light">
+                        <iframe src="https://yandex.kz/sprav/widget/rating-badge/125095434429?type=rating" frameborder="0"></iframe>
+                    </div>
+                    <!-- Dark Theme Widget -->
+                    <div class="yandex-dark">
+                        <iframe src="https://yandex.kz/sprav/widget/rating-badge/125095434429?type=rating&theme=dark" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="yandex-widget-content" id="yandex-content" style="display: none;">
-            <!-- Light Theme Widget -->
-            <div class="yandex-light">
-                <iframe src="https://yandex.kz/sprav/widget/rating-badge/125095434429?type=rating" width="150" height="50" frameborder="0"></iframe>
-            </div>
-            <!-- Dark Theme Widget -->
-            <div class="yandex-dark">
-                <iframe src="https://yandex.kz/sprav/widget/rating-badge/125095434429?type=rating&theme=dark" width="150" height="50" frameborder="0"></iframe>
-            </div>
+        
+        <div class="search-wrapper">
+            <input type="text" id="search-input" placeholder="🔍 Найти напиток или еду..." oninput="filterMenu()">
         </div>
-    </div>
-    
-    <div class="search-wrapper">
-        <input type="text" id="search-input" placeholder="🔍 Найти напиток или еду..." oninput="filterMenu()">
-    </div>
-    
-    <div id="repeat-order-container">
-        <div class="repeat-card" onclick="loadLastOrder()">
-            <div class="repeat-info">
-                <div class="repeat-title">↻ Повторить прошлый заказ</div>
-                <div class="repeat-desc" id="repeat-desc">...</div>
-                <div id="repeat-price" style="font-weight:bold; font-size:13px; color: var(--text-main); margin-top: 4px;"></div>
+        
+        <div id="repeat-order-container">
+            <div class="repeat-card" onclick="loadLastOrder()">
+                <div class="repeat-info">
+                    <div class="repeat-title">↻ Повторить прошлый заказ</div>
+                    <div class="repeat-desc" id="repeat-desc">...</div>
+                    <div id="repeat-price" style="font-weight:bold; font-size:13px; color: var(--text-main); margin-top: 4px;"></div>
+                </div>
+                <div style="font-weight:bold; color:var(--primary-color); font-size: 20px;">➔</div>
             </div>
-            <div style="font-weight:bold; color:var(--primary-color); font-size: 20px;">➔</div>
         </div>
     </div>
 
@@ -631,14 +641,16 @@
 
     function updateHeaderHeight() {
         let lastScrollTop = 0;
-        const headerEl = document.querySelector('.header-container');
+        const collapsible = document.getElementById('collapsible-header');
         
         window.addEventListener('scroll', throttle(() => {
             const st = window.pageYOffset || document.documentElement.scrollTop;
             if (st > lastScrollTop && st > 50) {
-                 headerEl.classList.add('minimized'); // Changed to use minimized class
+                 // Scrolling Down
+                 collapsible.classList.add('collapsed');
             } else if (st < lastScrollTop) {
-                 headerEl.classList.remove('minimized');
+                 // Scrolling Up
+                 collapsible.classList.remove('collapsed');
             }
             lastScrollTop = st <= 0 ? 0 : st;
             updateScrollSpy();
@@ -1554,7 +1566,7 @@
         const arrow = headerEl.querySelector('.yandex-widget-arrow');
         
         if (content.style.display === 'none') {
-            content.style.display = 'block';
+            content.style.display = 'flex'; // Changed to flex for centering
             arrow.style.transform = 'rotate(180deg)';
         } else {
             content.style.display = 'none';
