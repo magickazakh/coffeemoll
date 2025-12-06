@@ -41,20 +41,9 @@
             padding: 0 15px 10px 15px;
         }
 
-        /* Общий контейнер для скрывающихся элементов */
+        /* Контейнер для скрывающихся элементов (без анимации высоты, чтобы не лагало) */
         #collapsible-header {
-            overflow: hidden;
-            transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
-            max-height: 500px; /* С запасом */
-            opacity: 1;
-            will-change: max-height, opacity; /* Подсказка браузеру для оптимизации */
-        }
-
-        /* Класс скрытия */
-        #collapsible-header.collapsed {
-            max-height: 0 !important;
-            opacity: 0 !important;
-            margin: 0 !important;
+            overflow: visible;
         }
 
         .yandex-widget-header {
@@ -78,19 +67,21 @@
         
         .yandex-widget-content {
             margin-top: 15px;
-            overflow: visible; /* Важно: visible, чтобы тень или края не резались */
-            animation: slideDown 0.3s ease-out;
-            display: flex;
+            overflow: visible;
+            display: none; /* Изначально скрыт, управляется JS */
             justify-content: center;
-            /* Высота подстраивается под контент */
+            padding-bottom: 5px;
         }
         
-        /* Обертка для iframe с фиксированными размерами ПОСЛЕ масштабирования */
+        /* Исправленная обертка для бейджа */
         .iframe-wrapper {
-            width: 225px; /* 150px * 1.5 */
-            height: 75px; /* 50px * 1.5 */
+            width: 230px; /* Достаточно места для scale(1.5) от 150px */
+            height: 80px; /* Достаточно места для scale(1.5) от 50px */
             position: relative;
-            overflow: hidden; /* Обрезаем лишнее внутри самого враппера, если есть */
+            margin: 0 auto; /* Центрирование */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .iframe-wrapper iframe {
@@ -98,17 +89,12 @@
             height: 50px;
             border: 0;
             transform: scale(1.5); 
-            transform-origin: top left; /* Масштабируем от угла */
-            position: absolute;
-            top: 0;
-            left: 0;
+            transform-origin: center center; /* Масштабирование от центра */
         }
 
         /* Logic for light/dark iframe switching */
         .yandex-light { display: block; }
         .yandex-dark { display: none; }
-
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         @media (prefers-color-scheme: dark) {
             :root {
@@ -146,10 +132,15 @@
             top: 0; 
             z-index: 40; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Плавное движение всего хедера */
             padding-bottom: 5px;
+            will-change: transform; /* Оптимизация для GPU */
         }
-        .header-container.header-hidden { transform: translateY(-75px); }
+        
+        /* Класс для скрытия при скролле (управляется JS) */
+        .header-container.minimized { 
+            /* transform задается в JS динамически */
+        }
 
         header { padding: 12px 15px 10px 15px; display: flex; justify-content: space-between; align-items: flex-start; }
         .header-left { display: flex; flex-direction: column; }
@@ -318,8 +309,8 @@
 </div>
 
 <!-- Header -->
-<div class="header-container">
-    <header>
+<div class="header-container" id="header-container">
+    <header id="main-header">
         <div class="header-left">
             <h1><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></h1>
             <div class="separator-line"></div>
@@ -330,7 +321,7 @@
         </div>
     </header>
     
-    <!-- SINGLE COLLAPSIBLE CONTAINER FOR SMOOTH ANIMATION -->
+    <!-- WRAPPER FOR HIDEABLE CONTENT -->
     <div id="collapsible-header">
         <!-- YANDEX MAPS WIDGET -->
         <div class="yandex-widget-container">
@@ -338,7 +329,7 @@
                 <span>📍 Мы есть на Яндекс.Картах</span>
                 <span class="yandex-widget-arrow">▼</span>
             </div>
-            <div class="yandex-widget-content" id="yandex-content" style="display: none;">
+            <div class="yandex-widget-content" id="yandex-content">
                 <!-- Fixed wrapper for scaled iframe to prevent cropping -->
                 <div class="iframe-wrapper">
                     <!-- Light Theme Widget -->
@@ -639,23 +630,27 @@
         }
     }
 
+    // UPDATE HEADER HEIGHT LOGIC (REVISED FOR SMOOTH SCROLL)
     function updateHeaderHeight() {
         let lastScrollTop = 0;
-        const delta = 10; // Minimum scroll distance to trigger change
+        const delta = 10; // Threshold to prevent flickering
+        const headerContainer = document.getElementById('header-container');
+        const mainHeader = document.getElementById('main-header');
         const collapsible = document.getElementById('collapsible-header');
         
         window.addEventListener('scroll', throttle(() => {
             const st = window.pageYOffset || document.documentElement.scrollTop;
             
-            // Ignore small movements (hysteresis)
+            // Ignore small movements
             if (Math.abs(lastScrollTop - st) <= delta) return;
 
             if (st > lastScrollTop && st > 50) {
-                 // Scrolling Down
-                 collapsible.classList.add('collapsed');
+                 // Scrolling Down -> Hide top parts
+                 const hideHeight = mainHeader.offsetHeight + collapsible.offsetHeight;
+                 headerContainer.style.transform = `translateY(-${hideHeight}px)`;
             } else if (st < lastScrollTop) {
-                 // Scrolling Up
-                 collapsible.classList.remove('collapsed');
+                 // Scrolling Up -> Show everything
+                 headerContainer.style.transform = 'translateY(0)';
             }
             lastScrollTop = st <= 0 ? 0 : st;
             updateScrollSpy();
