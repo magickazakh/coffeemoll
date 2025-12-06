@@ -22,11 +22,11 @@
     <style>
         /* --- CSS ПЕРЕМЕННЫЕ --- */
         :root {
-            --primary-color: #88d100;       
+            --primary-color: #88d100;        
             --primary-text: #000000;        
             --bg-color: #F7F8F5;            
             --card-bg: #ffffff;
-            --text-main: #111111;           
+            --text-main: #111111;            
             --text-secondary: #6b7280;      
             --input-bg: #ffffff;
             --border-color: #eee;
@@ -35,6 +35,39 @@
             --font-body: 'Montserrat', sans-serif;
             --header-height: 75px; 
         }
+
+        /* YANDEX WIDGET STYLES (ADDED) */
+        .yandex-widget-container {
+            padding: 0 15px 10px 15px;
+        }
+        .yandex-widget-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+            font-family: var(--font-body);
+        }
+        .yandex-widget-header:active {
+            opacity: 0.7;
+        }
+        .yandex-widget-arrow {
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+        .yandex-widget-content {
+            margin-top: 10px;
+            overflow: hidden;
+            animation: slideDown 0.3s ease-out;
+        }
+        /* Logic for light/dark iframe switching */
+        .yandex-light { display: block; }
+        .yandex-dark { display: none; }
+
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         @media (prefers-color-scheme: dark) {
             :root {
@@ -56,6 +89,10 @@
             .upsell-no { background: #444 !important; color: #ccc !important; }
             .cart-qty-btn { background: #444 !important; color: #fff !important; }
             .qty-control-btn { background: #444 !important; color: #fff !important; }
+
+            /* Yandex Dark Mode Logic */
+            .yandex-light { display: none; }
+            .yandex-dark { display: block; }
         }
 
         /* --- БАЗОВЫЕ СТИЛИ --- */
@@ -154,7 +191,7 @@
 
         .checkout-radio-group { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; width: 100% !important; }
 
-        /* КНОПКИ */
+        /* КНОПКА ПОВТОРА */
         .main-btn { position: fixed; bottom: 20px; left: 15px; right: 15px; background: #000000; color: var(--primary-color); padding: 18px; border-radius: 16px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: none; z-index: 900; font-family: var(--font-title); letter-spacing: 1px; transition: transform 0.1s; }
         .main-btn:active { transform: scale(0.98); }
         .modal-add-btn { background: var(--primary-color); color: #000; width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: var(--font-title); letter-spacing: 0.5px; transition: opacity 0.3s; }
@@ -251,6 +288,24 @@
             <div id="work-status" class="status-badge">Checking...</div>
         </div>
     </header>
+    
+    <!-- YANDEX MAPS WIDGET ADDED HERE -->
+    <div class="yandex-widget-container">
+        <div class="yandex-widget-header" onclick="toggleYandexWidget(this)">
+            <span>📍 Мы есть на Яндекс.Картах</span>
+            <span class="yandex-widget-arrow">▼</span>
+        </div>
+        <div class="yandex-widget-content" id="yandex-content" style="display: none;">
+            <!-- Light Theme Widget -->
+            <div class="yandex-light">
+                <iframe src="https://yandex.kz/sprav/widget/rating-badge/125095434429?type=rating" width="100%" height="50" frameborder="0"></iframe>
+            </div>
+            <!-- Dark Theme Widget -->
+            <div class="yandex-dark">
+                <iframe src="https://yandex.kz/sprav/widget/rating-badge/125095434429?type=rating&theme=dark" width="100%" height="50" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
     
     <div class="search-wrapper">
         <input type="text" id="search-input" placeholder="🔍 Найти напиток или еду..." oninput="filterMenu()">
@@ -1456,6 +1511,20 @@
         }
     });
 
+    // Yandex Widget Toggle Logic
+    function toggleYandexWidget(headerEl) {
+        const content = headerEl.nextElementSibling;
+        const arrow = headerEl.querySelector('.yandex-widget-arrow');
+        
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            arrow.style.transform = 'rotate(180deg)';
+        } else {
+            content.style.display = 'none';
+            arrow.style.transform = 'rotate(0deg)';
+        }
+    }
+
     window.addEventListener('offline', () => { document.getElementById('error-screen').style.display = 'flex'; });
     window.addEventListener('online', () => { location.reload(); });
     
@@ -1463,5 +1532,4 @@
     try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e); }
 </script>
 </body>
-</html>
-
+</html>"
