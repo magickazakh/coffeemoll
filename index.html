@@ -641,10 +641,15 @@
 
     function updateHeaderHeight() {
         let lastScrollTop = 0;
+        const delta = 10; // Minimum scroll distance to trigger change
         const collapsible = document.getElementById('collapsible-header');
         
         window.addEventListener('scroll', throttle(() => {
             const st = window.pageYOffset || document.documentElement.scrollTop;
+            
+            // Ignore small movements (hysteresis)
+            if (Math.abs(lastScrollTop - st) <= delta) return;
+
             if (st > lastScrollTop && st > 50) {
                  // Scrolling Down
                  collapsible.classList.add('collapsed');
