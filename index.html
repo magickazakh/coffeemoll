@@ -39,6 +39,7 @@
         /* YANDEX WIDGET STYLES (ADDED) */
         .yandex-widget-container {
             padding: 0 15px 10px 15px;
+            transition: all 0.3s ease; /* Smooth hide on scroll */
         }
         .yandex-widget-header {
             font-size: 13px;
@@ -59,10 +60,20 @@
             transition: transform 0.2s;
         }
         .yandex-widget-content {
-            margin-top: 10px;
+            margin-top: 15px;
             overflow: hidden;
             animation: slideDown 0.3s ease-out;
+            /* Center and adjust height */
+            display: flex;
+            justify-content: center;
+            height: 80px; /* Increased height for scaled widget */
         }
+        
+        .yandex-widget-content iframe {
+            transform: scale(1.5); /* Increased scale */
+            transform-origin: top center;
+        }
+
         /* Logic for light/dark iframe switching */
         .yandex-light { display: block; }
         .yandex-dark { display: none; }
@@ -109,6 +120,13 @@
             padding-bottom: 5px;
         }
         .header-container.header-hidden { transform: translateY(-75px); }
+
+        /* СКРЫТИЕ ЭЛЕМЕНТОВ ПРИ СКРОЛЛЕ (MINIMIZED) */
+        .header-container.minimized .yandex-widget-container,
+        .header-container.minimized .search-wrapper,
+        .header-container.minimized #repeat-order-container {
+            display: none !important;
+        }
 
         header { padding: 12px 15px 10px 15px; display: flex; justify-content: space-between; align-items: flex-start; }
         .header-left { display: flex; flex-direction: column; }
@@ -1532,4 +1550,4 @@
     try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e); }
 </script>
 </body>
-</html>"
+</html>
