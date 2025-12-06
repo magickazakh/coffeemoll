@@ -36,11 +36,24 @@
             --header-height: 75px; 
         }
 
-        /* YANDEX WIDGET STYLES (ADDED) */
+        /* YANDEX WIDGET STYLES */
         .yandex-widget-container {
             padding: 0 15px 10px 15px;
-            transition: all 0.3s ease; /* Smooth hide on scroll */
+            overflow: hidden; 
         }
+
+        /* Анимация скрытия при скролле */
+        .yandex-widget-container,
+        .search-wrapper,
+        #repeat-order-container {
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                        opacity 0.3s ease, 
+                        margin 0.3s ease, 
+                        padding 0.3s ease;
+            max-height: 300px; /* Достаточная высота для контента */
+            opacity: 1;
+        }
+
         .yandex-widget-header {
             font-size: 13px;
             font-weight: 600;
@@ -63,15 +76,17 @@
             margin-top: 15px;
             overflow: hidden;
             animation: slideDown 0.3s ease-out;
-            /* Center and adjust height */
+            /* Центрирование и фиксированная высота для масштабированного бейджа */
             display: flex;
             justify-content: center;
-            height: 80px; /* Increased height for scaled widget */
+            height: 80px; 
         }
         
         .yandex-widget-content iframe {
-            transform: scale(1.5); /* Increased scale */
+            transform: scale(1.5); 
             transform-origin: top center;
+            /* Важно: scale + width 100% вызовет выход за границы. 
+               Фиксированная ширина 150px * 1.5 = 225px, что поместится везде. */
         }
 
         /* Logic for light/dark iframe switching */
@@ -121,11 +136,15 @@
         }
         .header-container.header-hidden { transform: translateY(-75px); }
 
-        /* СКРЫТИЕ ЭЛЕМЕНТОВ ПРИ СКРОЛЛЕ (MINIMIZED) */
+        /* ПЛАВНОЕ СКРЫТИЕ ПРИ СКРОЛЛЕ (MINIMIZED) */
         .header-container.minimized .yandex-widget-container,
         .header-container.minimized .search-wrapper,
         .header-container.minimized #repeat-order-container {
-            display: none !important;
+            max-height: 0 !important;
+            opacity: 0 !important;
+            margin: 0 !important;
+            padding: 0 15px !important; /* Оставляем горизонтальный паддинг, чтобы контент не дергался по ширине */
+            pointer-events: none;
         }
 
         header { padding: 12px 15px 10px 15px; display: flex; justify-content: space-between; align-items: flex-start; }
@@ -137,12 +156,12 @@
         .status-badge { font-family: var(--font-body); font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; margin-left: 10px;}
 
         /* ПОИСК */
-        .search-wrapper { padding: 0 15px 10px 15px; }
+        .search-wrapper { padding: 0 15px 10px 15px; overflow: hidden; }
         #search-input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 15px; outline: none; box-sizing: border-box; font-family: var(--font-body); transition: all 0.2s;}
         #search-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(136, 209, 0, 0.2); }
         
         /* КНОПКА ПОВТОРА */
-        #repeat-order-container { padding: 0 15px 10px 15px; display: none; }
+        #repeat-order-container { padding: 0 15px 10px 15px; display: none; overflow: hidden; }
         .repeat-card { background: var(--card-bg); border: 1px solid var(--primary-color); border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 5px rgba(136, 209, 0, 0.1); }
         .repeat-card:active { transform: scale(0.98); }
         .repeat-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
@@ -316,11 +335,11 @@
         <div class="yandex-widget-content" id="yandex-content" style="display: none;">
             <!-- Light Theme Widget -->
             <div class="yandex-light">
-                <iframe src="https://yandex.kz/sprav/widget/rating-badge/125095434429?type=rating" width="100%" height="50" frameborder="0"></iframe>
+                <iframe src="https://yandex.kz/sprav/widget/rating-badge/125095434429?type=rating" width="150" height="50" frameborder="0"></iframe>
             </div>
             <!-- Dark Theme Widget -->
             <div class="yandex-dark">
-                <iframe src="https://yandex.kz/sprav/widget/rating-badge/125095434429?type=rating&theme=dark" width="100%" height="50" frameborder="0"></iframe>
+                <iframe src="https://yandex.kz/sprav/widget/rating-badge/125095434429?type=rating&theme=dark" width="150" height="50" frameborder="0"></iframe>
             </div>
         </div>
     </div>
