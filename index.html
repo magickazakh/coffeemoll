@@ -44,9 +44,9 @@ padding: 0 15px 10px 15px;
 /* Контейнер для скрывающихся элементов (АНИМАЦИЯ СКРЫТИЯ) */
 #collapsible-header {
 overflow: hidden; /* Необходимо для анимации высоты */
-max-height: 500px; /* Начальная макс. высота (должна быть больше реальной) */
+max-height: 300px; /* Уменьшили с 500px, чтобы анимация начиналась быстрее */
 opacity: 1;
-transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease-out; /* Более плавная и медленная анимация */
 will-change: max-height, opacity;
 }
 
@@ -55,6 +55,7 @@ will-change: max-height, opacity;
 max-height: 0;
 opacity: 0;
 pointer-events: none; /* Чтобы нельзя было кликнуть, пока скрыто */
+margin-bottom: -5px; /* Небольшая коррекция отступа */
 }
 
 .yandex-widget-header {
@@ -134,7 +135,7 @@ transform-origin: center center; /* Масштабирование от цент
 }
 
 /* --- БАЗОВЫЕ СТИЛИ --- */
-body { font-family: var(--font-body); margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); padding-bottom: 100px; -webkit-tap-highlight-color: transparent; font-weight: 500; transition: background-color 0.3s, color 0.3s; }
+body { font-family: var(--font-body); margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); padding-bottom: 100px; -webkit-tap-highlight-color: transparent; font-weight: 500; transition: background-color 0.3s, color 0.3s; overscroll-behavior-y: none; }
 
 /* ШАПКА */
 .header-container {
@@ -639,26 +640,36 @@ lastRan = Date.now();
 // UPDATE HEADER HEIGHT LOGIC (REVISED FOR SMOOTH SCROLL)
 function updateHeaderHeight() {
 let lastScrollTop = 0;
-const delta = 10; // Threshold to prevent flickering
+const delta = 10; // Increased from 2 to 10 to prevent flickering on slow scrolls
 const collapsible = document.getElementById('collapsible-header');
 
 window.addEventListener('scroll', throttle(() => {
 const st = window.pageYOffset || document.documentElement.scrollTop;
 
-// Ignore small movements
+// Ignore negative scroll (iOS rubber banding)
+if (st < 0) return;
+
+// Always show at the very top
+if (st < 10) {
+collapsible.classList.remove('collapsed');
+lastScrollTop = st;
+return;
+}
+
+// If the difference is too small, do nothing (hysteresis)
 if (Math.abs(lastScrollTop - st) <= delta) return;
 
-if (st > lastScrollTop && st > 50) {
-// Scroll Down -> Hide contents of collapsible (Yandex/Search)
+if (st > lastScrollTop) {
+// Scroll Down -> Hide
 collapsible.classList.add('collapsed');
-} else if (st < lastScrollTop) {
-// Scroll Up -> Show contents
+} else {
+// Scroll Up -> Show
 collapsible.classList.remove('collapsed');
 }
 
-lastScrollTop = st <= 0 ? 0 : st;
+lastScrollTop = st;
 updateScrollSpy();
-}, 100));
+}, 50)); // Adjusted throttle to 50ms
 }
 
 function updateScrollSpy() {
