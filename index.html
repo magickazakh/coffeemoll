@@ -46,7 +46,7 @@ padding: 0 15px 10px 15px;
 overflow: hidden; /* Необходимо для анимации высоты */
 max-height: 300px; /* Уменьшили с 500px, чтобы анимация начиналась быстрее */
 opacity: 1;
-transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease-out; /* Более плавная и медленная анимация */
+transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out; /* Более плавная и предсказуемая анимация */
 will-change: max-height, opacity;
 }
 
@@ -640,8 +640,9 @@ lastRan = Date.now();
 // UPDATE HEADER HEIGHT LOGIC (REVISED FOR SMOOTH SCROLL)
 function updateHeaderHeight() {
 let lastScrollTop = 0;
-const delta = 100; // Increased from 2 to 10 to prevent flickering on slow scrolls
+const delta = 80; 
 const collapsible = document.getElementById('collapsible-header');
+let isToggling = false; // Флаг блокировки для предотвращения мигания
 
 window.addEventListener('scroll', throttle(() => {
 const st = window.pageYOffset || document.documentElement.scrollTop;
@@ -651,7 +652,16 @@ if (st < 0) return;
 
 // Always show at the very top
 if (st < 10) {
+if (collapsible.classList.contains('collapsed')) {
 collapsible.classList.remove('collapsed');
+}
+lastScrollTop = st;
+return;
+}
+
+// Если идет анимация открытия/закрытия - игнорируем события скролла,
+// чтобы предотвратить ложные срабатывания из-за сдвига контента
+if (isToggling) {
 lastScrollTop = st;
 return;
 }
@@ -661,15 +671,23 @@ if (Math.abs(lastScrollTop - st) <= delta) return;
 
 if (st > lastScrollTop) {
 // Scroll Down -> Hide
+if (!collapsible.classList.contains('collapsed')) {
 collapsible.classList.add('collapsed');
+}
 } else {
 // Scroll Up -> Show
+if (collapsible.classList.contains('collapsed')) {
 collapsible.classList.remove('collapsed');
+// БЛОКИРУЕМ обработку скролла на время анимации (400мс),
+// так как раскрытие меню сдвигает страницу вниз, что скрипт может принять за скролл вниз
+isToggling = true;
+setTimeout(() => { isToggling = false; }, 400); 
+}
 }
 
 lastScrollTop = st;
 updateScrollSpy();
-}, 50)); // Adjusted throttle to 50ms
+}, 50));
 }
 
 function updateScrollSpy() {
@@ -1616,4 +1634,3 @@ try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e)
 </script>
 </body>
 </html>
-
