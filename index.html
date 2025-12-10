@@ -632,7 +632,7 @@ const st = Math.max(0, window.pageYOffset || document.documentElement.scrollTop)
 
 // Minimum scroll amount to trigger change (hysteresis)
 if (Math.abs(st - lastScrollTop) > 100) { 
-if (st > lastScrollTop && st > 160) {
+if (st > lastScrollTop && st > 100) {
 // Scrolling Down
 collapsible.classList.add('collapsed');
 } else if (st < lastScrollTop) {
@@ -1598,4 +1598,5 @@ try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e)
 </script>
 </body>
 </html>
+
 
