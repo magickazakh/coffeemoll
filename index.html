@@ -640,7 +640,7 @@ lastRan = Date.now();
 // UPDATE HEADER HEIGHT LOGIC (REVISED FOR SMOOTH SCROLL)
 function updateHeaderHeight() {
 let lastScrollTop = 0;
-const delta = 10; // Increased from 2 to 10 to prevent flickering on slow scrolls
+const delta = 100; // Increased from 2 to 10 to prevent flickering on slow scrolls
 const collapsible = document.getElementById('collapsible-header');
 
 window.addEventListener('scroll', throttle(() => {
@@ -1616,3 +1616,4 @@ try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e)
 </script>
 </body>
 </html>
+
