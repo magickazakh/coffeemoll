@@ -46,7 +46,8 @@ padding: 0 15px 10px 15px;
 overflow: hidden; /* Необходимо для анимации высоты */
 max-height: 300px; /* Уменьшили с 500px, чтобы анимация начиналась быстрее */
 opacity: 1;
-transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out; /* Более плавная и предсказуемая анимация */
+/* Ускорил анимацию до 0.25s для большей отзывчивости */
+transition: max-height 0.25s cubic-bezier(0.2, 0, 0, 1), opacity 0.25s linear;
 will-change: max-height, opacity;
 }
 
@@ -616,82 +617,41 @@ setTimeout(() => { toast.remove(); }, 3000);
 }
 
 // --- SCROLL OPTIMIZATION ---
-function throttle(func, limit) {
-let lastFunc;
-let lastRan;
-return function() {
-const context = this;
-const args = arguments;
-if (!lastRan) {
-func.apply(context, args);
-lastRan = Date.now();
-} else {
-clearTimeout(lastFunc);
-lastFunc = setTimeout(function() {
-if ((Date.now() - lastRan) >= limit) {
-func.apply(context, args);
-lastRan = Date.now();
-}
-}, limit - (Date.now() - lastRan));
-}
-}
-}
+// (Throttle function removed as we switched to requestAnimationFrame)
 
 // UPDATE HEADER HEIGHT LOGIC (REVISED FOR SMOOTH SCROLL)
 function updateHeaderHeight() {
 let lastScrollTop = 0;
-const delta = 70; 
 const collapsible = document.getElementById('collapsible-header');
-let isToggling = false; // Флаг блокировки для предотвращения мигания
+let ticking = false;
 
-window.addEventListener('scroll', throttle(() => {
-const st = window.pageYOffset || document.documentElement.scrollTop;
+window.addEventListener('scroll', () => {
+if (!ticking) {
+window.requestAnimationFrame(() => {
+const st = Math.max(0, window.pageYOffset || document.documentElement.scrollTop); // Prevent negative scroll on iOS
 
-// Ignore negative scroll (iOS rubber banding)
-if (st < 0) return;
-
-// Always show at the very top
-if (st < 10) {
-if (collapsible.classList.contains('collapsed')) {
-collapsible.classList.remove('collapsed');
-}
-lastScrollTop = st;
-return;
-}
-
-// Если идет анимация открытия/закрытия - игнорируем события скролла,
-// чтобы предотвратить ложные срабатывания из-за сдвига контента
-if (isToggling) {
-lastScrollTop = st;
-return;
-}
-
-// If the difference is too small, do nothing (hysteresis)
-if (Math.abs(lastScrollTop - st) <= delta) return;
-
-if (st > lastScrollTop) {
-// Scroll Down -> Hide
-if (!collapsible.classList.contains('collapsed')) {
+// Minimum scroll amount to trigger change (hysteresis)
+if (Math.abs(st - lastScrollTop) > 100) { 
+if (st > lastScrollTop && st > 160) {
+// Scrolling Down
 collapsible.classList.add('collapsed');
-// БЛОКИРУЕМ обработку скролла на время анимации (400мс),
-// чтобы предотвратить ложные срабатывания при сдвиге контента вверх
-isToggling = true;
-setTimeout(() => { isToggling = false; }, 400); 
-}
-} else {
-// Scroll Up -> Show
-if (collapsible.classList.contains('collapsed')) {
+} else if (st < lastScrollTop) {
+// Scrolling Up
 collapsible.classList.remove('collapsed');
-// БЛОКИРУЕМ обработку скролла на время анимации (400мс),
-// так как раскрытие меню сдвигает страницу вниз, что скрипт может принять за скролл вниз
-isToggling = true;
-setTimeout(() => { isToggling = false; }, 400); 
 }
+lastScrollTop = st;
 }
 
-lastScrollTop = st;
-updateScrollSpy();
-}, 50));
+// Force show at very top
+if (st < 100) {
+collapsible.classList.remove('collapsed');
+}
+
+ticking = false;
+});
+ticking = true;
+}
+});
 }
 
 function updateScrollSpy() {
