@@ -640,7 +640,7 @@ lastRan = Date.now();
 // UPDATE HEADER HEIGHT LOGIC (REVISED FOR SMOOTH SCROLL)
 function updateHeaderHeight() {
 let lastScrollTop = 0;
-const delta = 80; 
+const delta = 70; 
 const collapsible = document.getElementById('collapsible-header');
 let isToggling = false; // Флаг блокировки для предотвращения мигания
 
@@ -673,6 +673,10 @@ if (st > lastScrollTop) {
 // Scroll Down -> Hide
 if (!collapsible.classList.contains('collapsed')) {
 collapsible.classList.add('collapsed');
+// БЛОКИРУЕМ обработку скролла на время анимации (400мс),
+// чтобы предотвратить ложные срабатывания при сдвиге контента вверх
+isToggling = true;
+setTimeout(() => { isToggling = false; }, 400); 
 }
 } else {
 // Scroll Up -> Show
