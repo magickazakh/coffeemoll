@@ -46,8 +46,8 @@ padding: 0 15px 10px 15px;
 overflow: hidden; /* Необходимо для анимации высоты */
 max-height: 300px; /* Уменьшили с 500px, чтобы анимация начиналась быстрее */
 opacity: 1;
-/* Ускорил анимацию до 0.25s для большей отзывчивости */
-transition: max-height 0.25s cubic-bezier(0.2, 0, 0, 1), opacity 0.25s linear;
+/* Плавная анимация без рывков */
+transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 will-change: max-height, opacity;
 }
 
@@ -621,37 +621,72 @@ setTimeout(() => { toast.remove(); }, 3000);
 
 // UPDATE HEADER HEIGHT LOGIC (REVISED FOR SMOOTH SCROLL)
 function updateHeaderHeight() {
-let lastScrollTop = 0;
-const collapsible = document.getElementById('collapsible-header');
-let ticking = false;
+    let lastScrollTop = 0;
+    let anchorScrollTop = 0;
+    let scrollDir = 0; // 1: down, -1: up
+    const tolerance = 15; // Pixels to scroll before triggering
+    const collapsible = document.getElementById('collapsible-header');
+    let ticking = false;
 
-window.addEventListener('scroll', () => {
-if (!ticking) {
-window.requestAnimationFrame(() => {
-const st = Math.max(0, window.pageYOffset || document.documentElement.scrollTop); // Prevent negative scroll on iOS
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                const st = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
+                
+                // Always show at top
+                if (st < 10) {
+                    if (collapsible.classList.contains('collapsed')) {
+                        collapsible.classList.remove('collapsed');
+                    }
+                    // Reset state
+                    lastScrollTop = st;
+                    anchorScrollTop = st;
+                    scrollDir = 0;
+                    ticking = false;
+                    return;
+                }
 
-// Minimum scroll amount to trigger change (hysteresis)
-if (Math.abs(st - lastScrollTop) > 100) { 
-if (st > lastScrollTop && st > 100) {
-// Scrolling Down
-collapsible.classList.add('collapsed');
-} else if (st < lastScrollTop) {
-// Scrolling Up
-collapsible.classList.remove('collapsed');
-}
-lastScrollTop = st;
-}
+                const diff = st - lastScrollTop;
+                
+                // Ignore tiny movements (noise)
+                if (Math.abs(diff) < 2) {
+                    ticking = false;
+                    return;
+                }
 
-// Force show at very top
-if (st < 50) {
-collapsible.classList.remove('collapsed');
-}
+                const currentDir = diff > 0 ? 1 : -1;
 
-ticking = false;
-});
-ticking = true;
-}
-});
+                // If direction changed, reset anchor
+                if (currentDir !== scrollDir) {
+                    anchorScrollTop = st;
+                    scrollDir = currentDir;
+                }
+
+                // Logic based on anchor distance
+                const dist = Math.abs(st - anchorScrollTop);
+
+                if (dist > tolerance) {
+                    if (scrollDir === 1) {
+                        // Scrolling Down > Tolerance -> Hide
+                        if (!collapsible.classList.contains('collapsed')) {
+                            collapsible.classList.add('collapsed');
+                        }
+                    } else {
+                        // Scrolling Up > Tolerance -> Show
+                        if (collapsible.classList.contains('collapsed')) {
+                            collapsible.classList.remove('collapsed');
+                        }
+                    }
+                }
+
+                lastScrollTop = st;
+                ticking = false;
+                
+                updateScrollSpy();
+            });
+            ticking = true;
+        }
+    });
 }
 
 function updateScrollSpy() {
@@ -1598,5 +1633,3 @@ try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e)
 </script>
 </body>
 </html>
-
-
