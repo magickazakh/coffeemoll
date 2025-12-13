@@ -41,22 +41,27 @@
 padding: 0 15px 10px 15px;
 }
 
-/* Контейнер для скрывающихся элементов (АНИМАЦИЯ СКРЫТИЯ) */
+/* --- АНИМАЦИЯ СКРЫТИЯ (ИСПРАВЛЕНО) --- */
 #collapsible-header {
-overflow: hidden; /* Необходимо для анимации высоты */
-max-height: 300px; /* Уменьшили с 500px, чтобы анимация начиналась быстрее */
+display: grid; /* Используем Grid для анимации высоты */
+grid-template-rows: 1fr; /* Состояние "Открыто" - полная высота */
 opacity: 1;
-/* Плавная анимация без рывков */
-transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
-will-change: max-height, opacity;
+transition: grid-template-rows 0.3s ease-out, opacity 0.3s ease-out;
+/* will-change: grid-template-rows, opacity; - иногда вызывает мыло на мобилках, лучше убрать для текста */
 }
 
 /* Класс для скрытия */
 #collapsible-header.collapsed {
-max-height: 0;
+grid-template-rows: 0fr; /* Состояние "Закрыто" - высота 0 */
 opacity: 0;
-pointer-events: none; /* Чтобы нельзя было кликнуть, пока скрыто */
-margin-bottom: -5px; /* Небольшая коррекция отступа */
+pointer-events: none;
+margin-bottom: -5px;
+}
+
+/* Обертка для контента внутри collapsible-header, обязательна для grid-анимации */
+.collapsible-inner {
+overflow: hidden;
+min-height: 0; /* Важно для grid */
 }
 
 .yandex-widget-header {
@@ -331,6 +336,9 @@ input:checked + .slider:before { transform: translateX(22px); }
 
 <!-- WRAPPER FOR HIDEABLE CONTENT -->
 <div id="collapsible-header">
+<!-- Inner Wrapper for Grid Animation -->
+<div class="collapsible-inner">
+
 <!-- YANDEX MAPS WIDGET -->
 <div class="yandex-widget-container">
 <div class="yandex-widget-header" onclick="toggleYandexWidget(this)">
@@ -366,7 +374,9 @@ input:checked + .slider:before { transform: translateX(22px); }
 <div style="font-weight:bold; color:var(--primary-color); font-size: 20px;">➔</div>
 </div>
 </div>
-</div>
+
+</div> <!-- End collapsible-inner -->
+</div> <!-- End collapsible-header -->
 
 <div class="nav-scroller" id="nav-container"></div>
 </div>
@@ -616,10 +626,8 @@ else tg.HapticFeedback.impactOccurred('light');
 setTimeout(() => { toast.remove(); }, 3000);
 }
 
-// --- SCROLL OPTIMIZATION ---
-// (Throttle function removed as we switched to requestAnimationFrame)
-
-// UPDATE HEADER HEIGHT LOGIC (REVISED FOR SMOOTH SCROLL)
+// --- SCROLL OPTIMIZATION (UPDATED) ---
+// Возвращена логика с блокировкой (Lock) для предотвращения прыжков при медленном скролле
 function updateHeaderHeight() {
     let lastScrollTop = 0;
     let anchorScrollTop = 0;
@@ -627,7 +635,7 @@ function updateHeaderHeight() {
     const tolerance = 10; // Чувствительность скролла
     const collapsible = document.getElementById('collapsible-header');
     
-    let isToggling = false; // Флаг блокировки для предотвращения "мигания"
+    let isToggling = false; // Флаг блокировки
     let ticking = false;
 
     // Вспомогательная функция для блокировки событий на время анимации
@@ -639,7 +647,7 @@ function updateHeaderHeight() {
             const st = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
             anchorScrollTop = st;
             lastScrollTop = st;
-        }, 550); // 300ms (CSS transition) + 50ms запас
+        }, 350); // 300ms (CSS transition) + 50ms запас
     };
 
     window.addEventListener('scroll', () => {
@@ -689,13 +697,13 @@ function updateHeaderHeight() {
                         // Скролл ВНИЗ -> Скрываем
                         if (!collapsible.classList.contains('collapsed')) {
                             collapsible.classList.add('collapsed');
-                            activateLock(); // БЛОКИРУЕМ обработку, чтобы не было "дребезга" при уменьшении высоты
+                            activateLock(); // БЛОКИРУЕМ обработку
                         }
                     } else {
                         // Скролл ВВЕРХ -> Показываем
                         if (collapsible.classList.contains('collapsed')) {
                             collapsible.classList.remove('collapsed');
-                            activateLock(); // БЛОКИРУЕМ обработку, чтобы не было "дребезга" при увеличении высоты
+                            activateLock(); // БЛОКИРУЕМ обработку
                         }
                     }
                 }
@@ -1653,4 +1661,3 @@ try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e)
 </script>
 </body>
 </html>
-
