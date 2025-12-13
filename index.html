@@ -452,7 +452,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 <input type="radio" name="deliveryType" id="d-delivery" value="delivery" class="checkout-radio-input" onchange="toggleDelivery()">
 <label for="d-delivery" class="checkout-radio-label">🚗 Доставка</label>
 </div>
-<div id="delivery-msg" class="delivery-warning" style="display:none; font-size:12px; color:#d97706; margin-top:5px;">⚠️ Доставка оплачивается отдельно курьеру (от 600₸).</div>
+<div id="delivery-msg" class="delivery-warning" style="display:none; font-size:12px; color:#d97706; margin-top:5px;">⚠️ Доставка оплачивается отдельно курьеру (от 600₸, до двери от 800₸).</div>
 </div>
 
 <div id="address-block" style="display: none;">
@@ -468,7 +468,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 <label for="p-halyk" class="checkout-radio-label">🟢 Halyk</label>
 </div>
 <div id="payment-phone-block" style="margin-top: 10px;">
-<label class="option-label" id="payment-phone-label" style="font-size: 13px; margin-bottom: 5px;">Номер Kaspi</label>
+<label class="option-label" id="payment-phone-label" style="font-size: 13px; margin-bottom: 5px;">Номер телефона Kaspi</label>
 <input type="tel" id="payment-phone" placeholder="Номер привязанный к карте" oninput="maskPhone(event); validateForm();">
 <div style="font-size:11px; color:var(--text-secondary); margin-top:5px;" id="payment-hint">Вам придет счет на оплату в приложение Kaspi.kz</div>
 </div>
@@ -1528,7 +1528,7 @@ showToast("Ошибка проверки", 'error');
 appliedDiscount = 0;
 calculateTotal();
 })
-.finally(() => { btn.disabled = false; btn.innerText = "Прим."; });
+.finally(() => { btn.disabled = false; btn.innerText = "ОК"; });
 }
 
 function submitOrder() {
@@ -1590,10 +1590,10 @@ const label = document.getElementById('payment-phone-label');
 const hint = document.getElementById('payment-hint');
 
 if (isKaspi) {
-label.innerText = "Номер Kaspi";
+label.innerText = "Номер телефона Kaspi";
 hint.innerText = "Вам придет счет на оплату в приложение Kaspi.kz";
 } else if (isHalyk) {
-label.innerText = "Номер Halyk";
+label.innerText = "Номер телефона Halyk";
 hint.innerText = "Вам придет счет на оплату в приложение Halyk";
 }
 validateForm();
@@ -1672,3 +1672,4 @@ try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e)
 </script>
 </body>
 </html>
+
