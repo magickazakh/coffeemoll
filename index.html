@@ -407,8 +407,8 @@ input:checked + .slider:before { transform: translateX(22px); }
 </div>
 
 <div id="closed-warning" class="warning-box" style="display:none;">🌙 <b>Мы сейчас закрыты.</b><br>Приготовим ваш заказ в рабочее время (с 09:00).</div>
-<div id="closing-soon-warning" class="warning-box" style="display:none; background:#fef3c7; color:#b45309; border-color:#fcd34d;">⚠️ <b>Скоро закрытие!</b><br>Успейте сделать заказ до конца рабочего дня.</div>
-<div id="pizza-warning" class="info-box" style="display:none;">🍕 <b>Пицца доступна с 11:00.</b></div>
+<div id="closing-soon-warning" class="warning-box" style="display:none; background:#fef3c7; color:#b45309; border-color:#fcd34d;">⚠️ <b>Скоро закрытие!</b><br>Успейте сделать заказ до конца рабочего дня (23:00).</div>
+<div id="pizza-warning" class="info-box">🍕 <b>Пицца доступна с 11:00.</b><br>Начнем готовить её после 11:00.</div>
 
 <div id="cart-list-container"></div>
 
@@ -1292,6 +1292,17 @@ renderCartList();
 calculateTotal();
 validateForm();
 
+// NEW LOGIC START
+const hasPizza = cart.some(i => i.cat === 'ПИЦЦА');
+const h = new Date().getHours();
+const pizzaWarning = document.getElementById('pizza-warning');
+if (hasPizza && h < 11) {
+    pizzaWarning.style.display = 'block';
+} else {
+    pizzaWarning.style.display = 'none';
+}
+// NEW LOGIC END
+
 // Auto-fill user data
 const u = tg.initDataUnsafe?.user;
 if(u && !document.getElementById('client-name').value) {
@@ -1372,7 +1383,7 @@ const isOpen = h >= OPEN_HOUR && h < CLOSE_HOUR;
 const b = document.getElementById('work-status');
 
 if(b){
-b.innerText = isOpen ? `Открыто (${OPEN_HOUR}:00 - ${CLOSE_HOUR}:00)` : "Закрыто";
+b.innerText = isOpen ? `Открыто (${OPEN_HOUR}:00 - ${CLOSE_HOUR}:00)` : `Закрыто (работаем с ${OPEN_HOUR}:00)`;
 b.style.background = isOpen ? '#e6fffa' : '#fee2e2';
 b.style.color = isOpen ? '#047857' : '#991b1b';
 }
