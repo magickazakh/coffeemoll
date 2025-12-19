@@ -6,7 +6,7 @@ import os
 import re 
 import time
 from datetime import datetime, timedelta, timezone
-from aiohttp import web
+from aiohttp import web, ClientSession
 
 # --- FIREBASE IMPORTS ---
 import firebase_admin
@@ -28,10 +28,15 @@ from aiogram.fsm.storage.memory import MemoryStorage
 TOKEN = os.getenv("BOT_TOKEN") 
 if not TOKEN:
     logging.critical("❌ BOT_TOKEN is not set!")
-    # Не прерываем выполнение сразу, чтобы логи успели записаться
+
+# URL Google таблицы теперь живет ТОЛЬКО на сервере
+GOOGLE_SHEET_CSV_URL = os.getenv("GOOGLE_SHEET_URL", "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv")
+
+# URL вашего Web App (Render)
+# Если переменная окружения WEB_APP_URL не задана, попробуем использовать дефолтную (но лучше задать в Render)
+WEB_APP_URL = os.getenv("WEB_APP_URL") 
 
 ADMIN_CHAT_ID = -1003356844624
-WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
 
 TOPIC_ID_ORDERS = 68
 TOPIC_ID_REVIEWS = 69
@@ -302,7 +307,37 @@ async def save_review_background(user_id, name, service_rate, food_rate, tips, c
     loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, _save)
 
-# --- API ---
+# --- API И ВЕБ-СЕРВЕР ---
+
+# 1. Раздача главной страницы (HTML)
+async def handle_index(request):
+    try:
+        return web.FileResponse('./static/index.html')
+    except Exception as e:
+        return web.Response(text=f"Error loading index: {e}", status=500)
+
+# 2. Прокси для меню (Скрывает Google Sheet)
+async def api_get_menu(request):
+    # Добавляем заголовки запрета кеширования API
+    headers = {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "Content-Type": "text/csv; charset=utf-8"
+    }
+    try:
+        # Сервер сам идет в Google за данными
+        async with ClientSession() as session:
+            # Добавляем timestamp чтобы Google не кешировал ответ
+            url = f"{GOOGLE_SHEET_CSV_URL}&t={int(time.time())}"
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    csv_data = await resp.text()
+                    return web.Response(text=csv_data, headers=headers)
+                else:
+                    return web.Response(status=500, text="Error fetching menu from Google")
+    except Exception as e:
+        logging.error(f"Menu Fetch Error: {e}")
+        return web.Response(status=500, text=str(e))
 
 async def api_check_promo(request):
     headers = {
@@ -331,10 +366,24 @@ async def health_check(request): return web.Response(text="OK")
 async def start_web_server():
     port = int(os.environ.get("PORT", 10000))
     app = web.Application()
-    app.router.add_get("/", health_check)
+    
+    # API Routes
     app.router.add_get("/health", health_check)
+    app.router.add_get("/api/get_menu", api_get_menu)
     app.router.add_post("/api/check_promo", api_check_promo)
     app.router.add_options("/api/check_promo", api_check_promo)
+    
+    # Frontend Routes (Static)
+    # Сначала пробуем раздать index.html на корневом пути
+    app.router.add_get("/", handle_index)
+    
+    # Раздаем папку static (css, js, images)
+    # Важно: путь в системе ./static, путь в URL /static/
+    if os.path.exists('./static'):
+        app.router.add_static('/static/', path='./static', name='static')
+    else:
+        logging.warning("⚠️ Static folder not found! Web App might not work correctly.")
+
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)
@@ -344,7 +393,7 @@ async def main():
     asyncio.create_task(cache_updater_task())
     await start_web_server()
     await bot.delete_webhook(drop_pending_updates=True)
-    print("🤖 Bot started...")
+    print("🤖 Bot started with Web App Server...")
     await dp.start_polling(bot)
 
 # --- КЛАВИАТУРЫ ---
@@ -368,6 +417,7 @@ def get_skip_comment_kb(): return InlineKeyboardMarkup(inline_keyboard=[[InlineK
 
 @dp.message(CommandStart())
 async def cmd_start(m: types.Message):
+    # Используем WEB_APP_URL, который должен указывать на ваш Render
     unique_url = f"{WEB_APP_URL}?v={int(time.time())}&uid={m.from_user.id}"
 
     if m.chat.id == ADMIN_CHAT_ID:
