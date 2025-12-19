@@ -11,6 +11,10 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Копируем папку со статикой (HTML, JS, CSS)
+# Это ВАЖНО, без этого сервер не увидит ваш сайт
+COPY static ./static
+
 # Копируем код бота
 COPY . .
 
