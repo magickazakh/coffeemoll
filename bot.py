@@ -36,10 +36,10 @@ GOOGLE_SHEET_CSV_URL = os.getenv("GOOGLE_SHEET_URL", "https://docs.google.com/sp
 # Если переменная окружения WEB_APP_URL не задана, попробуем использовать дефолтную (но лучше задать в Render)
 WEB_APP_URL = os.getenv("WEB_APP_URL") 
 
-ADMIN_CHAT_ID = -1003356844624
+ADMIN_CHAT_ID = -1003472248648
 
-TOPIC_ID_ORDERS = 68
-TOPIC_ID_REVIEWS = 69
+TOPIC_ID_ORDERS = 20
+TOPIC_ID_REVIEWS = 3
 
 KASPI_NUMBER = "+7 747 240 20 02" 
 
@@ -745,3 +745,4 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
