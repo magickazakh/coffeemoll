@@ -1673,12 +1673,17 @@ const payType = payTypeEl ? payTypeEl.value : 'Kaspi';
 const payPhone = document.getElementById('payment-phone').value.trim();
 let comment = document.getElementById('order-comment').value.trim();
 
+let orderTimeInfo = ""; // Создаем отдельную переменную для времени
+
 const timeTypeEl = document.querySelector('input[name="orderTimeType"]:checked');
 if(timeTypeEl && timeTypeEl.value === 'time') {
-const specTime = document.getElementById('specific-time').value;
-if(!specTime) { showToast("Выберите время", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; }
-comment = `⏰ К ${specTime}. ${comment}`;
-} else { comment = `⚡ Как можно скорее. ${comment}`; }
+    const specTime = document.getElementById('specific-time').value;
+    if(!specTime) { showToast("Выберите время", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; }
+    // Записываем время в отдельную переменную, не трогая comment
+    orderTimeInfo = `⏰ К ${specTime}`;
+} else { 
+    orderTimeInfo = `⚡ Как можно скорее`; 
+}
 
 saveUserData(name, phone, address);
 const total = calculateTotal();
@@ -1686,14 +1691,15 @@ const orderData = {
 cart: cart,
 total: total,
 info: {
-name, phone,
-deliveryType: prettyDelivery,
-address: (delType==='delivery'?address:''),
-paymentType: payType,
-paymentPhone: payPhone,
-comment,
-discount: appliedDiscount,
-promoCode: appliedPromoCode
+    name, phone,
+    deliveryType: prettyDelivery,
+    address: (delType==='delivery'?address:''),
+    paymentType: payType,
+    paymentPhone: payPhone,
+    comment,                 // Чистый комментарий пользователя
+    orderTime: orderTimeInfo,// Отдельное поле времени
+    discount: appliedDiscount,
+    promoCode: appliedPromoCode
 }
 };
 
@@ -1799,3 +1805,4 @@ try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e)
 </script>
 </body>
 </html>
+
