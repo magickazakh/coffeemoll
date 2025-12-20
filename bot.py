@@ -466,15 +466,21 @@ async def web_app_data_handler(m: types.Message):
                 d_txt = f"\n❌ <b>Промокод:</b> {promo} ({reasons.get(res, 'Ошибка')})"
                 warn = f"\n⚠️ <b>Промокод {promo} {user_reasons.get(res, 'не сработал')}!</b>"
 
-        is_del = (info.get('deliveryType') == 'Доставка')
+is_del = (info.get('deliveryType') == 'Доставка')
         safe_name = str(info.get('name', '')).replace('<', '&lt;').replace('>', '&gt;')
         safe_comment = str(info.get('comment', '')).replace('<', '&lt;').replace('>', '&gt;')
-        
+        # Получаем время заказа из нового поля (с защитой от старой версии фронтенда)
+        order_time = info.get('orderTime', '⚡ Как можно скорее')
         txt = f"{'🚗' if is_del else '🏃'} <b>НОВЫЙ ЗАКАЗ</b>\n➖➖➖➖➖➖➖➖➖➖\n👤 {safe_name} (<a href='tel:{info.get('phone')}'>{info.get('phone')}</a>)\n"
-        txt += f"📍 {'Адрес: ' + info.get('address') if is_del else info.get('deliveryType')}\n💳 {info.get('paymentType')}\n"
+        txt += f"📍 {'Адрес: ' + info.get('address') if is_del else info.get('deliveryType')}\n"
+        # Выводим время отдельной строкой
+        txt += f"⏳ <b>Время:</b> {order_time}\n"
+        txt += f"💳 {info.get('paymentType')}\n"
         if info.get('paymentType') in ['Kaspi', 'Halyk']: txt += f"📱 <b>Счет:</b> <code>{info.get('paymentPhone')}</code>\n"
+        # Выводим комментарий, только если пользователь его написал
         if safe_comment: txt += f"💬 <i>{safe_comment}</i>\n"
-        if "Ко времени" in str(safe_comment): txt += "⏰ <b>КО ВРЕМЕНИ!</b>\n"
+        # Проверка на заказ ко времени для жирного выделения
+        if "⏰" in order_time: txt += "⏰ <b>КО ВРЕМЕНИ!</b>\n"
         txt += f"➖➖➖➖➖➖➖➖➖➖\n"
         for i, item in enumerate(cart, 1):
             opts = [o for o in item.get('options', []) if o and o != "Без сахара"]
@@ -695,3 +701,4 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
