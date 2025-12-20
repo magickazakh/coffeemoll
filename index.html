@@ -348,15 +348,16 @@ input:checked + .slider:before { transform: translateX(22px); }
     100% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 10px currentColor; }
 }
 
-/* SANTA HAT ON LOGO */
-.logo-coffee { position: relative; display: inline-block; }
-.logo-coffee::after {
-    content: '🎅';
+/* TREE ON LOGO */
+.logo-moll { position: relative; display: inline-block; }
+.logo-moll::after {
+    content: '🎄';      /* Меняем эмодзи на ёлку */
     position: absolute;
-    top: -15px;
-    left: -10px;
+    top: -10px;         /* Чуть приподнимаем */
+    left: 100%;         /* Ставим сразу ПОСЛЕ элемента (справа) */
+    margin-left: 2px;   /* Небольшой отступ от букв */
     font-size: 24px;
-    transform: rotate(-15deg);
+    transform: none;    /* Убираем наклон (-15deg), чтобы ёлка стояла ровно */
     pointer-events: none;
 }
 
@@ -1813,5 +1814,6 @@ try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e)
 </script>
 </body>
 </html>
+
 
 
