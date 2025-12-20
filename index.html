@@ -41,27 +41,35 @@
 padding: 0 15px 10px 15px;
 }
 
-/* --- АНИМАЦИЯ СКРЫТИЯ (ИСПРАВЛЕНО) --- */
+/* --- АНИМАЦИЯ СКРЫТИЯ (ФИНАЛЬНЫЙ ВАРИАНТ) --- */
 #collapsible-header {
-display: grid; /* Используем Grid для анимации высоты */
-grid-template-rows: 1fr; /* Состояние "Открыто" - полная высота */
-opacity: 1;
-transition: grid-template-rows 0.3s ease-out, opacity 0.3s ease-out;
-/* will-change: grid-template-rows, opacity; - иногда вызывает мыло на мобилках, лучше убрать для текста */
+  display: grid;
+  grid-template-rows: 1fr; /* Открыто */
+  opacity: 1;
+  
+  /* Анимация ОТКРЫТИЯ (срабатывает, когда убираем класс .collapsed) */
+  /* ease-out: быстро выезжает, плавно тормозит */
+  transition: grid-template-rows 0.3s ease-out, opacity 0.3s ease-out;
 }
 
 /* Класс для скрытия */
 #collapsible-header.collapsed {
-grid-template-rows: 0fr; /* Состояние "Закрыто" - высота 0 */
-opacity: 0;
-pointer-events: none;
-margin-bottom: -5px;
+  grid-template-rows: 0fr; /* Закрыто */
+  opacity: 0;
+  pointer-events: none;
+  margin-bottom: -5px; 
+
+  /* Анимация ЗАКРЫТИЯ (срабатывает, когда добавляем класс .collapsed) */
+  /* ВАЖНО: переопределяем transition именно здесь */
+  /* ease-in: медленно начинает, ускоряется в конце (схлопывается) */
+  /* Opacity исчезает чуть быстрее (0.2s), чем высота (0.25s), чтобы не мылило */
+  transition: grid-template-rows 0.25s ease-in, opacity 0.2s ease-in;
 }
 
-/* Обертка для контента внутри collapsible-header, обязательна для grid-анимации */
+/* Обертка для контента внутри, без изменений */
 .collapsible-inner {
-overflow: hidden;
-min-height: 0; /* Важно для grid */
+  overflow: hidden;
+  min-height: 0;
 }
 
 .yandex-widget-header {
@@ -1805,4 +1813,5 @@ try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e)
 </script>
 </body>
 </html>
+
 
