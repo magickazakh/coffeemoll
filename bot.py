@@ -466,7 +466,7 @@ async def web_app_data_handler(m: types.Message):
                 d_txt = f"\n❌ <b>Промокод:</b> {promo} ({reasons.get(res, 'Ошибка')})"
                 warn = f"\n⚠️ <b>Промокод {promo} {user_reasons.get(res, 'не сработал')}!</b>"
 
-is_del = (info.get('deliveryType') == 'Доставка')
+        is_del = (info.get('deliveryType') == 'Доставка')
         safe_name = str(info.get('name', '')).replace('<', '&lt;').replace('>', '&gt;')
         safe_comment = str(info.get('comment', '')).replace('<', '&lt;').replace('>', '&gt;')
         # Получаем время заказа из нового поля (с защитой от старой версии фронтенда)
@@ -701,4 +701,5 @@ async def finalize_review(message, state, comment_text, user):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
