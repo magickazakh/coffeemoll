@@ -41,35 +41,47 @@
 padding: 0 15px 10px 15px;
 }
 
-/* --- АНИМАЦИЯ СКРЫТИЯ (ФИНАЛЬНЫЙ ВАРИАНТ) --- */
+/* --- АНИМАЦИЯ СКРЫТИЯ (OPTIMIZED) --- */
 #collapsible-header {
   display: grid;
-  grid-template-rows: 1fr; /* Открыто */
+  grid-template-rows: 1fr;
   opacity: 1;
+  /* Включаем аппаратное ускорение */
+  transform: translateZ(0);
+  will-change: grid-template-rows, opacity, margin-bottom;
+  /* Убираем лишние отступы, которые могут дергаться */
+  margin-bottom: 0; 
   
-  /* Анимация ОТКРЫТИЯ (срабатывает, когда убираем класс .collapsed) */
-  /* ease-out: быстро выезжает, плавно тормозит */
-  transition: grid-template-rows 0.2s ease-out, opacity 0.2s ease-out;
+  /* Используем более плавную кривую безье */
+  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Класс для скрытия */
 #collapsible-header.collapsed {
-  grid-template-rows: 0fr; /* Закрыто */
+  grid-template-rows: 0fr;
   opacity: 0;
   pointer-events: none;
-  margin-bottom: -5px; 
+  /* Чуть подтягиваем margin, чтобы убрать микро-щели */
+  margin-bottom: -1px; 
 
-  /* Анимация ЗАКРЫТИЯ (срабатывает, когда добавляем класс .collapsed) */
-  /* ВАЖНО: переопределяем transition именно здесь */
-  /* ease-in: медленно начинает, ускоряется в конце (схлопывается) */
-  /* Opacity исчезает чуть быстрее (0.2s), чем высота (0.25s), чтобы не мылило */
-  transition: grid-template-rows 0.15s ease-in, opacity 0.1s ease-in;
+  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Обертка для контента внутри, без изменений */
+/* Оптимизация содержимого, чтобы оно не "мигало" */
 .collapsible-inner {
   overflow: hidden;
   min-height: 0;
+  /* Скрываем содержимое от рендера, когда оно прозрачное */
+  visibility: visible;
+  transition: visibility 0.3s;
+}
+
+#collapsible-header.collapsed .collapsible-inner {
+  visibility: hidden;
+  transition-delay: 0.2s; /* Ждем пока исчезнет opacity */
 }
 
 .yandex-widget-header {
@@ -101,10 +113,10 @@ padding-bottom: 5px;
 
 /* Исправленная обертка для бейджа */
 .iframe-wrapper {
-width: 230px; /* Достаточно места для scale(1.5) от 150px */
-height: 80px; /* Достаточно места для scale(1.5) от 50px */
+width: 230px;
+height: 80px;
 position: relative;
-margin: 0 auto; /* Центрирование */
+margin: 0 auto;
 display: flex;
 align-items: center;
 justify-content: center;
@@ -115,7 +127,10 @@ width: 150px;
 height: 50px;
 border: 0;
 transform: scale(1.5);
-transform-origin: center center; /* Масштабирование от центра */
+transform-origin: center center;
+/* Важно: отключаем перерисовку iframe при скролле */
+will-change: transform;
+backface-visibility: hidden;
 }
 
 /* Logic for light/dark iframe switching */
@@ -151,16 +166,19 @@ transform-origin: center center; /* Масштабирование от цент
 /* --- БАЗОВЫЕ СТИЛИ --- */
 body { font-family: var(--font-body); margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); padding-bottom: 100px; -webkit-tap-highlight-color: transparent; font-weight: 500; transition: background-color 0.3s, color 0.3s; overscroll-behavior-y: none; }
 
-/* ШАПКА */
+/* ШАПКА (OPTIMIZED) */
 .header-container {
 background: white;
 position: sticky;
 top: 0;
 z-index: 40;
+/* Тень часто вызывает перерисовку при ресайзе. Используем contain для оптимизации */
+contain: layout paint;
 box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-/* transform удален, так как скрытие теперь через max-height внутри */
 padding-bottom: 5px;
 transition: background 0.3s;
+/* Форсируем GPU слой для всего контейнера */
+transform: translate3d(0,0,0);
 }
 
 header { padding: 12px 15px 10px 15px; display: flex; justify-content: space-between; align-items: flex-start; }
@@ -776,24 +794,22 @@ function createGarland() {
 // Возвращена логика с блокировкой (Lock) для предотвращения прыжков при медленном скролле
 function updateHeaderHeight() {
     let lastScrollTop = 0;
-    let anchorScrollTop = 0;
-    let scrollDir = 0; // 1: down, -1: up
-    const tolerance = 10; // Чувствительность скролла
     const collapsible = document.getElementById('collapsible-header');
     
-    let isToggling = false; // Флаг блокировки
+    // Флаги оптимизации
+    let isLocked = false; 
     let ticking = false;
+    const tolerance = 5; // Чуть уменьшили порог для отзывчивости
 
-    // Вспомогательная функция для блокировки событий на время анимации
-    const activateLock = () => {
-        isToggling = true;
-        setTimeout(() => {
-            isToggling = false;
-            // Сбрасываем якорь после завершения анимации, чтобы начать отсчет заново
-            const st = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
-            anchorScrollTop = st;
-            lastScrollTop = st;
-        }, 350); // 300ms (CSS transition) + 50ms запас
+    // Функция блокировки (Debounce анимации)
+    const lockAnimation = () => {
+        isLocked = true;
+        // Время блокировки = времени анимации CSS (300ms)
+        setTimeout(() => { 
+            isLocked = false;
+            // Синхронизируем позицию после разблокировки
+            lastScrollTop = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
+        }, 300);
     };
 
     window.addEventListener('scroll', () => {
@@ -801,14 +817,13 @@ function updateHeaderHeight() {
             window.requestAnimationFrame(() => {
                 const st = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
                 
-                // 1. Если идет анимация (isToggling) - просто обновляем позицию и выходим
-                if (isToggling) {
-                    lastScrollTop = st;
+                // 1. Если заблокировано - выходим сразу, экономим ресурсы CPU
+                if (isLocked) {
                     ticking = false;
                     return;
                 }
 
-                // 2. Всегда показывать шапку в самом верху страницы
+                // 2. Всегда показывать в самом верху (защита от "застревания")
                 if (st < 10) {
                     if (collapsible.classList.contains('collapsed')) {
                         collapsible.classList.remove('collapsed');
@@ -819,48 +834,32 @@ function updateHeaderHeight() {
                 }
 
                 const diff = st - lastScrollTop;
-                
-                // Игнорируем микро-дрожания (меньше 2px)
-                if (Math.abs(diff) < 2) {
-                    ticking = false;
-                    return;
-                }
 
-                const currentDir = diff > 0 ? 1 : -1;
-
-                // Если направление сменилось, ставим новый "якорь"
-                if (currentDir !== scrollDir) {
-                    anchorScrollTop = st;
-                    scrollDir = currentDir;
-                }
-
-                // Вычисляем, как далеко ушли от якоря
-                const dist = Math.abs(st - anchorScrollTop);
-
-                // Если проскроллили достаточно (больше tolerance)
-                if (dist > tolerance) {
-                    if (scrollDir === 1) {
+                // 3. Основная логика
+                if (Math.abs(diff) > tolerance) {
+                    if (diff > 0) {
                         // Скролл ВНИЗ -> Скрываем
                         if (!collapsible.classList.contains('collapsed')) {
                             collapsible.classList.add('collapsed');
-                            activateLock(); // БЛОКИРУЕМ обработку
+                            lockAnimation();
                         }
                     } else {
                         // Скролл ВВЕРХ -> Показываем
                         if (collapsible.classList.contains('collapsed')) {
                             collapsible.classList.remove('collapsed');
-                            activateLock(); // БЛОКИРУЕМ обработку
+                            lockAnimation();
                         }
                     }
+                    // Обновляем якорь только если произошло действие или значительный сдвиг
+                    lastScrollTop = st;
                 }
-
-                lastScrollTop = st;
+                
                 updateScrollSpy();
                 ticking = false;
             });
             ticking = true;
         }
-    });
+    }, { passive: true }); // Важно: passive: true улучшает производительность скролла
 }
 
 function updateScrollSpy() {
@@ -1884,6 +1883,7 @@ try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e)
 </script>
 </body>
 </html>
+
 
 
 
