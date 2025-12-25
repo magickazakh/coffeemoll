@@ -1680,53 +1680,111 @@ calculateTotal();
 }
 
 function submitOrder() {
-if (document.activeElement) { document.activeElement.blur(); }
-const btn = document.getElementById('submit-btn');
-btn.disabled = true; btn.innerText = "Отправка...";
-const name = document.getElementById('client-name').value.trim();
-const phone = document.getElementById('client-phone').value.trim();
-const address = document.getElementById('delivery-address').value.trim();
-const delTypeEl = document.querySelector('input[name="deliveryType"]:checked');
-const delType = delTypeEl ? delTypeEl.value : 'pickup';
-let prettyDelivery = 'Самовывоз'; if(delType==='delivery') prettyDelivery='Доставка'; if(delType==='dinein') prettyDelivery='В зале';
-const payTypeEl = document.querySelector('input[name="paymentType"]:checked');
-const payType = payTypeEl ? payTypeEl.value : 'Kaspi';
-const payPhone = document.getElementById('payment-phone').value.trim();
-let comment = document.getElementById('order-comment').value.trim();
+    if (document.activeElement) { document.activeElement.blur(); }
+    
+    // --- НАЧАЛО БЛОКА ПРОВЕРКИ ПИЦЦЫ ---
+    const now = new Date();
+    const currentHour = now.getHours();
+    const hasPizza = cart.some(i => i.cat === 'ПИЦЦА'); 
+    
+    if (hasPizza) {
+        // 1. Получаем выбранные параметры
+        const delTypeEl = document.querySelector('input[name="deliveryType"]:checked');
+        const delType = delTypeEl ? delTypeEl.value : 'pickup'; 
+        
+        const timeTypeEl = document.querySelector('input[name="orderTimeType"]:checked');
+        const isAsap = timeTypeEl && timeTypeEl.value === 'asap';
+        const isTime = timeTypeEl && timeTypeEl.value === 'time';
+        
+        // 2. Сценарий: "Как можно скорее" (ASAP)
+        if (isAsap && currentHour < 11) {
+            // ТЕКСТ ИЗМЕНЕН: четкое правило про 11:00
+            showToast(`🚫 Мы готовим пиццу с 11:00. Пожалуйста, выберите время получения после 11:00.`, 'error');
+            return; 
+        }
 
-let orderTimeInfo = ""; // Создаем отдельную переменную для времени
+        // 3. Сценарий: "Ко времени"
+        if (isTime) {
+            const specTime = document.getElementById('specific-time').value;
+            if (specTime) {
+                const selectedHour = parseInt(specTime.split(':')[0], 10);
+                if (selectedHour < 11) {
+                    // ТЕКСТ ИЗМЕНЕН
+                    showToast(`🚫 Мы готовим пиццу с 11:00. Вы выбрали ${specTime}, пожалуйста, сдвиньте время на 11:00 или позже.`, 'error');
+                    return; 
+                }
+            } else {
+                showToast("⚠️ Пожалуйста, укажите время заказа.", 'error');
+                return;
+            }
+        }
+    }
+    // --- КОНЕЦ БЛОКА ПРОВЕРКИ ПИЦЦЫ ---
 
-const timeTypeEl = document.querySelector('input[name="orderTimeType"]:checked');
-if(timeTypeEl && timeTypeEl.value === 'time') {
-    const specTime = document.getElementById('specific-time').value;
-    if(!specTime) { showToast("Выберите время", 'error'); btn.disabled = false; btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; return; }
-    // Записываем время в отдельную переменную, не трогая comment
-    orderTimeInfo = `⏰ К ${specTime}`;
-} else { 
-    orderTimeInfo = `⚡ Как можно скорее`; 
-}
+    // --- СТАНДАРТНАЯ ОТПРАВКА (Без изменений) ---
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true; 
+    btn.innerText = "Отправка...";
+    
+    const name = document.getElementById('client-name').value.trim();
+    const phone = document.getElementById('client-phone').value.trim();
+    const address = document.getElementById('delivery-address').value.trim();
+    
+    const delTypeElFinal = document.querySelector('input[name="deliveryType"]:checked');
+    const delTypeFinal = delTypeElFinal ? delTypeElFinal.value : 'pickup';
+    
+    let prettyDelivery = 'Самовывоз'; 
+    if(delTypeFinal==='delivery') prettyDelivery='Доставка'; 
+    if(delTypeFinal==='dinein') prettyDelivery='В зале';
+    
+    const payTypeEl = document.querySelector('input[name="paymentType"]:checked');
+    const payType = payTypeEl ? payTypeEl.value : 'Kaspi';
+    const payPhone = document.getElementById('payment-phone').value.trim();
+    let comment = document.getElementById('order-comment').value.trim();
 
-saveUserData(name, phone, address);
-const total = calculateTotal();
-const orderData = {
-cart: cart,
-total: total,
-info: {
-    name, phone,
-    deliveryType: prettyDelivery,
-    address: (delType==='delivery'?address:''),
-    paymentType: payType,
-    paymentPhone: payPhone,
-    comment,                 // Чистый комментарий пользователя
-    orderTime: orderTimeInfo,// Отдельное поле времени
-    discount: appliedDiscount,
-    promoCode: appliedPromoCode
-}
-};
+    let orderTimeInfo = ""; 
+    const timeTypeElFinal = document.querySelector('input[name="orderTimeType"]:checked');
+    
+    if(timeTypeElFinal && timeTypeElFinal.value === 'time') {
+        const specTime = document.getElementById('specific-time').value;
+        if(!specTime) { 
+            showToast("Выберите время", 'error'); 
+            btn.disabled = false; 
+            btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; 
+            return; 
+        }
+        orderTimeInfo = `⏰ К ${specTime}`;
+    } else { 
+        orderTimeInfo = `⚡ Как можно скорее`; 
+    }
 
-localStorage.setItem('coffee_last_order', JSON.stringify(cart));
-tg.sendData(JSON.stringify(orderData));
-setTimeout(function() { cart = []; updateCartUI(); closeCheckout(); tg.close(); }, 100);
+    saveUserData(name, phone, address);
+    const total = calculateTotal();
+    const orderData = {
+        cart: cart,
+        total: total,
+        info: {
+            name, phone,
+            deliveryType: prettyDelivery,
+            address: (delTypeFinal==='delivery'?address:''),
+            paymentType: payType,
+            paymentPhone: payPhone,
+            comment,
+            orderTime: orderTimeInfo,
+            discount: appliedDiscount,
+            promoCode: appliedPromoCode
+        }
+    };
+
+    localStorage.setItem('coffee_last_order', JSON.stringify(cart));
+    tg.sendData(JSON.stringify(orderData));
+    
+    setTimeout(function() { 
+        cart = []; 
+        updateCartUI(); 
+        closeCheckout(); 
+        tg.close(); 
+    }, 100);
 }
 
 function toggleDelivery() {
@@ -1826,6 +1884,7 @@ try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e)
 </script>
 </body>
 </html>
+
 
 
 
