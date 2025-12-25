@@ -732,8 +732,7 @@ async def handle_user_support_message(m: types.Message):
             message_thread_id=TOPIC_ID_SUPPORT,
             reply_markup=get_reply_kb(user_id)
         )
-        # Можно отправить реакцию пользователю, чтобы он понял, что сообщение ушло
-        await m.react([types.ReactionTypeEmoji(emoji="👨‍💻")]) 
+        # УДАЛЕНО: await m.react(...) — это вызывало ошибку
     except Exception as e:
         logging.error(f"Support msg error: {e}")
 
@@ -775,7 +774,7 @@ async def admin_reply_send(m: types.Message, state: FSMContext):
             chat_id=target_user_id,
             text=f"👨‍🍳 <b>Ответ от CoffeeMoll:</b>\n\n{m.text}"
         )
-        await m.react([types.ReactionTypeEmoji(emoji="✅")])
+        # УДАЛЕНО: await m.react(...) — это вызывало ошибку
         await m.answer("✅ Ответ отправлен.")
     except Exception as e:
         await m.answer(f"❌ Не удалось отправить сообщение (пользователь заблокировал бота?)\nОшибка: {e}")
@@ -785,6 +784,7 @@ async def admin_reply_send(m: types.Message, state: FSMContext):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
 
