@@ -49,7 +49,7 @@ padding: 0 15px 10px 15px;
   
   /* Анимация ОТКРЫТИЯ (срабатывает, когда убираем класс .collapsed) */
   /* ease-out: быстро выезжает, плавно тормозит */
-  transition: grid-template-rows 0.7s ease-out, opacity 0.7s ease-out;
+  transition: grid-template-rows 0.2s ease-out, opacity 0.2s ease-out;
 }
 
 /* Класс для скрытия */
@@ -63,7 +63,7 @@ padding: 0 15px 10px 15px;
   /* ВАЖНО: переопределяем transition именно здесь */
   /* ease-in: медленно начинает, ускоряется в конце (схлопывается) */
   /* Opacity исчезает чуть быстрее (0.2s), чем высота (0.25s), чтобы не мылило */
-  transition: grid-template-rows 0.65s ease-in, opacity 0.6s ease-in;
+  transition: grid-template-rows 0.15s ease-in, opacity 0.1s ease-in;
 }
 
 /* Обертка для контента внутри, без изменений */
@@ -1884,6 +1884,7 @@ try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e)
 </script>
 </body>
 </html>
+
 
 
 
