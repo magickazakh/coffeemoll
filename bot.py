@@ -35,6 +35,7 @@ WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
 
 TOPIC_ID_ORDERS = 68
 TOPIC_ID_REVIEWS = 69
+TOPIC_ID_SUPPORT = 250
 
 KASPI_NUMBER = "+7 747 240 20 02" 
 
@@ -59,6 +60,9 @@ class ReviewState(StatesGroup):
     waiting_for_tips_decision = State()
     waiting_for_barista_choice = State()
     waiting_for_comment = State()
+
+class SupportState(StatesGroup):
+    waiting_for_admin_reply = State()
 
 # --- ГЛОБАЛЬНЫЙ КЕШ ---
 PROMO_CACHE = {}
@@ -362,6 +366,10 @@ def get_baristas_kb():
     b.append([InlineKeyboardButton(text="Отмена", callback_data="barista_cancel")])
     return InlineKeyboardMarkup(inline_keyboard=b)
 def get_skip_comment_kb(): return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="⏩ Пропустить", callback_data="skip_comment")]])
+def get_reply_kb(user_id):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="↩️ Ответить", callback_data=f"reply_{user_id}")]
+    ])
 
 
 # --- ОБРАБОТЧИКИ ---
@@ -698,8 +706,85 @@ async def finalize_review(message, state, comment_text, user):
     else: await message.edit_text(resp)
     await state.clear()
 
+# --- ЧАТ ПОДДЕРЖКИ ---
+
+# 1. Обработка сообщений от клиента (пересылка в админ-чат)
+@dp.message(F.chat.type == "private", F.text, ~F.text.startswith("/"), StateFilter(None))
+async def handle_user_support_message(m: types.Message):
+    # Пытаемся найти имя клиента в кеше или берем из профиля
+    user_name = NAMES_CACHE.get(str(m.from_user.id), m.from_user.full_name)
+    user_id = m.from_user.id
+    username_link = f"@{m.from_user.username}" if m.from_user.username else "без юзернейма"
+
+    # Формируем сообщение для бариста
+    text_to_admin = (
+        f"📩 <b>СООБЩЕНИЕ ОТ ГОСТЯ</b>\n"
+        f"👤 <b>От:</b> {user_name} ({username_link})\n"
+        f"🆔 <code>{user_id}</code>\n"
+        f"➖➖➖➖➖➖➖➖➖➖\n"
+        f"{m.text}"
+    )
+
+    try:
+        await bot.send_message(
+            chat_id=ADMIN_CHAT_ID,
+            text=text_to_admin,
+            message_thread_id=TOPIC_ID_SUPPORT,
+            reply_markup=get_reply_kb(user_id)
+        )
+        # Можно отправить реакцию пользователю, чтобы он понял, что сообщение ушло
+        await m.react([types.ReactionTypeEmoji(emoji="👨‍💻")]) 
+    except Exception as e:
+        logging.error(f"Support msg error: {e}")
+
+# 2. Нажатие кнопки "Ответить" бариста
+@dp.callback_query(F.data.startswith("reply_"))
+async def admin_reply_start(c: CallbackQuery, state: FSMContext):
+    user_id = c.data.split("_")[1]
+    
+    # Сохраняем ID пользователя, которому отвечаем
+    await state.update_data(reply_user_id=user_id)
+    await state.set_state(SupportState.waiting_for_admin_reply)
+    
+    await c.message.answer(
+        f"✍️ Введите ответ для пользователя (ID: {user_id}):\n"
+        f"Или напишите /cancel для отмены."
+    )
+    await c.answer()
+
+# 3. Отмена ответа (если бариста передумал)
+@dp.message(SupportState.waiting_for_admin_reply, Command("cancel"))
+async def admin_reply_cancel(m: types.Message, state: FSMContext):
+    await state.clear()
+    await m.answer("❌ Ответ отменен.")
+
+# 4. Отправка ответа пользователю
+@dp.message(SupportState.waiting_for_admin_reply)
+async def admin_reply_send(m: types.Message, state: FSMContext):
+    data = await state.get_data()
+    target_user_id = data.get('reply_user_id')
+    
+    if not target_user_id:
+        await m.answer("❌ Ошибка: потерян ID пользователя.")
+        await state.clear()
+        return
+
+    try:
+        # Отправляем сообщение пользователю
+        await bot.send_message(
+            chat_id=target_user_id,
+            text=f"👨‍🍳 <b>Ответ от CoffeeMoll:</b>\n\n{m.text}"
+        )
+        await m.react([types.ReactionTypeEmoji(emoji="✅")])
+        await m.answer("✅ Ответ отправлен.")
+    except Exception as e:
+        await m.answer(f"❌ Не удалось отправить сообщение (пользователь заблокировал бота?)\nОшибка: {e}")
+    
+    await state.clear()
+    
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
