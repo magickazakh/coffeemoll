@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CoffeeMoll</title>
 
-<!-- ЗАПРЕТ КЕШИРОВАНИЯ -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
@@ -430,7 +429,6 @@ input:checked + .slider:before { transform: translateX(22px); }
 <button class="modal-add-btn" style="width: auto; padding: 10px 30px; margin-top: 20px;" onclick="location.reload()">Повторить</button>
 </div>
 
-<!-- Header -->
 <div class="header-container" id="header-container">
 <header id="main-header">
 <div class="header-left">
@@ -443,25 +441,19 @@ input:checked + .slider:before { transform: translateX(22px); }
 </div>
 </header>
 
-<!-- WRAPPER FOR HIDEABLE CONTENT -->
 <div id="collapsible-header">
-<!-- Inner Wrapper for Grid Animation -->
 <div class="collapsible-inner">
 
-<!-- YANDEX MAPS WIDGET -->
 <div class="yandex-widget-container">
 <div class="yandex-widget-header" onclick="toggleYandexWidget(this)">
 <span>📍 Мы есть на Яндекс.Картах</span>
 <span class="yandex-widget-arrow">▼</span>
 </div>
 <div class="yandex-widget-content" id="yandex-content">
-<!-- Fixed wrapper for scaled iframe to prevent cropping -->
 <div class="iframe-wrapper">
-<!-- Light Theme Widget -->
 <div class="yandex-light">
 <iframe src="https://yandex.kz/sprav/widget/rating-badge/125095434429?type=rating" frameborder="0"></iframe>
 </div>
-<!-- Dark Theme Widget -->
 <div class="yandex-dark">
 <iframe src="https://yandex.kz/sprav/widget/rating-badge/125095434429?type=rating&theme=dark" frameborder="0"></iframe>
 </div>
@@ -484,13 +476,9 @@ input:checked + .slider:before { transform: translateX(22px); }
 </div>
 </div>
 
-</div> <!-- End collapsible-inner -->
-</div> <!-- End collapsible-header -->
-
-<div class="nav-scroller" id="nav-container"></div>
+</div> </div> <div class="nav-scroller" id="nav-container"></div>
 </div>
 
-<!-- App Content -->
 <div id="app"></div>
 
 <div id="no-results" style="display:none; text-align:center; padding: 50px 20px; color: var(--text-secondary);">
@@ -498,13 +486,11 @@ input:checked + .slider:before { transform: translateX(22px); }
 <h3>Ничего не найдено</h3>
 </div>
 
-<!-- Floating Action Button -->
 <div class="main-btn" id="cart-btn" onclick="openCheckout()">
 <span id="cart-text">К корзине</span>
 <div class="cart-counter" id="cart-count" style="background: white; color: black; border-radius: 50%; width: 22px; height: 22px; position: absolute; top: -8px; right: -8px; display: flex; align-items: center; justify-content: center; font-size: 12px;">0</div>
 </div>
 
-<!-- Modals -->
 <div class="modal-overlay" id="product-modal" onclick="closeProductModal(event)"><div class="modal-content" id="product-modal-content"></div></div>
 
 <div class="modal-overlay" id="checkout-modal">
@@ -521,7 +507,6 @@ input:checked + .slider:before { transform: translateX(22px); }
 
 <div id="cart-list-container"></div>
 
-<!-- Promo Code -->
 <div class="promo-section" id="promo-container" style="display:flex; gap:10px; margin: 15px 0;">
 <input type="text" id="promo-code" placeholder="Промокод" style="margin-bottom: 0; flex:1;">
 <button class="promo-btn" id="apply-promo-btn" onclick="applyPromo()" style="background: #f0f0f0; border:none; border-radius:12px; font-weight:bold; padding:0 20px; cursor:pointer;">ОК</button>
@@ -1230,6 +1215,18 @@ product.volumes.forEach((v, i) => { html += `<input type="radio" name="vol" id="
 html += `</div></div>`;
 } else if (product.fixedVolume) { html += `<div class="option-group"><label class="option-label">Объем: ${product.fixedVolume}</label></div>`; }
 
+if (product.name.includes('ОБЛЕПИХОВЫЙ')) {
+    html += `<div class="option-group" id="strain-block" style="display:none;">
+        <label class="option-label">Процеживать?</label>
+        <div class="radio-group">
+            <input type="radio" name="strain" id="strain-yes" value="Процедить" class="radio-input" checked>
+            <label for="strain-yes" class="radio-label">Процедить</label>
+            <input type="radio" name="strain" id="strain-no" value="Не процеживать" class="radio-input">
+            <label for="strain-no" class="radio-label">Не процеживать</label>
+        </div>
+    </div>`;
+}
+
 if(product.hasMilk) {
 let altMilkDisplayPrice = PRICES.alt_milk;
 if (product.mods && product.mods.alt_milk !== undefined) {
@@ -1389,6 +1386,22 @@ document.getElementById('syrup-less').checked = false;
 }
 }
 
+const strainBlock = document.getElementById('strain-block');
+if (strainBlock && prod.name.includes('ОБЛЕПИХОВЫЙ')) {
+    const volEl = document.querySelector('input[name="vol"]:checked');
+    if (volEl) {
+        // Check if volume name contains '0.4'
+        const volName = prod.volumes[volEl.value].n;
+        if (volName.includes('0.4')) {
+            strainBlock.style.display = 'block';
+        } else {
+            strainBlock.style.display = 'none';
+        }
+    } else {
+        strainBlock.style.display = 'none';
+    }
+}
+
 const btn = document.getElementById('modal-btn');
 if(btn) {
 const total = p * modalQty;
@@ -1423,6 +1436,12 @@ if(document.getElementById('syrup-more').checked) syrupStr += " (Побольш�
 if(document.getElementById('syrup-less').checked) syrupStr += " (Поменьше)";
 opts.push(syrupStr);
 }
+}
+
+const strainBlock = document.getElementById('strain-block');
+if (strainBlock && strainBlock.style.display !== 'none') {
+    const strainVal = document.querySelector('input[name="strain"]:checked').value;
+    opts.push(`Опция: ${strainVal}`);
 }
 
 addToCart({ name: prod.name, price: price, options: opts, cat: prod.cat, qty: modalQty });
@@ -1883,11 +1902,3 @@ try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e)
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
