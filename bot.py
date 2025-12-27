@@ -524,7 +524,7 @@ async def decision(c: CallbackQuery):
             logging.error(f"Auto-revert error: {e}")
 
         await c.message.edit_text(f"{c.message.text}\n\n❌ <b>ОТКЛОНЕН</b>")
-        try: await bot.send_message(uid, "❌ Заказ отклонен.")
+        try: await bot.send_message(uid, "❌ Заказ отклонен. Скоро свяжемся с вами для уточнения.")
         except: pass
     await c.answer()
 
@@ -549,7 +549,7 @@ async def set_time(c: CallbackQuery, state: FSMContext):
         reply_markup=get_ready_kb(uid)
     )
     
-    msg = f"👨‍🍳Оплата принята! Готовность: <b>{t_val}</b>.\n📞Телефон: +77006437303"
+    msg = f"👨‍🍳Оплата принята! Готовность: <b>{t_val}</b>.\n📞Телефон для связи: +77006437303"
     if "🚗" in clean_text or "Доставка" in clean_text: msg += "\n<i>(Время приготовления, без учета доставки)</i>"
     try: await bot.send_message(uid, msg)
     except: pass
@@ -784,6 +784,7 @@ async def admin_reply_send(m: types.Message, state: FSMContext):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
+
 
 
 
