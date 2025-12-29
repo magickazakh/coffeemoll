@@ -372,17 +372,13 @@ def get_reply_kb(user_id):
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="↩️ Ответить", callback_data=f"reply_{user_id}")]
     ])
-def get_rejection_kb():
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="Хот-догов временно нет в наличии")],
-            [KeyboardButton(text="Круассанов временно нет в наличии")],
-            [KeyboardButton(text="К сожалению, мы закрыты")],
-        ],
-        resize_keyboard=True,
-        one_time_keyboard=True,
-        input_field_placeholder="Укажите причину отказа..."
-    )
+def get_rejection_kb(uid):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🌭 Хот-догов нет", callback_data=f"reason_hd_{uid}")],
+        [InlineKeyboardButton(text="🥐 Круассанов нет", callback_data=f"reason_cr_{uid}")],
+        [InlineKeyboardButton(text="🔒 Мы закрыты", callback_data=f"reason_closed_{uid}")],
+        [InlineKeyboardButton(text="✍️ Своя причина", callback_data=f"reason_custom_{uid}")]
+    ])
 
 
 # --- ОБРАБОТЧИКИ ---
@@ -527,30 +523,64 @@ async def decision(c: CallbackQuery, state: FSMContext):
     if act == "accept": 
         await c.message.edit_reply_markup(reply_markup=get_time_kb(uid))
     elif act == "reject":
-        # ОБНОВЛЕННАЯ ЛОГИКА ОТКАЗА
-        # Сохраняем данные, чтобы потом изменить сообщение и уведомить пользователя
+        # Сохраняем данные заказа
         text = c.message.text or c.message.caption or ""
+        
+        # Отправляем сообщение с инлайн-кнопками причин (используем get_rejection_kb)
+        prompt_msg = await c.message.answer(
+            "✍️ <b>Выберите причину отказа:</b>", 
+            reply_markup=get_rejection_kb(uid)
+        )
+        
         await state.update_data(
             reject_uid=uid, 
             reject_msg_id=c.message.message_id,
-            reject_text=text
+            reject_text=text,
+            prompt_msg_id=prompt_msg.message_id
         )
+        # Не ставим состояние ожидания текста сразу, ждем выбора кнопки
+        
+    await c.answer()
+
+@dp.callback_query(F.data.startswith("reason_"))
+async def rejection_reason_callback(c: CallbackQuery, state: FSMContext):
+    parts = c.data.split("_")
+    r_type = parts[1]
+    uid = parts[2]
+    
+    if r_type == "custom":
+        # Если выбрана "Своя причина", просим ввести текст
+        await c.message.edit_text("✍️ <b>Напишите причину отказа:</b>", reply_markup=None)
         await state.set_state(OrderState.waiting_for_rejection_reason)
-        
-        # Отправляем сообщение с клавиатурой причин
-        await c.message.answer("✍️ <b>Укажите причину отказа:</b>\n<i>Выберите вариант или напишите свой текст</i>", reply_markup=get_rejection_kb())
-        
+        await c.answer()
+        return
+
+    # Предустановленные причины
+    reasons_map = {
+        "hd": "Хот-догов временно нет в наличии",
+        "cr": "Круассанов временно нет в наличии",
+        "closed": "К сожалению, мы закрыты"
+    }
+    reason = reasons_map.get(r_type, "Заказ отклонен")
+    
+    # Выполняем отказ
+    await execute_rejection(c.message, state, reason, is_preset=True)
     await c.answer()
 
 @dp.message(OrderState.waiting_for_rejection_reason)
 async def process_rejection_reason(m: types.Message, state: FSMContext):
+    reason = m.text
+    # Выполняем отказ (тут передаем сообщение пользователя m, чтобы его удалить)
+    await execute_rejection(m, state, reason, is_preset=False)
+
+async def execute_rejection(message_obj, state, reason, is_preset):
     data = await state.get_data()
     uid = data.get('reject_uid')
     msg_id = data.get('reject_msg_id')
     original_text = data.get('reject_text')
-    reason = m.text
+    prompt_msg_id = data.get('prompt_msg_id')
     
-    # Логика отмены промокода (перенесена сюда)
+    # Логика отмены промокода
     try:
         match = re.search(r"Промокод:\s*([A-Za-z0-9]+)", original_text)
         if match:
@@ -560,13 +590,12 @@ async def process_rejection_reason(m: types.Message, state: FSMContext):
     except Exception as e:
         logging.error(f"Auto-revert error: {e}")
 
-    # Экранируем старый текст, чтобы спецсимволы (<, >, &) не ломали HTML
     safe_original_text = html.escape(original_text)
 
-    # Обновляем сообщение в админке
+    # Обновляем сообщение в админке (Order Card)
     try:
         await bot.edit_message_text(
-            chat_id=m.chat.id,
+            chat_id=ADMIN_CHAT_ID, # Используем константу или message_obj.chat.id
             message_id=msg_id,
             text=f"{safe_original_text}\n\n❌ <b>ОТКЛОНЕН ({reason})</b>",
             parse_mode=ParseMode.HTML
@@ -576,11 +605,32 @@ async def process_rejection_reason(m: types.Message, state: FSMContext):
 
     # Уведомляем пользователя
     try: 
-        await bot.send_message(uid, f"❌ <b>Ваш заказ был отклонен.</b>\n\nПричина: {reason}", reply_markup=ReplyKeyboardRemove())
+        await bot.send_message(uid, f"❌ <b>Ваш заказ был отклонен.</b>\n\nПричина: {reason}")
     except: pass
     
-    await m.answer("✅ Отказ с причиной отправлен пользователю.", reply_markup=ReplyKeyboardRemove())
+    # Чистка сообщений
+    chat_id = message_obj.chat.id
+    
+    # 1. Удаляем prompt message (сообщение с кнопками или просьбой ввода)
+    if prompt_msg_id:
+        try:
+            await bot.delete_message(chat_id=chat_id, message_id=prompt_msg_id)
+        except: pass
+
+    # 2. Если это не пресет (т.е. текст введен вручную), удаляем сообщение пользователя
+    if not is_preset:
+        try:
+            await message_obj.delete()
+        except: pass
+
+    # 3. Временное подтверждение
+    conf_msg = await bot.send_message(chat_id, "✅ Отказ отправлен.")
     await state.clear()
+    
+    await asyncio.sleep(3)
+    try:
+        await conf_msg.delete()
+    except: pass
 
 @dp.callback_query(F.data.startswith("time_"))
 async def set_time(c: CallbackQuery, state: FSMContext):
