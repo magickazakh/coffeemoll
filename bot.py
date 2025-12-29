@@ -16,7 +16,7 @@ from firebase_admin import firestore
 
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command, CommandStart, StateFilter
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ReplyKeyboardRemove
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
@@ -53,6 +53,7 @@ dp = Dispatcher(storage=MemoryStorage())
 class OrderState(StatesGroup):
     waiting_for_custom_time = State()
     waiting_for_broadcast = State()
+    waiting_for_rejection_reason = State() # <-- Новое состояние для причины отказа
 
 class ReviewState(StatesGroup):
     waiting_for_service_rate = State()
@@ -370,6 +371,17 @@ def get_reply_kb(user_id):
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="↩️ Ответить", callback_data=f"reply_{user_id}")]
     ])
+def get_rejection_kb():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="Хот-догов временно нет в наличии")],
+            [KeyboardButton(text="Круассанов временно нет в наличии")],
+            [KeyboardButton(text="К сожалению, мы закрыты")],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+        input_field_placeholder="Укажите причину отказа..."
+    )
 
 
 # --- ОБРАБОТЧИКИ ---
@@ -508,25 +520,63 @@ async def web_app_data_handler(m: types.Message):
         await m.answer("⚠️ Ошибка обработки заказа.")
 
 @dp.callback_query(F.data.startswith("dec_"))
-async def decision(c: CallbackQuery):
+async def decision(c: CallbackQuery, state: FSMContext):
     act, uid = c.data.split("_")[1], c.data.split("_")[2]
+    
     if act == "accept": 
         await c.message.edit_reply_markup(reply_markup=get_time_kb(uid))
-    else:
-        try:
-            text = c.message.text or c.message.caption or ""
-            match = re.search(r"Промокод:\s*([A-Za-z0-9]+)", text)
-            if match:
-                code = match.group(1)
-                loop = asyncio.get_running_loop()
-                await loop.run_in_executor(None, cancel_promo_firebase, code, uid)
-        except Exception as e:
-            logging.error(f"Auto-revert error: {e}")
-
-        await c.message.edit_text(f"{c.message.text}\n\n❌ <b>ОТКЛОНЕН</b>")
-        try: await bot.send_message(uid, "❌ Заказ отклонен. Скоро свяжемся с вами для уточнения.")
-        except: pass
+    elif act == "reject":
+        # ОБНОВЛЕННАЯ ЛОГИКА ОТКАЗА
+        # Сохраняем данные, чтобы потом изменить сообщение и уведомить пользователя
+        text = c.message.text or c.message.caption or ""
+        await state.update_data(
+            reject_uid=uid, 
+            reject_msg_id=c.message.message_id,
+            reject_text=text
+        )
+        await state.set_state(OrderState.waiting_for_rejection_reason)
+        
+        # Отправляем сообщение с клавиатурой причин
+        await c.message.answer("✍️ <b>Укажите причину отказа:</b>\n<i>Выберите вариант или напишите свой текст</i>", reply_markup=get_rejection_kb())
+        
     await c.answer()
+
+@dp.message(OrderState.waiting_for_rejection_reason)
+async def process_rejection_reason(m: types.Message, state: FSMContext):
+    data = await state.get_data()
+    uid = data.get('reject_uid')
+    msg_id = data.get('reject_msg_id')
+    original_text = data.get('reject_text')
+    reason = m.text
+    
+    # Логика отмены промокода (перенесена сюда)
+    try:
+        match = re.search(r"Промокод:\s*([A-Za-z0-9]+)", original_text)
+        if match:
+            code = match.group(1)
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(None, cancel_promo_firebase, code, uid)
+    except Exception as e:
+        logging.error(f"Auto-revert error: {e}")
+
+    # Обновляем сообщение в админке
+    try:
+        await bot.edit_message_text(
+            chat_id=m.chat.id,
+            message_id=msg_id,
+            text=f"{original_text}\n\n❌ <b>ОТКЛОНЕН ({reason})</b>",
+            parse_mode=ParseMode.HTML
+        )
+    except Exception as e:
+        logging.error(f"Edit rejection message error: {e}")
+
+    # Уведомляем пользователя
+    try: 
+        await bot.send_message(uid, f"❌ <b>Ваш заказ был отклонен.</b>\n\nПричина: {reason}", reply_markup=ReplyKeyboardRemove())
+    except: pass
+    
+    await m.answer("✅ Отказ с причиной отправлен пользователю.", reply_markup=ReplyKeyboardRemove())
+    await state.clear()
 
 @dp.callback_query(F.data.startswith("time_"))
 async def set_time(c: CallbackQuery, state: FSMContext):
@@ -784,9 +834,3 @@ async def admin_reply_send(m: types.Message, state: FSMContext):
 if __name__ == "__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
-
-
-
-
-
-
