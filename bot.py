@@ -5,6 +5,7 @@ import sys
 import os
 import re 
 import time
+import html # <--- ДОБАВЛЕН ИМПОРТ ДЛЯ ЗАЩИТЫ ТЕКСТА
 from datetime import datetime, timedelta, timezone
 from aiohttp import web
 
@@ -41,8 +42,8 @@ KASPI_NUMBER = "+7 747 240 20 02"
 
 BARISTAS = {
     "1": {"name": "Анара", "phone": "+7 747 240 20 02 (только Kaspi)"},
-    "2": {"name": "Карина", "phone": "+7 776 962 28 14 (Kaspi\Halyk)"},
-    "3": {"name": "Павел", "phone": "+7 771 904 44 55 (Kaspi\Halyk\Forte\Freedom)"}
+    "2": {"name": "Карина", "phone": "+7 776 962 28 14 (Kaspi/Halyk)"}, # Исправлен слеш
+    "3": {"name": "Павел", "phone": "+7 771 904 44 55 (Kaspi/Halyk/Forte/Freedom)"} # Исправлен слеш
 }
 
 logging.basicConfig(level=logging.INFO)
@@ -559,12 +560,15 @@ async def process_rejection_reason(m: types.Message, state: FSMContext):
     except Exception as e:
         logging.error(f"Auto-revert error: {e}")
 
+    # Экранируем старый текст, чтобы спецсимволы (<, >, &) не ломали HTML
+    safe_original_text = html.escape(original_text)
+
     # Обновляем сообщение в админке
     try:
         await bot.edit_message_text(
             chat_id=m.chat.id,
             message_id=msg_id,
-            text=f"{original_text}\n\n❌ <b>ОТКЛОНЕН ({reason})</b>",
+            text=f"{safe_original_text}\n\n❌ <b>ОТКЛОНЕН ({reason})</b>",
             parse_mode=ParseMode.HTML
         )
     except Exception as e:
