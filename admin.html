@@ -50,7 +50,7 @@
     <!-- Блок настроек кофейни -->
     <div class="config-block">
         <h6 class="text-muted mb-3">🛠 Быстрые настройки</h6>
-        <div class="row g-3 align-items-center">
+        <div class="row g-3 align-items-center mb-3">
             <div class="col-auto">
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="promo-switch" onchange="updateSettings()">
@@ -58,14 +58,30 @@
                 </div>
             </div>
             <div class="col-auto">
-                <input type="time" class="form-control form-control-sm" id="open-time" onchange="updateSettings()">
+                <label class="small text-muted me-1">Открытие:</label>
+                <input type="time" class="form-control form-control-sm d-inline-block" style="width: auto;" id="open-time" onchange="updateSettings()">
             </div>
-            <div class="col-auto text-muted">-</div>
             <div class="col-auto">
-                <input type="time" class="form-control form-control-sm" id="close-time" onchange="updateSettings()">
+                <label class="small text-muted me-1">Закрытие:</label>
+                <input type="time" class="form-control form-control-sm d-inline-block" style="width: auto;" id="close-time" onchange="updateSettings()">
             </div>
             <div class="col-auto">
                 <span id="settings-status" class="badge bg-secondary">Загрузка...</span>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="small text-muted fw-bold">Сиропы (через запятую)</label>
+                <textarea class="form-control form-control-sm" id="set-syrups" rows="3" onchange="updateSettings()"></textarea>
+            </div>
+            <div class="col-md-4">
+                <label class="small text-muted fw-bold">Альтернативное молоко</label>
+                <textarea class="form-control form-control-sm" id="set-milks" rows="3" onchange="updateSettings()"></textarea>
+            </div>
+            <div class="col-md-4">
+                <label class="small text-muted fw-bold">Соусы</label>
+                <textarea class="form-control form-control-sm" id="set-sauces" rows="3" onchange="updateSettings()"></textarea>
             </div>
         </div>
     </div>
@@ -155,12 +171,12 @@
 
   // 🔴🔴🔴 ВСТАВЬТЕ СЮДА ВАШ КОНФИГ ИЗ FIREBASE CONSOLE 🔴🔴🔴
   const firebaseConfig = {
-    apiKey: "AIzaSyDO8ZqXtb_E7ivbdeSB_2rBc1aKpLVBKqY",
-    authDomain: "coffeemoll-1d1fa.firebaseapp.com",
-    projectId: "coffeemoll-1d1fa",
-    storageBucket: "coffeemoll-1d1fa.firebasestorage.app",
-    messagingSenderId: "281469424386",
-    appId: "1:281469424386:web:0173ad6a1646c444a7281b"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -230,6 +246,12 @@
               document.getElementById('open-time').value = d.open_time || "09:00";
               document.getElementById('close-time').value = d.close_time || "23:00";
               document.getElementById('promo-switch').checked = (String(d.enable_promos) === "true");
+              
+              // Загрузка списков
+              document.getElementById('set-syrups').value = d.syrup_names || "";
+              document.getElementById('set-milks').value = d.alt_milks || "";
+              document.getElementById('set-sauces').value = d.sauce_names || "";
+
               document.getElementById('settings-status').innerText = "Активно";
               document.getElementById('settings-status').className = "badge bg-success";
           }
@@ -240,7 +262,10 @@
       const updates = {
           open_time: document.getElementById('open-time').value,
           close_time: document.getElementById('close-time').value,
-          enable_promos: String(document.getElementById('promo-switch').checked)
+          enable_promos: String(document.getElementById('promo-switch').checked),
+          syrup_names: document.getElementById('set-syrups').value,
+          alt_milks: document.getElementById('set-milks').value,
+          sauce_names: document.getElementById('set-sauces').value
       };
       document.getElementById('settings-status').innerText = "Сохранение...";
       await updateDoc(doc(db, "settings", "main"), updates);
