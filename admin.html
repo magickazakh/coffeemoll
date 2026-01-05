@@ -26,7 +26,6 @@
         
         /* Заказы */
         .order-card { border-left: 4px solid #88d100; }
-        .order-status-new { border-color: #0d6efd; }
         
         /* Клиенты */
         .user-avatar { width: 40px; height: 40px; background: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #495057; margin-right: 10px; }
@@ -38,7 +37,7 @@
         .bg-success { background-color: #88d100 !important; color: #000; }
         .text-accent { color: #88d100; }
         
-        /* Модификаторы в модалке */
+        /* Модификаторы */
         .mod-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f8f9fa; }
         .mod-price-inp { width: 90px; text-align: right; font-size: 0.9em; padding: 4px; }
     </style>
@@ -81,7 +80,7 @@
                     <div class="col-md-3">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="promo-switch" onchange="updateSettings()">
-                            <label class="form-check-label small fw-bold">Глобальные Промо</label>
+                            <label class="form-check-label small fw-bold">Промокоды на сайте</label>
                         </div>
                     </div>
                     <div class="col-md-6 d-flex gap-2">
@@ -107,7 +106,8 @@
 
         <!-- 2. ЗАКАЗЫ -->
         <div class="tab-pane fade" id="tab-orders">
-            <div class="d-flex justify-content-end mb-3">
+            <div class="d-flex justify-content-between mb-3">
+                <h5 class="m-0">История заказов</h5>
                 <button class="btn btn-light border btn-sm" onclick="loadOrders()"><i class="fas fa-sync"></i> Обновить</button>
             </div>
             <div id="orders-container"></div>
@@ -131,7 +131,7 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="card card-shadow p-3 mb-3">
-                        <h6 class="fw-bold mb-3">Новый промокод</h6>
+                        <h6 class="fw-bold mb-3">Создать промокод</h6>
                         <input type="text" id="new-promo-code" class="form-control mb-2 text-uppercase fw-bold" placeholder="Код (напр. SUMMER)">
                         <div class="row g-2 mb-2">
                             <div class="col-6"><input type="number" id="new-promo-disc" class="form-control" placeholder="Скидка %"></div>
@@ -148,7 +148,8 @@
 
         <!-- 5. ОТЗЫВЫ -->
         <div class="tab-pane fade" id="tab-reviews">
-            <div class="d-flex justify-content-end mb-3">
+            <div class="d-flex justify-content-between mb-3">
+                <h5 class="m-0">Отзывы клиентов</h5>
                 <button class="btn btn-light border btn-sm" onclick="loadReviews()"><i class="fas fa-sync"></i> Обновить</button>
             </div>
             <div id="reviews-container"></div>
@@ -243,8 +244,10 @@
       if(user) { 
           initData(); 
           initSettings();
-          // Загружаем другие вкладки сразу, чтобы не было пустоты
+          // Загрузка остальных данных
+          loadOrders();
           loadPromos(); 
+          loadReviews();
       }
   });
 
@@ -346,65 +349,75 @@
       modal.hide();
   }
 
-  // === 2. ЗАКАЗЫ (КОЛЛЕКЦИЯ orders) ===
+  // === 2. ЗАКАЗЫ (УЛУЧШЕНО) ===
   window.loadOrders = async () => {
       const cont = document.getElementById('orders-container');
-      cont.innerHTML = '<div class="text-center p-3">Загрузка...</div>';
+      cont.innerHTML = '<div class="text-center p-3 text-muted">Загрузка заказов...</div>';
       try {
-          // Сортировка по timestamp, который создает бот
-          // Если индекс не создан, убираем orderBy временно
-          const q = query(collection(db, "orders"), orderBy("created_at", "desc"), limit(30));
+          // Получаем все заказы (без сортировки на сервере, чтобы избежать ошибки индекса)
+          const q = query(collection(db, "orders"), limit(50));
           const snap = await getDocs(q);
+          
+          if(snap.empty) { cont.innerHTML = '<div class="text-center text-muted p-4">История заказов пуста</div>'; return; }
+
+          let orders = [];
+          snap.forEach(doc => orders.push({ id: doc.id, ...doc.data() }));
+
+          // Сортировка на клиенте
+          orders.sort((a, b) => {
+              const ta = (a.created_at || a.timestamp || a.date)?.seconds || 0;
+              const tb = (b.created_at || b.timestamp || b.date)?.seconds || 0;
+              return tb - ta;
+          });
+
           cont.innerHTML = '';
-          if(snap.empty) { cont.innerHTML = '<div class="text-center text-muted p-4">Нет заказов</div>'; return; }
-
-          snap.forEach(doc => {
-              const d = doc.data();
-              
-              // Безопасное получение даты
-              let dateStr = "Недавно";
-              try {
-                  if(d.created_at && d.created_at.seconds) dateStr = new Date(d.created_at.seconds * 1000).toLocaleString('ru-RU');
-                  else if(d.created_at) dateStr = new Date(d.created_at).toLocaleString('ru-RU');
-              } catch(e) {}
-
-              // Безопасное получение списка товаров
-              let items = "Пусто";
-              if (d.cart && Array.isArray(d.cart)) {
-                  items = d.cart.map(i => `<span class="badge bg-light text-dark border me-1">${i.name} x${i.qty}</span>`).join('');
+          orders.forEach(d => {
+              // Пытаемся получить дату из разных полей
+              let dateStr = "Неизвестно";
+              const rawDate = d.created_at || d.timestamp || d.date;
+              if (rawDate && rawDate.seconds) {
+                  dateStr = new Date(rawDate.seconds * 1000).toLocaleString('ru-RU');
+              } else if (rawDate && typeof rawDate === 'string') {
+                  dateStr = rawDate;
               }
 
-              // Безопасное получение информации о клиенте (структура из index.html)
-              const clientName = d.info?.name || 'Клиент';
-              const clientPhone = d.info?.phone || '';
-              const delType = d.info?.deliveryType || 'Самовывоз';
-              const payType = d.info?.paymentType || 'Оплата';
-              const promo = d.promoCode || d.info?.promoCode || '';
+              // Состав заказа
+              let items = '<span class="text-muted">Пустой заказ</span>';
+              if (d.cart && Array.isArray(d.cart) && d.cart.length > 0) {
+                  items = d.cart.map(i => `<span class="badge bg-light text-dark border me-1">${i.name} <span class="text-secondary">x${i.qty}</span></span>`).join('');
+              }
 
+              // Инфо о клиенте
+              const info = d.info || {};
+              
               cont.innerHTML += `
               <div class="card card-shadow order-card p-3 mb-3">
                   <div class="d-flex justify-content-between small text-muted mb-2">
-                      <span>${dateStr}</span>
-                      <span>${delType} • ${payType}</span>
+                      <span><i class="far fa-clock"></i> ${dateStr}</span>
+                      <span class="badge bg-light text-dark border">${d.status || 'Новый'}</span>
                   </div>
-                  <div class="fw-bold mb-1">${clientName} <span class="fw-normal text-muted">${clientPhone}</span></div>
-                  <div class="mb-2">${items}</div>
-                  <div class="d-flex justify-content-between align-items-center border-top pt-2">
-                      <div class="small text-danger">${promo ? `Промо: ${promo}` : ''}</div>
+                  <div class="d-flex justify-content-between">
+                      <div>
+                          <div class="fw-bold">${info.name || 'Клиент'} <small class="text-muted fw-normal">${info.phone || ''}</small></div>
+                          <div class="small text-muted mb-2">${info.deliveryType || 'Самовывоз'} • ${info.paymentType || 'Оплата'}</div>
+                      </div>
                       <div class="fs-5 fw-bold text-success">${d.total || 0} ₸</div>
                   </div>
+                  <div class="mb-2">${items}</div>
+                  ${info.address ? `<div class="small text-muted bg-light p-1 rounded"><i class="fas fa-map-marker-alt"></i> ${info.address}</div>` : ''}
+                  ${info.comment ? `<div class="small text-danger mt-1">"${info.comment}"</div>` : ''}
               </div>`;
           });
       } catch (e) {
-          console.error("Ошибка загрузки заказов:", e);
-          cont.innerHTML = `<div class="alert alert-warning">Ошибка загрузки заказов: ${e.message}</div>`;
+          console.error("Orders Error:", e);
+          cont.innerHTML = `<div class="alert alert-warning small">Ошибка: ${e.message}.<br>Проверьте консоль.</div>`;
       }
   }
 
-  // === 3. КЛИЕНТЫ (КОЛЛЕКЦИЯ users) ===
+  // === 3. КЛИЕНТЫ ===
   window.loadUsers = async () => {
       const cont = document.getElementById('users-container');
-      cont.innerHTML = '<div class="text-center p-3">Загрузка базы клиентов...</div>';
+      cont.innerHTML = '<div class="text-center p-3 text-muted">Загрузка клиентов...</div>';
       try {
           const snap = await getDocs(collection(db, "users"));
           allUsers = [];
@@ -413,8 +426,7 @@
           allUsers.sort((a,b) => (b.total_spent || 0) - (a.total_spent || 0));
           filterUsers();
       } catch(e) {
-          console.error(e);
-          cont.innerHTML = '<div class="alert alert-danger">Нет доступа к коллекции users</div>';
+          cont.innerHTML = '<div class="alert alert-danger small">Нет доступа к коллекции users</div>';
       }
   }
 
@@ -429,11 +441,11 @@
           (u.first_name && u.first_name.toLowerCase().includes(q))
       ).slice(0, 50);
 
-      if(filtered.length === 0) { cont.innerHTML = '<div class="text-center text-muted">Не найдено</div>'; return; }
+      if(filtered.length === 0) { cont.innerHTML = '<div class="text-center text-muted p-3">Ничего не найдено</div>'; return; }
 
       filtered.forEach(u => {
-          const name = u.username || u.first_name || "Без имени";
-          const initial = name ? name[0].toUpperCase() : "?";
+          const name = u.username || u.first_name || "Клиент";
+          const initial = name[0].toUpperCase();
           const spent = u.total_spent || 0;
           const points = u.bonus_points || 0;
           
@@ -449,7 +461,7 @@
                   </div>
                   <div class="text-end">
                       <div class="fw-bold text-success">${spent.toLocaleString()} ₸</div>
-                      <div class="small text-muted cursor-pointer" onclick="editPoints('${u.id}', ${points})" style="cursor:pointer; text-decoration:underline">Баллы: ${points}</div>
+                      <div class="small text-muted cursor-pointer text-decoration-underline" onclick="editPoints('${u.id}', ${points})">Баллы: ${points}</div>
                   </div>
               </div>
           </div>`;
@@ -457,42 +469,42 @@
   }
 
   window.editPoints = async (uid, current) => {
-      const newVal = prompt("Изменить количество баллов:", current);
+      const newVal = prompt("Баланс баллов:", current);
       if(newVal !== null && !isNaN(parseInt(newVal))) {
           await updateDoc(doc(db, "users", uid), { bonus_points: parseInt(newVal) });
           loadUsers();
       }
   }
 
-  // === 4. ПРОМОКОДЫ (КОЛЛЕКЦИЯ promocodes) ===
+  // === 4. ПРОМОКОДЫ (ИСПРАВЛЕНО) ===
   window.loadPromos = async () => {
       const cont = document.getElementById('promos-container');
-      cont.innerHTML = 'Загрузка...';
+      cont.innerHTML = '<div class="text-center text-muted">Загрузка...</div>';
       try {
           const snap = await getDocs(collection(db, "promocodes"));
           cont.innerHTML = '';
           
-          if(snap.empty) { cont.innerHTML = '<div class="text-muted">Нет промокодов</div>'; return; }
+          if(snap.empty) { cont.innerHTML = '<div class="text-muted p-3">Список промокодов пуст</div>'; return; }
           
           snap.forEach(d => {
               const p = d.data();
-              // Важно: проверяем наличие массива users_used
-              const used = p.users_used ? p.users_used.length : 0;
-              const limit = p.limit || '∞';
+              // Проверка массива users_used (он может быть undefined)
+              const usedCount = (p.users_used && Array.isArray(p.users_used)) ? p.users_used.length : 0;
+              const limitStr = p.limit ? ` из ${p.limit}` : '';
               
               cont.innerHTML += `
               <div class="card card-shadow p-3 mb-2 d-flex flex-row justify-content-between align-items-center">
                   <div>
                       <span class="promo-code">${p.code}</span>
                       <span class="badge bg-success ms-2">-${p.discount}%</span>
-                      <div class="small text-muted mt-1">Использовано: ${used} / ${limit}</div>
+                      <div class="small text-muted mt-1">Использовано: <b>${usedCount}</b>${limitStr}</div>
                   </div>
                   <button class="btn btn-sm btn-outline-danger" onclick="delPromo('${d.id}')"><i class="fas fa-trash"></i></button>
               </div>`;
           });
       } catch(e) {
           console.error(e);
-          cont.innerHTML = 'Ошибка загрузки промокодов';
+          cont.innerHTML = '<div class="alert alert-danger small">Ошибка загрузки промокодов</div>';
       }
   }
 
@@ -501,13 +513,13 @@
       const disc = parseInt(document.getElementById('new-promo-disc').value);
       const limitVal = parseInt(document.getElementById('new-promo-limit').value) || 100;
       
-      if(!code || !disc) return alert("Введите код и скидку");
+      if(!code || !disc) return alert("Введите код и размер скидки");
       
       await addDoc(collection(db, "promocodes"), {
           code: code,
           discount: disc,
           limit: limitVal,
-          users_used: [], // Обязательно инициализируем массив!
+          users_used: [], // Инициализируем массив
           created_at: new Date()
       });
       
@@ -522,46 +534,55 @@
       }
   }
 
-  // === 5. ОТЗЫВЫ (КОЛЛЕКЦИЯ reviews) ===
+  // === 5. ОТЗЫВЫ (ИСПРАВЛЕНО) ===
   window.loadReviews = async () => {
       const cont = document.getElementById('reviews-container');
-      cont.innerHTML = 'Загрузка...';
+      cont.innerHTML = '<div class="text-center text-muted">Загрузка отзывов...</div>';
       try {
-          // Убираем orderBy для теста, чтобы избежать ошибки "Index required", если он не создан
-          // В продакшене лучше вернуть orderBy("created_at", "desc") и создать индекс в консоли
-          const q = query(collection(db, "reviews"), limit(20));
+          // Без сортировки на сервере для надежности
+          const q = query(collection(db, "reviews"), limit(50));
           const snap = await getDocs(q);
-          cont.innerHTML = '';
-          if(snap.empty) { cont.innerHTML = '<div class="text-center text-muted">Отзывов пока нет (или коллекция пуста)</div>'; return; }
           
-          snap.forEach(d => {
-              const r = d.data();
-              // Проверяем разные варианты названия полей (в зависимости от бота)
-              const dateRaw = r.created_at || r.date || r.timestamp;
-              const text = r.text || r.comment || 'Без текста';
-              const rating = r.rating || 5;
-              const userId = r.user_id || 'Аноним';
+          if(snap.empty) { cont.innerHTML = '<div class="text-center text-muted p-4">Отзывов пока нет</div>'; return; }
+          
+          let reviews = [];
+          snap.forEach(d => reviews.push({ id: d.id, ...d.data() }));
+          
+          // Сортировка JS
+          reviews.sort((a,b) => {
+             const da = a.created_at || a.date;
+             const db = b.created_at || b.date;
+             const ta = da?.seconds || 0;
+             const tb = db?.seconds || 0;
+             return tb - ta;
+          });
 
+          cont.innerHTML = '';
+          reviews.forEach(r => {
+              // Ищем поле даты
               let dateStr = "";
-              try {
-                  if(dateRaw && dateRaw.seconds) dateStr = new Date(dateRaw.seconds * 1000).toLocaleDateString();
-              } catch(e){}
-              
-              const stars = '⭐'.repeat(rating);
+              const rawDate = r.created_at || r.date || r.timestamp;
+              if (rawDate && rawDate.seconds) dateStr = new Date(rawDate.seconds * 1000).toLocaleDateString();
+
+              // Ищем текст и рейтинг
+              const text = r.text || r.comment || r.review || 'Без текста';
+              const rating = r.rating || r.stars || 5;
+              const user = r.user_name || r.username || `ID: ${r.user_id}`;
+              const starsHtml = '<i class="fas fa-star text-warning"></i>'.repeat(rating) + '<i class="far fa-star text-warning"></i>'.repeat(5 - rating);
               
               cont.innerHTML += `
               <div class="card card-shadow p-3 mb-2">
                   <div class="d-flex justify-content-between mb-2">
-                      <span class="fw-bold small">User ID: ${userId}</span>
+                      <span class="fw-bold small">${user}</span>
                       <span class="text-muted small">${dateStr}</span>
                   </div>
-                  <div class="mb-2 text-warning">${stars}</div>
-                  <p class="mb-0 text-secondary">${text}</p>
+                  <div class="mb-2">${starsHtml}</div>
+                  <p class="mb-0 text-secondary small">${text}</p>
               </div>`;
           });
       } catch (e) {
-          console.error(e);
-          cont.innerHTML = `<div class="alert alert-warning">Ошибка загрузки отзывов: ${e.message}</div>`;
+          console.error("Reviews Error:", e);
+          cont.innerHTML = `<div class="alert alert-warning small">Ошибка загрузки отзывов: ${e.message}</div>`;
       }
   }
 
