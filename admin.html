@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoffeeMoll Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .login-container { max-width: 400px; margin: 80px auto; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .dashboard-container { max-width: 900px; margin: 30px auto; display: none; }
+        .item-row { background: white; border: 1px solid #e1e4e8; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; }
+        .item-row:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .bg-success { background-color: #28a745 !important; }
+        .bg-danger { background-color: #dc3545 !important; }
+        .cat-header { font-weight: 700; color: #6c757d; margin: 25px 0 10px 0; border-bottom: 2px solid #dee2e6; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-edit { font-size: 0.85rem; padding: 4px 12px; border-radius: 6px; }
+        .form-check-input:checked { background-color: #88d100; border-color: #88d100; }
+        .config-block { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #dee2e6; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="login-screen">
+    <div class="login-container text-center">
+        <h3 class="mb-4">🔐 CoffeeMoll Admin</h3>
+        <input type="email" id="email" class="form-control mb-3" placeholder="Email администратора">
+        <input type="password" id="password" class="form-control mb-3" placeholder="Пароль">
+        <button onclick="login()" class="btn btn-dark w-100 py-2">Войти</button>
+        <div id="login-msg" class="text-danger mt-3 small"></div>
+    </div>
+</div>
+
+<div class="container dashboard-container" id="admin-panel">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="m-0">📦 Управление Меню</h4>
+        <button onclick="logout()" class="btn btn-outline-danger btn-sm">Выйти</button>
+    </div>
+
+    <!-- Блок настроек кофейни -->
+    <div class="config-block">
+        <h6 class="text-muted mb-3">🛠 Быстрые настройки</h6>
+        <div class="row g-3 align-items-center">
+            <div class="col-auto">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="promo-switch" onchange="updateSettings()">
+                    <label class="form-check-label">Промокоды</label>
+                </div>
+            </div>
+            <div class="col-auto">
+                <input type="time" class="form-control form-control-sm" id="open-time" onchange="updateSettings()">
+            </div>
+            <div class="col-auto text-muted">-</div>
+            <div class="col-auto">
+                <input type="time" class="form-control form-control-sm" id="close-time" onchange="updateSettings()">
+            </div>
+            <div class="col-auto">
+                <span id="settings-status" class="badge bg-secondary">Загрузка...</span>
+            </div>
+        </div>
+    </div>
+
+    <input type="text" id="search" class="form-control mb-4 p-3 shadow-sm" placeholder="🔍 Найти блюдо..." oninput="renderList()">
+    <div id="menu-list"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="modal-title">Редактирование</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+          <input type="hidden" id="edit-id">
+          
+          <div class="mb-3">
+              <label class="form-label small text-muted">Название</label>
+              <input type="text" id="edit-name" class="form-control fw-bold">
+          </div>
+
+          <div class="row">
+              <div class="col-6 mb-3">
+                  <label class="form-label small text-muted">Цена</label>
+                  <input type="number" id="edit-price" class="form-control">
+              </div>
+              <div class="col-6 mb-3 d-flex align-items-end">
+                  <div class="form-check form-switch w-100 p-2 border rounded">
+                      <input class="form-check-input ms-0 me-2" type="checkbox" id="edit-available">
+                      <label class="form-check-label">В наличии</label>
+                  </div>
+              </div>
+          </div>
+          
+          <div class="mb-3">
+              <label class="form-label small text-muted">Описание</label>
+              <textarea id="edit-desc" class="form-control" rows="3"></textarea>
+          </div>
+          
+          <div class="mb-3">
+               <label class="form-label small text-muted">Бейдж (акция/острое)</label>
+               <input type="text" id="edit-badge" class="form-control" placeholder="Например: ХИТ">
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-success fw-bold px-4" onclick="saveItem()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, doc, updateDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  // 🔴🔴🔴 ВСТАВЬТЕ СЮДА ВАШ КОНФИГ ИЗ ГЛАВЫ 2 🔴🔴🔴
+  const firebaseConfig = {
+    apiKey: "AIzaSyDO8ZqXtb_E7ivbdeSB_2rBc1aKpLVBKqY",
+    authDomain: "coffeemoll-1d1fa.firebaseapp.com",
+    projectId: "coffeemoll-1d1fa",
+    storageBucket: "coffeemoll-1d1fa.firebasestorage.app",
+    messagingSenderId: "281469424386",
+    appId: "1:281469424386:web:0173ad6a1646c444a7281b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  let menuData = [];
+
+  // --- AUTH ---
+  window.login = () => {
+      const e = document.getElementById('email').value;
+      const p = document.getElementById('password').value;
+      const btn = document.querySelector('button[onclick="login()"]');
+      btn.disabled = true; btn.innerText = "Входим...";
+      
+      signInWithEmailAndPassword(auth, e, p)
+        .then(() => { document.getElementById('login-msg').innerText = ""; })
+        .catch(err => { 
+            document.getElementById('login-msg').innerText = "Ошибка: " + err.message; 
+            btn.disabled = false; btn.innerText = "Войти";
+        });
+  }
+  window.logout = () => signOut(auth);
+
+  onAuthStateChanged(auth, (user) => {
+      if(user) {
+          document.getElementById('login-screen').style.display = 'none';
+          document.querySelector('.dashboard-container').style.display = 'block';
+          initData();
+          initSettings();
+      } else {
+          document.getElementById('login-screen').style.display = 'block';
+          document.querySelector('.dashboard-container').style.display = 'none';
+      }
+  });
+
+  // --- DATA ---
+  function initData() {
+      onSnapshot(collection(db, "menu"), (snapshot) => {
+          menuData = [];
+          snapshot.forEach(doc => menuData.push({ _id: doc.id, ...doc.data() }));
+          renderList();
+      });
+  }
+  
+  function initSettings() {
+      onSnapshot(doc(db, "settings", "main"), (doc) => {
+          if(doc.exists()) {
+              const d = doc.data();
+              document.getElementById('open-time').value = d.open_time || "09:00";
+              document.getElementById('close-time').value = d.close_time || "23:00";
+              document.getElementById('promo-switch').checked = (String(d.enable_promos) === "true");
+              document.getElementById('settings-status').innerText = "Активно";
+              document.getElementById('settings-status').className = "badge bg-success";
+          }
+      });
+  }
+
+  window.updateSettings = async () => {
+      const updates = {
+          open_time: document.getElementById('open-time').value,
+          close_time: document.getElementById('close-time').value,
+          enable_promos: String(document.getElementById('promo-switch').checked)
+      };
+      document.getElementById('settings-status').innerText = "Сохранение...";
+      await updateDoc(doc(db, "settings", "main"), updates);
+  }
+
+  window.renderList = () => {
+      const q = document.getElementById('search').value.toLowerCase();
+      const cont = document.getElementById('menu-list');
+      cont.innerHTML = '';
+
+      // Группировка
+      const categories = {};
+      const order = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "ПАСТЫ", "ЗАКУСКИ"];
+      
+      menuData.forEach(item => {
+          if (!item.name.toLowerCase().includes(q)) return;
+          if (!categories[item.category]) categories[item.category] = [];
+          categories[item.category].push(item);
+      });
+
+      // Сортируем ключи категорий по order
+      const sortedCats = Object.keys(categories).sort((a,b) => {
+         let idxA = order.indexOf(a.toUpperCase());
+         let idxB = order.indexOf(b.toUpperCase());
+         if(idxA === -1) idxA = 999;
+         if(idxB === -1) idxB = 999;
+         return idxA - idxB;
+      });
+
+      sortedCats.forEach(cat => {
+          cont.innerHTML += `<div class="cat-header">${cat}</div>`;
+          categories[cat].forEach(item => {
+              const opacity = item.available ? '1' : '0.5';
+              const dotClass = item.available ? 'bg-success' : 'bg-danger';
+              cont.innerHTML += `
+              <div class="item-row" style="opacity: ${opacity}">
+                  <div class="d-flex align-items-center">
+                      <span class="status-dot ${dotClass}"></span>
+                      <div>
+                          <div class="fw-bold text-dark">${item.name}</div>
+                          <div class="small text-muted">${item.price} ₸</div>
+                      </div>
+                  </div>
+                  <button class="btn btn-outline-dark btn-edit" onclick="openEdit('${item._id}')">✏️</button>
+              </div>`;
+          });
+      });
+  }
+
+  // --- EDIT ---
+  const modal = new bootstrap.Modal(document.getElementById('editModal'));
+
+  window.openEdit = (id) => {
+      const item = menuData.find(i => i._id === id);
+      document.getElementById('edit-id').value = id;
+      document.getElementById('edit-name').value = item.name;
+      document.getElementById('edit-price').value = item.price;
+      document.getElementById('edit-desc').value = item.description || "";
+      document.getElementById('edit-badge').value = item.badge || "";
+      document.getElementById('edit-available').checked = item.available;
+      document.getElementById('modal-title').innerText = item.name;
+      modal.show();
+  }
+
+  window.saveItem = async () => {
+      const id = document.getElementById('edit-id').value;
+      const updates = {
+          name: document.getElementById('edit-name').value,
+          price: parseInt(document.getElementById('edit-price').value),
+          description: document.getElementById('edit-desc').value,
+          badge: document.getElementById('edit-badge').value,
+          available: document.getElementById('edit-available').checked
+      };
+      
+      try {
+          await updateDoc(doc(db, "menu", id), updates);
+          modal.hide();
+      } catch (e) {
+          alert("Ошибка: " + e.message);
+      }
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
