@@ -14,48 +14,37 @@
         /* Табы */
         .nav-pills .nav-link { color: #495057; margin-right: 5px; border-radius: 8px; font-weight: 500; }
         .nav-pills .nav-link.active { background-color: #212529; color: #88d100; }
-        .nav-pills .nav-link i { margin-right: 5px; }
-
+        
         /* Карточки */
         .card-shadow { background: white; border-radius: 10px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.03); margin-bottom: 15px; }
-        
-        /* Меню */
-        .item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f0f0f0; transition: 0.1s; }
-        .item-row:hover { background: #f8f9fa; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
         
         /* Заказы */
         .order-card { border-left: 4px solid #88d100; }
         
-        /* Клиенты */
-        .user-avatar { width: 40px; height: 40px; background: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #495057; margin-right: 10px; }
-        
         /* Промокоды */
-        .promo-code { font-family: monospace; font-size: 1.1em; letter-spacing: 1px; background: #eee; padding: 2px 6px; border-radius: 4px; }
+        .promo-code { font-family: monospace; font-size: 1.2em; letter-spacing: 1px; background: #eee; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
         
-        /* Общее */
-        .bg-success { background-color: #88d100 !important; color: #000; }
-        .text-accent { color: #88d100; }
-        
-        /* Модификаторы */
-        .mod-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f8f9fa; }
-        .mod-price-inp { width: 90px; text-align: right; font-size: 0.9em; padding: 4px; }
+        /* Рейтинг */
+        .star-box { font-size: 0.9rem; background: #fff3cd; padding: 2px 6px; border-radius: 4px; color: #856404; display: inline-block; margin-right: 5px;}
+
+        /* Статус */
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .bg-success-custom { background-color: #88d100 !important; }
     </style>
 </head>
 <body>
 
-<!-- ЭКРАН ВХОДА -->
+<!-- ВХОД -->
 <div class="container" id="login-screen">
     <div class="login-container text-center">
-        <h3 class="mb-4 fw-bold">☕ CoffeeMoll <span class="text-accent">Admin</span></h3>
+        <h3 class="mb-4 fw-bold">☕ CoffeeMoll <span style="color:#88d100">Admin</span></h3>
         <input type="email" id="email" class="form-control mb-3" placeholder="Email">
         <input type="password" id="password" class="form-control mb-3" placeholder="Пароль">
         <button onclick="login()" class="btn btn-dark w-100 py-2 fw-bold">Войти</button>
-        <div id="login-msg" class="text-danger mt-3 small"></div>
     </div>
 </div>
 
-<!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
+<!-- ПАНЕЛЬ -->
 <div class="main-container" id="dashboard">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="m-0 fw-bold">Панель управления</h4>
@@ -66,27 +55,26 @@
     <ul class="nav nav-pills mb-4" id="pills-tab">
         <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-menu"><i class="fas fa-coffee"></i> Меню</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-orders" onclick="loadOrders()"><i class="fas fa-list-ul"></i> Заказы</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-users" onclick="loadUsers()"><i class="fas fa-users"></i> Клиенты</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-promos" onclick="loadPromos()"><i class="fas fa-ticket-alt"></i> Промокоды</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-reviews" onclick="loadReviews()"><i class="fas fa-star"></i> Отзывы</button></li>
     </ul>
 
     <div class="tab-content">
         
-        <!-- 1. МЕНЮ -->
+        <!-- 1. МЕНЮ (Без изменений логики) -->
         <div class="tab-pane fade show active" id="tab-menu">
             <div class="card card-shadow p-3">
                 <div class="row g-2 align-items-center mb-3">
                     <div class="col-md-3">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="promo-switch" onchange="updateSettings()">
-                            <label class="form-check-label small fw-bold">Промокоды на сайте</label>
+                            <label class="form-check-label small fw-bold">Включить Промо</label>
                         </div>
                     </div>
                     <div class="col-md-6 d-flex gap-2">
-                        <input type="time" class="form-control form-control-sm" id="open-time" onchange="updateSettings()" title="Открытие">
+                        <input type="time" class="form-control form-control-sm" id="open-time" onchange="updateSettings()">
                         <span class="text-muted">-</span>
-                        <input type="time" class="form-control form-control-sm" id="close-time" onchange="updateSettings()" title="Закрытие">
+                        <input type="time" class="form-control form-control-sm" id="close-time" onchange="updateSettings()">
                     </div>
                     <div class="col-md-3 text-end">
                         <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="collapse" data-bs-target="#settingsCollapse">⚙️ Списки</button>
@@ -99,7 +87,7 @@
                         <div class="col-4"><small class="text-muted">Соусы</small><textarea id="set-sauces" class="form-control form-control-sm" rows="3" onchange="updateSettings()"></textarea></div>
                     </div>
                 </div>
-                <input type="text" id="search" class="form-control" placeholder="🔍 Поиск по меню..." oninput="renderList()">
+                <input type="text" id="search" class="form-control" placeholder="🔍 Поиск..." oninput="renderList()">
             </div>
             <div id="menu-list" class="card card-shadow p-0 overflow-hidden"></div>
         </div>
@@ -108,30 +96,17 @@
         <div class="tab-pane fade" id="tab-orders">
             <div class="d-flex justify-content-between mb-3">
                 <h5 class="m-0">История заказов</h5>
-                <button class="btn btn-light border btn-sm" onclick="loadOrders()"><i class="fas fa-sync"></i> Обновить</button>
+                <button class="btn btn-light border btn-sm" onclick="loadOrders()"><i class="fas fa-sync"></i></button>
             </div>
             <div id="orders-container"></div>
         </div>
 
-        <!-- 3. КЛИЕНТЫ -->
-        <div class="tab-pane fade" id="tab-users">
-            <div class="d-flex justify-content-between mb-3 align-items-center">
-                <h5 class="m-0">База клиентов</h5>
-                <button class="btn btn-light border btn-sm" onclick="loadUsers()"><i class="fas fa-sync"></i> Обновить</button>
-            </div>
-            <div class="input-group mb-3 card-shadow">
-                <span class="input-group-text bg-white border-0"><i class="fas fa-search"></i></span>
-                <input type="text" id="user-search" class="form-control border-0" placeholder="Поиск по имени или телефону..." oninput="filterUsers()">
-            </div>
-            <div id="users-container"></div>
-        </div>
-
-        <!-- 4. ПРОМОКОДЫ -->
+        <!-- 3. ПРОМОКОДЫ -->
         <div class="tab-pane fade" id="tab-promos">
             <div class="row">
                 <div class="col-md-4">
                     <div class="card card-shadow p-3 mb-3">
-                        <h6 class="fw-bold mb-3">Создать промокод</h6>
+                        <h6 class="fw-bold mb-3">Новый промокод</h6>
                         <input type="text" id="new-promo-code" class="form-control mb-2 text-uppercase fw-bold" placeholder="Код (напр. SUMMER)">
                         <div class="row g-2 mb-2">
                             <div class="col-6"><input type="number" id="new-promo-disc" class="form-control" placeholder="Скидка %"></div>
@@ -146,54 +121,49 @@
             </div>
         </div>
 
-        <!-- 5. ОТЗЫВЫ -->
+        <!-- 4. ОТЗЫВЫ -->
         <div class="tab-pane fade" id="tab-reviews">
             <div class="d-flex justify-content-between mb-3">
-                <h5 class="m-0">Отзывы клиентов</h5>
-                <button class="btn btn-light border btn-sm" onclick="loadReviews()"><i class="fas fa-sync"></i> Обновить</button>
+                <h5 class="m-0">Отзывы</h5>
+                <button class="btn btn-light border btn-sm" onclick="loadReviews()"><i class="fas fa-sync"></i></button>
             </div>
             <div id="reviews-container"></div>
         </div>
     </div>
 </div>
 
-<!-- МОДАЛКА РЕДАКТИРОВАНИЯ ТОВАРА -->
+<!-- МОДАЛКА (Меню) -->
 <div class="modal fade" id="editModal" tabindex="-1">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fw-bold">Редактирование товара</h5>
+        <h5 class="modal-title fw-bold">Редактирование</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
           <input type="hidden" id="edit-id">
           <div class="row">
               <div class="col-md-4 border-end">
-                  <label class="small text-muted fw-bold">ИНФОРМАЦИЯ</label>
                   <input type="text" id="edit-name" class="form-control mb-2 fw-bold" placeholder="Название">
                   <div class="row g-2 mb-2">
                       <div class="col-6"><input type="number" id="edit-price" class="form-control" placeholder="Цена"></div>
                       <div class="col-6 pt-2"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="edit-available"><label class="form-check-label">В наличии</label></div></div>
                   </div>
                   <textarea id="edit-desc" class="form-control mb-2" rows="3" placeholder="Описание"></textarea>
-                  <input type="text" id="edit-badge" class="form-control" placeholder="Бейдж (ХИТ)">
+                  <input type="text" id="edit-badge" class="form-control" placeholder="Бейдж">
               </div>
               <div class="col-md-4 border-end">
-                  <div class="d-flex justify-content-between mb-2 align-items-center">
-                      <label class="small text-muted fw-bold">ОБЪЕМЫ</label>
-                      <button class="btn btn-sm btn-success py-0 px-2" onclick="addVolumeRow()">+</button>
-                  </div>
+                  <div class="d-flex justify-content-between mb-2"><label class="small fw-bold">ОБЪЕМЫ</label><button class="btn btn-sm btn-success py-0" onclick="addVolumeRow()">+</button></div>
                   <div id="volumes-container"></div>
               </div>
               <div class="col-md-4">
-                  <label class="small text-muted fw-bold mb-2">МОДИФИКАТОРЫ</label>
+                  <label class="small fw-bold mb-2">МОДИФИКАТОРЫ</label>
                   <div id="modifiers-container" style="max-height: 400px; overflow-y: auto;"></div>
               </div>
           </div>
       </div>
       <div class="modal-footer border-0">
-        <button class="btn btn-light" data-bs-dismiss="modal">Отмена</button>
-        <button class="btn btn-success fw-bold px-4" onclick="saveItem()">Сохранить изменения</button>
+        <button class="btn btn-success fw-bold px-4" onclick="saveItem()">Сохранить</button>
       </div>
     </div>
   </div>
@@ -201,10 +171,10 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, doc, updateDoc, onSnapshot, getDocs, addDoc, deleteDoc, query, orderBy, limit, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getFirestore, collection, doc, updateDoc, onSnapshot, getDocs, setDoc, deleteDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
   import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-  // 🔴🔴🔴 ВСТАВЬТЕ СЮДА ВАШ КОНФИГ ИЗ FIREBASE CONSOLE 🔴🔴🔴
+  // 🔴🔴🔴 ВСТАВЬТЕ СЮДА ВАШ КОНФИГ 🔴🔴🔴
   const firebaseConfig = {
   apiKey: "AIzaSyCjmU7YTy6aKzd-0GxnS7DSClLmIFCVrWU",
   authDomain: "coffeemolldb.firebaseapp.com",
@@ -219,7 +189,6 @@
   const db = getFirestore(app);
   const auth = getAuth(app);
   let menuData = [];
-  let allUsers = [];
 
   const MOD_CONFIG = [
       { key: 'milk', label: 'Молоко', def: 50 }, { key: 'alt_milk', label: 'Альт. молоко', def: 400 },
@@ -242,12 +211,7 @@
       document.getElementById('login-screen').style.display = user ? 'none' : 'block';
       document.getElementById('dashboard').style.display = user ? 'block' : 'none';
       if(user) { 
-          initData(); 
-          initSettings();
-          // Загрузка остальных данных
-          loadOrders();
-          loadPromos(); 
-          loadReviews();
+          initData(); initSettings(); loadOrders(); loadPromos(); loadReviews();
       }
   });
 
@@ -306,7 +270,6 @@
       });
   }
 
-  // === ЛОГИКА РЕДАКТИРОВАНИЯ ===
   const modal = new bootstrap.Modal(document.getElementById('editModal'));
   window.openEdit = (id) => {
       const i = menuData.find(x => x._id === id);
@@ -322,7 +285,7 @@
       MOD_CONFIG.forEach(c => {
           const chk = c.key in cm;
           const pr = chk ? (Array.isArray(cm[c.key]) ? cm[c.key][0] : cm[c.key]) : c.def;
-          mc.innerHTML += `<div class="mod-row"><div class="form-check mb-0"><input class="form-check-input mod-cb" type="checkbox" id="m_${c.key}" data-key="${c.key}" ${chk?'checked':''}><label class="form-check-label small" for="m_${c.key}">${c.label}</label></div><input type="number" class="form-control form-control-sm mod-price-inp" id="mp_${c.key}" value="${pr}"></div>`;
+          mc.innerHTML += `<div class="d-flex justify-content-between align-items-center mb-1 border-bottom pb-1"><div class="form-check mb-0"><input class="form-check-input mod-cb" type="checkbox" id="m_${c.key}" data-key="${c.key}" ${chk?'checked':''}><label class="form-check-label small" for="m_${c.key}">${c.label}</label></div><input type="number" class="form-control form-control-sm text-end" style="width:80px" id="mp_${c.key}" value="${pr}"></div>`;
       });
       document.getElementById('volumes-container').innerHTML = '';
       (i.volumes || []).forEach(v => addVolumeRow(v.n, v.p));
@@ -349,12 +312,11 @@
       modal.hide();
   }
 
-  // === 2. ЗАКАЗЫ (УЛУЧШЕНО) ===
+  // === 2. ЗАКАЗЫ (АДАПТИРОВАНО ПОД BOT.PY) ===
   window.loadOrders = async () => {
       const cont = document.getElementById('orders-container');
       cont.innerHTML = '<div class="text-center p-3 text-muted">Загрузка заказов...</div>';
       try {
-          // Получаем все заказы (без сортировки на сервере, чтобы избежать ошибки индекса)
           const q = query(collection(db, "orders"), limit(50));
           const snap = await getDocs(q);
           
@@ -363,148 +325,77 @@
           let orders = [];
           snap.forEach(doc => orders.push({ id: doc.id, ...doc.data() }));
 
-          // Сортировка на клиенте
-          orders.sort((a, b) => {
-              const ta = (a.created_at || a.timestamp || a.date)?.seconds || 0;
-              const tb = (b.created_at || b.timestamp || b.date)?.seconds || 0;
-              return tb - ta;
-          });
+          // Сортировка JS (по дате строки, так надежнее чем timestamp)
+          orders.sort((a, b) => new Date(b.date_str || 0) - new Date(a.date_str || 0));
 
           cont.innerHTML = '';
           orders.forEach(d => {
-              // Пытаемся получить дату из разных полей
-              let dateStr = "Неизвестно";
-              const rawDate = d.created_at || d.timestamp || d.date;
-              if (rawDate && rawDate.seconds) {
-                  dateStr = new Date(rawDate.seconds * 1000).toLocaleString('ru-RU');
-              } else if (rawDate && typeof rawDate === 'string') {
-                  dateStr = rawDate;
+              const od = d.order_data || {};
+              const info = od.info || {};
+              const cart = od.cart || [];
+              const total = d.total_price || od.total || 0;
+              const dateStr = d.date_str || "???";
+
+              let items = '<span class="text-muted">Пусто</span>';
+              if (Array.isArray(cart) && cart.length > 0) {
+                  items = cart.map(i => `<span class="badge bg-light text-dark border me-1">${i.name} <span class="text-secondary">x${i.qty}</span></span>`).join('');
               }
 
-              // Состав заказа
-              let items = '<span class="text-muted">Пустой заказ</span>';
-              if (d.cart && Array.isArray(d.cart) && d.cart.length > 0) {
-                  items = d.cart.map(i => `<span class="badge bg-light text-dark border me-1">${i.name} <span class="text-secondary">x${i.qty}</span></span>`).join('');
-              }
-
-              // Инфо о клиенте
-              const info = d.info || {};
-              
               cont.innerHTML += `
               <div class="card card-shadow order-card p-3 mb-3">
                   <div class="d-flex justify-content-between small text-muted mb-2">
                       <span><i class="far fa-clock"></i> ${dateStr}</span>
-                      <span class="badge bg-light text-dark border">${d.status || 'Новый'}</span>
+                      <span class="badge bg-light text-dark border">${d.status || 'new'}</span>
                   </div>
                   <div class="d-flex justify-content-between">
                       <div>
                           <div class="fw-bold">${info.name || 'Клиент'} <small class="text-muted fw-normal">${info.phone || ''}</small></div>
-                          <div class="small text-muted mb-2">${info.deliveryType || 'Самовывоз'} • ${info.paymentType || 'Оплата'}</div>
+                          <div class="small text-muted mb-2">${info.deliveryType || ''} • ${info.paymentType || ''}</div>
                       </div>
-                      <div class="fs-5 fw-bold text-success">${d.total || 0} ₸</div>
+                      <div class="fs-5 fw-bold text-success">${total} ₸</div>
                   </div>
                   <div class="mb-2">${items}</div>
                   ${info.address ? `<div class="small text-muted bg-light p-1 rounded"><i class="fas fa-map-marker-alt"></i> ${info.address}</div>` : ''}
                   ${info.comment ? `<div class="small text-danger mt-1">"${info.comment}"</div>` : ''}
+                  ${info.promoCode ? `<div class="small text-success mt-1">Промокод: ${info.promoCode}</div>` : ''}
               </div>`;
           });
       } catch (e) {
           console.error("Orders Error:", e);
-          cont.innerHTML = `<div class="alert alert-warning small">Ошибка: ${e.message}.<br>Проверьте консоль.</div>`;
+          cont.innerHTML = `<div class="alert alert-warning small">Ошибка: ${e.message}</div>`;
       }
   }
 
-  // === 3. КЛИЕНТЫ ===
-  window.loadUsers = async () => {
-      const cont = document.getElementById('users-container');
-      cont.innerHTML = '<div class="text-center p-3 text-muted">Загрузка клиентов...</div>';
-      try {
-          const snap = await getDocs(collection(db, "users"));
-          allUsers = [];
-          snap.forEach(doc => allUsers.push({id: doc.id, ...doc.data()}));
-          
-          allUsers.sort((a,b) => (b.total_spent || 0) - (a.total_spent || 0));
-          filterUsers();
-      } catch(e) {
-          cont.innerHTML = '<div class="alert alert-danger small">Нет доступа к коллекции users</div>';
-      }
-  }
-
-  window.filterUsers = () => {
-      const q = document.getElementById('user-search').value.toLowerCase();
-      const cont = document.getElementById('users-container');
-      cont.innerHTML = '';
-      
-      const filtered = allUsers.filter(u => 
-          (u.username && u.username.toLowerCase().includes(q)) || 
-          (u.phone && u.phone.includes(q)) ||
-          (u.first_name && u.first_name.toLowerCase().includes(q))
-      ).slice(0, 50);
-
-      if(filtered.length === 0) { cont.innerHTML = '<div class="text-center text-muted p-3">Ничего не найдено</div>'; return; }
-
-      filtered.forEach(u => {
-          const name = u.username || u.first_name || "Клиент";
-          const initial = name[0].toUpperCase();
-          const spent = u.total_spent || 0;
-          const points = u.bonus_points || 0;
-          
-          cont.innerHTML += `
-          <div class="card card-shadow p-3 mb-2">
-              <div class="d-flex justify-content-between align-items-center">
-                  <div class="d-flex align-items-center">
-                      <div class="user-avatar">${initial}</div>
-                      <div>
-                          <div class="fw-bold">${name}</div>
-                          <div class="small text-muted">${u.phone || 'Нет телефона'}</div>
-                      </div>
-                  </div>
-                  <div class="text-end">
-                      <div class="fw-bold text-success">${spent.toLocaleString()} ₸</div>
-                      <div class="small text-muted cursor-pointer text-decoration-underline" onclick="editPoints('${u.id}', ${points})">Баллы: ${points}</div>
-                  </div>
-              </div>
-          </div>`;
-      });
-  }
-
-  window.editPoints = async (uid, current) => {
-      const newVal = prompt("Баланс баллов:", current);
-      if(newVal !== null && !isNaN(parseInt(newVal))) {
-          await updateDoc(doc(db, "users", uid), { bonus_points: parseInt(newVal) });
-          loadUsers();
-      }
-  }
-
-  // === 4. ПРОМОКОДЫ (ИСПРАВЛЕНО) ===
+  // === 3. ПРОМОКОДЫ (АДАПТИРОВАНО: ID = CODE) ===
   window.loadPromos = async () => {
       const cont = document.getElementById('promos-container');
       cont.innerHTML = '<div class="text-center text-muted">Загрузка...</div>';
       try {
           const snap = await getDocs(collection(db, "promocodes"));
           cont.innerHTML = '';
-          
-          if(snap.empty) { cont.innerHTML = '<div class="text-muted p-3">Список промокодов пуст</div>'; return; }
+          if(snap.empty) { cont.innerHTML = '<div class="text-muted p-3">Список пуст</div>'; return; }
           
           snap.forEach(d => {
               const p = d.data();
-              // Проверка массива users_used (он может быть undefined)
-              const usedCount = (p.users_used && Array.isArray(p.users_used)) ? p.users_used.length : 0;
-              const limitStr = p.limit ? ` из ${p.limit}` : '';
+              // Бот не хранит список юзеров в промокоде, он просто уменьшает лимит.
+              // Поэтому мы показываем ОСТАТОК лимита.
+              const limit = p.limit || 0;
+              const disc = p.discount || 0;
+              const code = d.id; // ID документа это и есть код!
               
               cont.innerHTML += `
               <div class="card card-shadow p-3 mb-2 d-flex flex-row justify-content-between align-items-center">
                   <div>
-                      <span class="promo-code">${p.code}</span>
-                      <span class="badge bg-success ms-2">-${p.discount}%</span>
-                      <div class="small text-muted mt-1">Использовано: <b>${usedCount}</b>${limitStr}</div>
+                      <span class="promo-code">${code}</span>
+                      <span class="badge bg-success ms-2">-${disc}%</span>
+                      <div class="small text-muted mt-1">Осталось активаций: <b>${limit}</b></div>
                   </div>
                   <button class="btn btn-sm btn-outline-danger" onclick="delPromo('${d.id}')"><i class="fas fa-trash"></i></button>
               </div>`;
           });
       } catch(e) {
           console.error(e);
-          cont.innerHTML = '<div class="alert alert-danger small">Ошибка загрузки промокодов</div>';
+          cont.innerHTML = '<div class="alert alert-danger small">Ошибка загрузки</div>';
       }
   }
 
@@ -513,13 +404,12 @@
       const disc = parseInt(document.getElementById('new-promo-disc').value);
       const limitVal = parseInt(document.getElementById('new-promo-limit').value) || 100;
       
-      if(!code || !disc) return alert("Введите код и размер скидки");
+      if(!code || !disc) return alert("Введите код и скидку");
       
-      await addDoc(collection(db, "promocodes"), {
-          code: code,
-          discount: disc,
+      // Бот ищет промокоды по ID документа. Используем setDoc вместо addDoc.
+      await setDoc(doc(db, "promocodes", code), {
           limit: limitVal,
-          users_used: [], // Инициализируем массив
+          discount: disc,
           created_at: new Date()
       });
       
@@ -528,18 +418,17 @@
   }
 
   window.delPromo = async (id) => {
-      if(confirm("Удалить этот промокод?")) {
+      if(confirm("Удалить промокод?")) {
           await deleteDoc(doc(db, "promocodes", id));
           loadPromos();
       }
   }
 
-  // === 5. ОТЗЫВЫ (ИСПРАВЛЕНО) ===
+  // === 4. ОТЗЫВЫ (АДАПТИРОВАНО ПОД BOT.PY) ===
   window.loadReviews = async () => {
       const cont = document.getElementById('reviews-container');
       cont.innerHTML = '<div class="text-center text-muted">Загрузка отзывов...</div>';
       try {
-          // Без сортировки на сервере для надежности
           const q = query(collection(db, "reviews"), limit(50));
           const snap = await getDocs(q);
           
@@ -548,53 +437,46 @@
           let reviews = [];
           snap.forEach(d => reviews.push({ id: d.id, ...d.data() }));
           
-          // Сортировка JS
-          reviews.sort((a,b) => {
-             const da = a.created_at || a.date;
-             const db = b.created_at || b.date;
-             const ta = da?.seconds || 0;
-             const tb = db?.seconds || 0;
-             return tb - ta;
-          });
+          reviews.sort((a,b) => new Date(b.date_str || 0) - new Date(a.date_str || 0));
 
           cont.innerHTML = '';
           reviews.forEach(r => {
-              // Ищем поле даты
-              let dateStr = "";
-              const rawDate = r.created_at || r.date || r.timestamp;
-              if (rawDate && rawDate.seconds) dateStr = new Date(rawDate.seconds * 1000).toLocaleDateString();
-
-              // Ищем текст и рейтинг
-              const text = r.text || r.comment || r.review || 'Без текста';
-              const rating = r.rating || r.stars || 5;
-              const user = r.user_name || r.username || `ID: ${r.user_id}`;
-              const starsHtml = '<i class="fas fa-star text-warning"></i>'.repeat(rating) + '<i class="far fa-star text-warning"></i>'.repeat(5 - rating);
+              const dateStr = r.date_str || "???";
+              const sRate = r.service_rate || 0;
+              const fRate = r.food_rate || 0;
+              const avg = Math.round((sRate + fRate) / 2) || 5;
+              const comment = r.comment || r.text || 'Без комментария';
+              const tips = r.tips ? `💰 Чаевые: ${r.tips} ₸` : '';
+              
+              const starsHtml = '<i class="fas fa-star text-warning"></i>'.repeat(avg) + '<i class="far fa-star text-warning"></i>'.repeat(5 - avg);
               
               cont.innerHTML += `
               <div class="card card-shadow p-3 mb-2">
                   <div class="d-flex justify-content-between mb-2">
-                      <span class="fw-bold small">${user}</span>
+                      <span class="fw-bold small">${r.name || 'Гость'}</span>
                       <span class="text-muted small">${dateStr}</span>
                   </div>
-                  <div class="mb-2">${starsHtml}</div>
-                  <p class="mb-0 text-secondary small">${text}</p>
+                  <div class="mb-2">
+                      ${starsHtml} 
+                      <span class="ms-2 small text-muted">(Еда: ${fRate}, Сервис: ${sRate})</span>
+                  </div>
+                  <p class="mb-1 text-secondary small">${comment}</p>
+                  <div class="small fw-bold text-success">${tips}</div>
               </div>`;
           });
       } catch (e) {
           console.error("Reviews Error:", e);
-          cont.innerHTML = `<div class="alert alert-warning small">Ошибка загрузки отзывов: ${e.message}</div>`;
+          cont.innerHTML = `<div class="alert alert-warning small">Ошибка: ${e.message}</div>`;
       }
   }
 
-  // Экспорт функций
+  // Экспорт
   window.loadOrders = window.loadOrders;
-  window.loadUsers = window.loadUsers;
-  window.filterUsers = window.filterUsers;
-  window.editPoints = window.editPoints;
   window.loadPromos = window.loadPromos;
   window.addPromo = window.addPromo;
   window.delPromo = window.delPromo;
   window.loadReviews = window.loadReviews;
+  window.loadUsers = () => {}; // Заглушка, если вкладка "Клиенты" не нужна или не реализована
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
