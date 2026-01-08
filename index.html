@@ -5,6 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CoffeeMoll</title>
 
+<!-- FIREBASE SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // 🔴🔴🔴 ВСТАВЬТЕ СЮДА ВАШ КОНФИГ ИЗ FIREBASE CONSOLE 🔴🔴🔴
+  const firebaseConfig = {
+  apiKey: "AIzaSyCjmU7YTy6aKzd-0GxnS7DSClLmIFCVrWU",
+  authDomain: "coffeemolldb.firebaseapp.com",
+  projectId: "coffeemolldb",
+  storageBucket: "coffeemolldb.firebasestorage.app",
+  messagingSenderId: "599284136702",
+  appId: "1:599284136702:web:d84ef0a10a1dde699743af",
+  measurementId: "G-W4CDJ2PDX0"
+};
+
+  // Инициализация Firebase
+  try {
+      const app = initializeApp(firebaseConfig);
+      window.db = getFirestore(app);
+      window.collection = collection;
+      window.getDocs = getDocs;
+      window.doc = doc;
+      window.getDoc = getDoc;
+      window.firebaseReady = true;
+      console.log("Firebase initialized");
+  } catch (e) {
+      console.error("Firebase init error:", e);
+      alert("Ошибка настройки Firebase. Проверьте консоль.");
+  }
+</script>
+
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
@@ -13,173 +45,27 @@
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" as="style" crossorigin>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <script>window.onerror = function(msg, url, line) { return false; };</script>
 
 <style>
 /* --- CSS ПЕРЕМЕННЫЕ --- */
-:root {
---primary-color: #88d100;
---primary-text: #000000;
---bg-color: #F7F8F5;
---card-bg: #ffffff;
---text-main: #111111;
---text-secondary: #6b7280;
---input-bg: #ffffff;
---border-color: #eee;
---font-logo: 'Bebas Neue', cursive;
---font-title: 'Oswald', sans-serif;
---font-body: 'Montserrat', sans-serif;
---header-height: 75px;
-}
-
-/* YANDEX WIDGET STYLES */
-.yandex-widget-container {
-padding: 0 15px 10px 15px;
-}
-
-/* --- АНИМАЦИЯ СКРЫТИЯ (OPTIMIZED) --- */
-#collapsible-header {
-  display: grid;
-  grid-template-rows: 1fr;
-  opacity: 1;
-  /* Включаем аппаратное ускорение */
-  transform: translateZ(0);
-  will-change: grid-template-rows, opacity, margin-bottom;
-  /* Убираем лишние отступы, которые могут дергаться */
-  margin-bottom: 0; 
-  
-  /* Используем более плавную кривую безье */
-  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-#collapsible-header.collapsed {
-  grid-template-rows: 0fr;
-  opacity: 0;
-  pointer-events: none;
-  /* Чуть подтягиваем margin, чтобы убрать микро-щели */
-  margin-bottom: -1px; 
-
-  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-              margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Оптимизация содержимого, чтобы оно не "мигало" */
-.collapsible-inner {
-  overflow: hidden;
-  min-height: 0;
-  /* Скрываем содержимое от рендера, когда оно прозрачное */
-  visibility: visible;
-  transition: visibility 0.3s;
-}
-
-#collapsible-header.collapsed .collapsible-inner {
-  visibility: hidden;
-  transition-delay: 0.2s; /* Ждем пока исчезнет opacity */
-}
-
-.yandex-widget-header {
-font-size: 13px;
-font-weight: 600;
-color: var(--text-secondary);
-cursor: pointer;
-display: flex;
-align-items: center;
-gap: 6px;
-transition: color 0.2s;
-font-family: var(--font-body);
-}
-.yandex-widget-header:active {
-opacity: 0.7;
-}
-.yandex-widget-arrow {
-font-size: 10px;
-transition: transform 0.2s;
-}
-
-.yandex-widget-content {
-margin-top: 15px;
-overflow: visible;
-display: none; /* Изначально скрыт, управляется JS */
-justify-content: center;
-padding-bottom: 5px;
-}
-
-/* Исправленная обертка для бейджа */
-.iframe-wrapper {
-width: 230px;
-height: 80px;
-position: relative;
-margin: 0 auto;
-display: flex;
-align-items: center;
-justify-content: center;
-}
-
-.iframe-wrapper iframe {
-width: 150px;
-height: 50px;
-border: 0;
-transform: scale(1.5);
-transform-origin: center center;
-/* Важно: отключаем перерисовку iframe при скролле */
-will-change: transform;
-backface-visibility: hidden;
-}
-
-/* Logic for light/dark iframe switching */
-.yandex-light { display: block; }
-.yandex-dark { display: none; }
-
-@media (prefers-color-scheme: dark) {
-:root {
---bg-color: #1a1a1a;
---card-bg: #2d2d2d;
---text-main: #ffffff;
---text-secondary: #a0a0a0;
---input-bg: #333333;
---border-color: #444444;
-}
-.header-container { background: #2d2d2d !important; }
-.logo-coffee { color: #ffffff !important; }
-.status-badge { background: #064e3b; color: #a7f3d0; }
-.radio-label, .checkout-radio-label { background: #333 !important; border-color: #444 !important; color: #fff !important; }
-.radio-input:checked + .radio-label, .checkout-radio-input:checked + .checkout-radio-label { background: #064e3b !important; border-color: var(--primary-color) !important; }
-.category-separator { color: var(--text-main); }
-.accordion-header { background: #333 !important; color: #fff !important; }
-.repeat-card { background: #333 !important; border-color: #444 !important; }
-.upsell-no { background: #444 !important; color: #ccc !important; }
-.cart-qty-btn { background: #444 !important; color: #fff !important; }
-.qty-control-btn { background: #444 !important; color: #fff !important; }
-
-/* Yandex Dark Mode Logic */
-.yandex-light { display: none; }
-.yandex-dark { display: block; }
-}
-
-/* --- БАЗОВЫЕ СТИЛИ --- */
+:root { --primary-color: #88d100; --primary-text: #000000; --bg-color: #F7F8F5; --card-bg: #ffffff; --text-main: #111111; --text-secondary: #6b7280; --input-bg: #ffffff; --border-color: #eee; --font-logo: 'Bebas Neue', cursive; --font-title: 'Oswald', sans-serif; --font-body: 'Montserrat', sans-serif; --header-height: 75px; }
+.yandex-widget-container { padding: 0 15px 10px 15px; }
+#collapsible-header { display: grid; grid-template-rows: 1fr; opacity: 1; transform: translateZ(0); will-change: grid-template-rows, opacity, margin-bottom; margin-bottom: 0; transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+#collapsible-header.collapsed { grid-template-rows: 0fr; opacity: 0; pointer-events: none; margin-bottom: -1px; transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.collapsible-inner { overflow: hidden; min-height: 0; visibility: visible; transition: visibility 0.3s; }
+#collapsible-header.collapsed .collapsible-inner { visibility: hidden; transition-delay: 0.2s; }
+.yandex-widget-header { font-size: 13px; font-weight: 600; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: color 0.2s; font-family: var(--font-body); }
+.yandex-widget-header:active { opacity: 0.7; }
+.yandex-widget-arrow { font-size: 10px; transition: transform 0.2s; }
+.yandex-widget-content { margin-top: 15px; overflow: visible; display: none; justify-content: center; padding-bottom: 5px; }
+.iframe-wrapper { width: 230px; height: 80px; position: relative; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.iframe-wrapper iframe { width: 150px; height: 50px; border: 0; transform: scale(1.5); transform-origin: center center; will-change: transform; backface-visibility: hidden; }
+.yandex-light { display: block; } .yandex-dark { display: none; }
+@media (prefers-color-scheme: dark) { :root { --bg-color: #1a1a1a; --card-bg: #2d2d2d; --text-main: #ffffff; --text-secondary: #a0a0a0; --input-bg: #333333; --border-color: #444444; } .header-container { background: #2d2d2d !important; } .logo-coffee { color: #ffffff !important; } .status-badge { background: #064e3b; color: #a7f3d0; } .radio-label, .checkout-radio-label { background: #333 !important; border-color: #444 !important; color: #fff !important; } .radio-input:checked + .radio-label, .checkout-radio-input:checked + .checkout-radio-label { background: #064e3b !important; border-color: var(--primary-color) !important; } .category-separator { color: var(--text-main); } .accordion-header { background: #333 !important; color: #fff !important; } .repeat-card { background: #333 !important; border-color: #444 !important; } .upsell-no { background: #444 !important; color: #ccc !important; } .cart-qty-btn { background: #444 !important; color: #fff !important; } .qty-control-btn { background: #444 !important; color: #fff !important; } .yandex-light { display: none; } .yandex-dark { display: block; } }
 body { font-family: var(--font-body); margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); padding-bottom: 100px; -webkit-tap-highlight-color: transparent; font-weight: 500; transition: background-color 0.3s, color 0.3s; overscroll-behavior-y: none; }
-
-/* ШАПКА (OPTIMIZED) */
-.header-container {
-background: white;
-position: sticky;
-top: 0;
-z-index: 40;
-/* Тень часто вызывает перерисовку при ресайзе. Используем contain для оптимизации */
-contain: layout paint;
-box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-padding-bottom: 5px;
-transition: background 0.3s;
-/* Форсируем GPU слой для всего контейнера */
-transform: translate3d(0,0,0);
-}
-
+.header-container { background: white; position: sticky; top: 0; z-index: 40; contain: layout paint; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding-bottom: 5px; transition: background 0.3s; transform: translate3d(0,0,0); }
 header { padding: 12px 15px 10px 15px; display: flex; justify-content: space-between; align-items: flex-start; }
 .header-left { display: flex; flex-direction: column; }
 h1 { margin: 0; font-family: var(--font-logo); font-size: 34px; letter-spacing: 1px; line-height: 1; text-transform: uppercase; }
@@ -187,30 +73,21 @@ h1 { margin: 0; font-family: var(--font-logo); font-size: 34px; letter-spacing: 
 .separator-line { width: 141px; height: 3px; background-color: var(--primary-color); margin: 3px 0; border-radius: 2px; }
 .motto { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-weight: 600; max-width: 180px; transition: opacity 0.3s ease; }
 .status-badge { font-family: var(--font-body); font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e6fffa; color: #047857; margin-left: 10px;}
-
-/* ПОИСК */
 .search-wrapper { padding: 0 15px 10px 15px; overflow: hidden; }
 #search-input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 15px; outline: none; box-sizing: border-box; font-family: var(--font-body); transition: all 0.2s;}
 #search-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(136, 209, 0, 0.2); }
-
-/* КНОПКА ПОВТОРА */
 #repeat-order-container { padding: 0 15px 10px 15px; display: none; overflow: hidden; }
 .repeat-card { background: var(--card-bg); border: 1px solid var(--primary-color); border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 5px rgba(136, 209, 0, 0.1); }
 .repeat-card:active { transform: scale(0.98); }
 .repeat-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
 .repeat-title { font-size: 13px; font-weight: 700; color: var(--primary-color); text-transform: uppercase; font-family: var(--font-title); }
 .repeat-desc { font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;}
-
-/* НАВИГАЦИЯ */
 .nav-scroller { overflow-x: auto; white-space: nowrap; padding: 5px 15px 15px 15px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .nav-scroller::-webkit-scrollbar { display: none; }
 .nav-btn { display: inline-block; padding: 8px 16px; margin-right: 8px; background: var(--input-bg); border-radius: 20px; font-size: 14px; font-weight: 600; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border-color); transition: all 0.3s; font-family: var(--font-body); }
 .nav-btn.active { background: #000000; color: var(--primary-color); border-color: #000000; transform: scale(1.05); }
-
-/* КАРТОЧКИ */
 .category-section { margin-bottom: 10px; scroll-margin-top: 140px; }
 .category-separator { padding: 0 15px; margin-bottom: 10px; font-size: 24px; font-weight: 700; color: var(--text-main); font-family: var(--font-title); text-transform: uppercase; padding-left: 25px; border-left: 4px solid var(--primary-color); margin-left: 10px; }
-
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 12px; }
 .card { background: var(--card-bg); border-radius: 16px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.1s; position: relative; cursor: pointer; border: 1px solid transparent; overflow: hidden;}
 .card:active { transform: scale(0.97); }
@@ -219,22 +96,17 @@ h1 { margin: 0; font-family: var(--font-logo); font-size: 34px; letter-spacing: 
 .card img { width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 0.4s ease-out; }
 .card img.loaded { opacity: 1; }
 .card.unavailable { opacity: 0.6; filter: grayscale(0.8); pointer-events: none; }
-
 .fav-btn { position: absolute; top: 8px; left: 8px; z-index: 25; font-size: 18px; color: #ccc; transition: 0.2s; background: rgba(255,255,255,0.9); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 .fav-btn.active { color: #ef4444; }
 .card-badge { position: absolute; top: 8px; right: 8px; background: var(--primary-color); color: #000; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; z-index: 20; font-family: var(--font-title); }
 .unavailable-badge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #ef4444; font-size: 14px; text-transform: uppercase; border-radius: 12px; transform: rotate(-15deg); z-index: 10; text-shadow: 0 0 2px white; }
-
 .card h3 { margin: 0 0 5px 0; font-family: var(--font-title); font-size: 16px; font-weight: 700; line-height: 1.2; }
 .card .desc { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
 .price { font-weight: 700; font-size: 15px; color: var(--text-main); font-family: var(--font-body); }
 .add-btn { background-color: var(--primary-color); color: #000; border: none; border-radius: 8px; padding: 6px 10px; font-weight: 700; font-size: 11px; font-family: var(--font-title); text-transform: uppercase; min-width: 70px; }
-
-/* MODAL & CHECKOUT */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
 .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 25px 20px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative; }
-
 .close-icon { position: absolute; top: 20px; right: 20px; width: 32px; height: 32px; background: #f3f4f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #333; font-size: 18px; z-index: 50; }
 .modal-header { margin-bottom: 15px; border-bottom: none; padding-bottom: 0; display: block; text-align: center;}
 .modal-title-block { flex: 1; }
@@ -242,14 +114,12 @@ h1 { margin: 0; font-family: var(--font-logo); font-size: 34px; letter-spacing: 
 .modal-desc { font-size: 13px; color: var(--text-secondary); margin-top: 8px; line-height: 1.5; font-family: var(--font-body); }
 .modal-img-wrapper { width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin-bottom: 15px; background: #f9fafb; display: flex; align-items: center; justify-content: center; }
 .modal-img { width: 100%; height: 100%; object-fit: contain; background-color: #fff; }
-
 .accordion { margin-bottom: 15px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
 .accordion-header { background: #f9fafb; padding: 12px 15px; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-main); font-family: var(--font-body); }
 .accordion-content { display: none; padding: 15px; border-top: 1px solid var(--border-color); background: var(--card-bg); }
 .accordion-arrow { transition: transform 0.2s; }
 .accordion.open .accordion-content { display: block; }
 .accordion.open .accordion-arrow { transform: rotate(180deg); }
-
 .option-group { margin-bottom: 20px; }
 .option-label { font-weight: 700; margin-bottom: 8px; display: block; font-size: 14px; color: var(--text-main); font-family: var(--font-body); }
 .radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
@@ -258,54 +128,33 @@ h1 { margin: 0; font-family: var(--font-logo); font-size: 34px; letter-spacing: 
 .radio-input, .checkout-radio-input { display: none; }
 .radio-input:checked + .radio-label, .checkout-radio-input:checked + .checkout-radio-label { background-color: #f0fdf4; border-color: var(--primary-color); color: #000; box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15); font-weight: 600; }
 .radio-input:checked + .radio-label::before, .checkout-radio-input:checked + .checkout-radio-label::before { border-color: var(--primary-color); background-color: var(--primary-color); box-shadow: inset 0 0 0 3px #fff; }
-
 .checkout-radio-group { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; width: 100% !important; }
-
-/* КНОПКА ПОВТОРА */
 .main-btn { position: fixed; bottom: 20px; left: 15px; right: 15px; background: #000000; color: var(--primary-color); padding: 18px; border-radius: 16px; text-align: center; font-size: 16px; font-weight: 700; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: none; z-index: 900; font-family: var(--font-title); letter-spacing: 1px; transition: transform 0.1s; }
 .main-btn:active { transform: scale(0.98); }
 .modal-add-btn { background: var(--primary-color); color: #000; width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: var(--font-title); letter-spacing: 0.5px; transition: opacity 0.3s; }
 .modal-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
 .modal-footer { margin-top: 20px; display: flex; gap: 10px; align-items: center; }
-
-/* УПРАВЛЕНИЕ КОЛИЧЕСТВОМ В МОДАЛКЕ */
 .qty-control-modal { display: flex; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 5px; height: 52px; box-sizing: border-box; }
 .qty-control-btn { width: 36px; height: 100%; border: none; background: transparent; font-size: 18px; font-weight: bold; cursor: pointer; color: var(--text-main); display: flex; align-items: center; justify-content: center; }
 .qty-control-val { width: 30px; text-align: center; font-weight: bold; font-size: 16px; color: var(--text-main); }
-
-/* КОРЗИНА */
 .cart-item { background: var(--input-bg); border-radius: 12px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); }
 .cart-qty-btn { width: 32px; height: 32px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: #333; }
 .cart-del-btn { color: #ef4444; padding: 0 10px; cursor: pointer; font-size: 18px; display: flex; align-items: center; height: 32px; }
-
-/* Loading & Toast */
 .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-color); z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction: column; text-align: center;}
 .spinner { border: 4px solid #eee; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 50px; height: 50px; animation: spin 0.8s linear infinite; margin-bottom: 20px;}
 .loading-motto { font-size: 13px; color: #666; font-style: italic; font-family: var(--font-body); transition: opacity 0.3s ease; }
-
 #toast-container { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 2100; display: flex; flex-direction: column; gap: 8px; width: auto; pointer-events: none; }
 .toast { background: rgba(30, 30, 30, 0.9); color: white; padding: 10px 20px; border-radius: 25px; font-size: 13px; font-weight: 600; text-align: center; backdrop-filter: blur(5px); animation: fadeUp 0.3s forwards; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-
-.clear-cart-btn {
-background: transparent; border: 1px solid #ef4444; color: #ef4444;
-padding: 8px 15px; border-radius: 10px; font-size: 12px; font-weight: bold;
-margin-bottom: 15px; align-self: flex-end; cursor: pointer;
-}
-
-/* ANIMATIONS */
+.clear-cart-btn { background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 8px 15px; border-radius: 10px; font-size: 12px; font-weight: bold; margin-bottom: 15px; align-self: flex-end; cursor: pointer; }
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes fadeUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 @keyframes pop { 0% { transform: scale(0); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
 @keyframes popIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
-
-/* INPUTS & CONTROLS */
 input, textarea, select { font-family: var(--font-body); width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 14px; box-sizing: border-box; background: var(--input-bg); margin-bottom: 10px; color: var(--text-main); transition: border-color 0.2s; }
 input:focus, textarea:focus, select:focus { border-color: var(--primary-color); outline: none; }
 select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2388d100' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 15px center; background-size: 16px; }
-
 .checkbox-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--border-color); font-family: var(--font-body); color: var(--text-main); }
 .toggle-switch { position: relative; display: inline-block; width: 46px; height: 24px; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; }
@@ -313,11 +162,9 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: var(--primary-color); }
 input:checked + .slider:before { transform: translateX(22px); }
-
 .warning-box { background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; display: none; border: 1px solid #fecaca; line-height: 1.4; font-family: var(--font-body); }
 .info-box { background: #e0f2fe; color: #075985; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; display: none; border: 1px solid #bae6fd; line-height: 1.4; font-family: var(--font-body); }
 .delivery-warning { font-size: 13px; color: #d97706; background: #fef3c7; padding: 8px; border-radius: 8px; margin-top: 5px; display: none; font-family: var(--font-body); }
-
 .upsell-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1100; align-items: center; justify-content: center; }
 .upsell-content { background: var(--card-bg); width: 85%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; animation: popIn 0.3s; }
 .upsell-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
@@ -327,89 +174,18 @@ input:checked + .slider:before { transform: translateX(22px); }
 .upsell-title { font-family: var(--font-title); margin: 0 0 10px 0; letter-spacing: 0.5px; font-size: 20px; font-weight: 700; color: var(--text-main); }
 .upsell-product { font-family: var(--font-title); font-weight: 700; margin-bottom: 5px; letter-spacing: 0.5px; font-size: 18px; color: var(--text-main); }
 .upsell-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 15px; }
-
-/* --- NEW YEAR STYLES --- */
-/* GARLAND */
-.garland {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 30px;
-    z-index: 45;
-    display: flex;
-    justify-content: space-around;
-    overflow: hidden;
-    pointer-events: none;
-}
-.light {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #ccc;
-    margin-top: -5px; /* Half hanging off */
-    animation: flash 2s infinite alternate;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
+.garland { position: absolute; top: 0; left: 0; width: 100%; height: 30px; z-index: 45; display: flex; justify-content: space-around; overflow: hidden; pointer-events: none; }
+.light { width: 10px; height: 10px; border-radius: 50%; background: #ccc; margin-top: -5px; animation: flash 2s infinite alternate; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 .light:nth-child(2n) { animation-duration: 1.5s; animation-delay: 0.5s; }
 .light:nth-child(3n) { animation-duration: 2.5s; animation-delay: 1s; }
 .light:nth-child(4n) { animation-duration: 1.8s; animation-delay: 0.2s; }
-
-.light.red { background: #ff4444; box-shadow: 0 0 5px #ff4444; }
-.light.gold { background: #ffd700; box-shadow: 0 0 5px #ffd700; }
-.light.green { background: #88d100; box-shadow: 0 0 5px #88d100; }
-.light.blue { background: #4488ff; box-shadow: 0 0 5px #4488ff; }
-
-@keyframes flash {
-    0% { opacity: 0.5; transform: scale(0.8); }
-    100% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 10px currentColor; }
-}
-
-/* TREE ON LOGO */
-/* Добавляем relative для MOLL, чтобы позиционировать ёлку от него */
+.light.red { background: #ff4444; box-shadow: 0 0 5px #ff4444; } .light.gold { background: #ffd700; box-shadow: 0 0 5px #ffd700; } .light.green { background: #88d100; box-shadow: 0 0 5px #88d100; } .light.blue { background: #4488ff; box-shadow: 0 0 5px #4488ff; }
+@keyframes flash { 0% { opacity: 0.5; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 10px currentColor; } }
 .logo-moll { position: relative; display: inline-block; } 
-
-.logo-moll::after {
-    content: '🎄';
-    position: absolute;
-    top: 3px;           /* Опускаем вниз (было -10px), чтобы выровнять с текстом */
-    left: 100%;         /* Ставим справа от слова MOLL */
-    margin-left: 5px;   /* Небольшой отступ от буквы L */
-    font-size: 24px;    /* Размер ёлки */
-    
-    /* Анимация покачивания */
-    transform-origin: bottom center;
-    animation: tree-sway 2s ease-in-out infinite;
-    pointer-events: none;
-}
-
-/* SNOWFALL */
-.snowflake {
-    position: fixed;
-    top: -10px;
-    color: #b0dfff; /* Light blue-ish white */
-    font-size: 1em;
-    font-family: Arial, sans-serif;
-    text-shadow: 0 0 1px #000;
-    user-select: none;
-    z-index: 9999;
-    pointer-events: none;
-    animation-name: fall;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-    opacity: 0.8;
-}
-
-@keyframes fall {
-    to { transform: translateY(100vh) rotate(360deg); }
-}
-
-  /* Анимация покачивания для ёлки */
-@keyframes tree-sway {
-    0% { transform: rotate(-10deg); }
-    50% { transform: rotate(10deg); }
-    100% { transform: rotate(-10deg); }
-}
+.logo-moll::after { content: '🎄'; position: absolute; top: 3px; left: 100%; margin-left: 5px; font-size: 24px; transform-origin: bottom center; animation: tree-sway 2s ease-in-out infinite; pointer-events: none; }
+.snowflake { position: fixed; top: -10px; color: #b0dfff; font-size: 1em; font-family: Arial, sans-serif; text-shadow: 0 0 1px #000; user-select: none; z-index: 9999; pointer-events: none; animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite; opacity: 0.8; }
+@keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
+@keyframes tree-sway { 0% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } 100% { transform: rotate(-10deg); } }
 </style>
 </head>
 <body>
@@ -418,7 +194,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 <div class="spinner"></div>
 <div class="loading-title"><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></div>
 <div class="separator-line"></div>
-<div class="loading-motto">Загружаем новогоднее настроение...</div>
+<div class="loading-motto">Загружаем меню...</div>
 </div>
 
 <div id="toast-container"></div>
@@ -593,75 +369,56 @@ input:checked + .slider:before { transform: translateX(22px); }
 const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
-
-// MICRO-PAPA PARSER (Lightweight CSV parser)
-const Papa = {
-parse: function(url, config) {
-// Simplified fetch logic for Google Sheets CSV
-fetch(url)
-.then(response => response.text())
-.then(text => {
-const data = this.parseCSV(text);
-if (config.complete) config.complete({ data: data });
-})
-.catch(err => {
-if (config.error) config.error(err);
-});
-},
-parseCSV: function(str) {
-const arr = [];
-let quote = false; // 'true' means we're inside a quoted field
-for (let row = 0, col = 0, c = 0; c < str.length; c++) {
-let cc = str[c], nc = str[c+1];
-arr[row] = arr[row] || [];
-arr[row][col] = arr[row][col] || '';
-if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; }
-else if (cc == '"') { quote = !quote; }
-else if (cc == ',' && !quote) { ++col; }
-else if (cc == '\r' && !quote && nc == '\n') { ++row; col = 0; ++c; }
-else if (cc == '\n' && !quote) { ++row; col = 0; }
-else { arr[row][col] += cc; }
-}
-
-// Convert to array of objects (Header: true logic)
-if (arr.length < 2) return arr;
-const headers = arr[0].map(h => h.trim());
-const result = [];
-for(let i=1; i<arr.length; i++) {
-const row = arr[i];
-if(row.length < headers.length) continue;
-let obj = {};
-let hasData = false;
-headers.forEach((h, idx) => {
-const val = row[idx] || "";
-if(val.trim()) hasData = true;
-obj[h] = val;
-});
-if(hasData) result.push(obj);
-}
-return result;
-}
-};
-
-// Config
-const RAW_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ702KYrLAJsR_peGN2CjJZ28FNqeZyNXN_7nLv6pMpEPMRDxLKqqkXKqbGm8NvWIU0NOCoy7q_jRgN/pub?gid=0&single=true&output=csv";
 const BACKEND_URL = "https://coffeemoll.onrender.com";
-
-// State
-const cacheBuster = new Date().getTime();
-const GOOGLE_SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent(RAW_SHEET_URL + "&t=" + cacheBuster);
 const CATEGORY_ORDER = ["ИЗБРАННОЕ", "Популярное", "Сезонное", "Кофе", "Чай", "Десерты", "Холодные напитки", "Молочные коктейли", "Завтраки", "Круассаны", "Хот-доги", "Салаты", "Пицца", "Пасты", "Закуски"];
 
-let PRICES = { alt_milk: 400, add_milk: 50, add_cream: 50, add_honey: 100, add_lemon: 50, syrup: 0, shot: 300, hd_cheese: 150, hd_jalapeno: 150, hd_onion: 150, egg: 70, sauce: 150, cinnamon: 0 };
+// --- CONSTANTS ---
+// These will be loaded/updated from Firebase, but defaults are good to have
+let PRICES = {
+    alt_milk: 400,
+    add_milk: 50,
+    add_cream: 50,
+    add_honey: 100,
+    add_lemon: 50,
+    syrup: 0,
+    shot: 300,
+    hd_cheese: 150,
+    hd_jalapeno: 150,
+    hd_onion: 150,
+    egg: 70,
+    sauce: 150,
+    cinnamon: 0
+};
 let SYRUPS = ["Карамель", "Ваниль", "Орех"];
 let SAUCES = ["Кетчуп"];
 let ALT_MILKS = ["Кокосовое"];
 let PROMOS_ENABLED = true;
 let OPEN_HOUR = 9;
 let CLOSE_HOUR = 23;
-
-const MOD_LABELS = { milk: "Доп. молоко", cream: "Доп. сливки", honey: "Мед", lemon: "Лимон", syrup: "Сироп", shot: "Доп. шот", egg: "Доп. яйцо", cheese: "Сыр", jalapeno: "Халапеньо", onion: "Жареный лук", sauce: "Соус", alt_milk: "Растительное молоко", cinnamon: "Корица" };
-const UPSELL_RULES = { "КОФЕ": ["КРУАССАНЫ", "ДЕСЕРТЫ"], "СЕЗОННОЕ": ["КРУАССАНЫ", "ДЕСЕРТЫ"], "КРУАССАНЫ": ["СЕЗОННОЕ"], "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"], "ЗАВТРАКИ": ["КОФЕ", "СЕЗОННОЕ"] };
+const MOD_LABELS = {
+    milk: "Доп. молоко",
+    cream: "Доп. сливки",
+    honey: "Мед",
+    lemon: "Лимон",
+    syrup: "Сироп",
+    shot: "Доп. шот",
+    egg: "Доп. яйцо",
+    cheese: "Сыр",
+    jalapeno: "Халапеньо",
+    onion: "Жареный лук",
+    sauce: "Соус",
+    alt_milk: "Растительное молоко",
+    cinnamon: "Корица"
+};
+const UPSELL_RULES = {
+    "КОФЕ": ["КРУАССАНЫ", "ДЕСЕРТЫ"],
+    "СЕЗОННОЕ": ["КРУАССАНЫ", "ДЕСЕРТЫ"],
+    "КРУАССАНЫ": ["СЕЗОННОЕ"],
+    "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"],
+    "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"],
+    "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"],
+    "ЗАВТРАКИ": ["КОФЕ", "СЕЗОННОЕ"]
+};
 
 let menuData = [];
 let cart = [];
@@ -673,55 +430,46 @@ let appliedPromoCode = "";
 let upsellShown = false;
 let currentUpsellItem = null;
 
-// Loading Texts Logic (NEW YEAR EDITION)
-const loadingTexts = [
-"Настраиваем гирлянду...",
-"Варим новогодний какао...",
-"Пакуем подарки...",
-"Ждем Деда Мороза...",
-"Греем круассаны..."
-];
+// Loading Animation
+const loadingTexts = ["Настраиваем гирлянду...", "Варим новогодний какао...", "Пакуем подарки...", "Ждем Деда Мороза...", "Греем круассаны..."];
 let textIdx = 0;
 const mottoEl = document.querySelector('.loading-motto');
-
 const loadingInterval = setInterval(() => {
-if(!mottoEl) return;
-mottoEl.style.opacity = 0;
-setTimeout(() => {
-textIdx = (textIdx + 1) % loadingTexts.length;
-mottoEl.innerText = loadingTexts[textIdx];
-mottoEl.style.opacity = 1;
-}, 150);
+    if (!mottoEl) return;
+    mottoEl.style.opacity = 0;
+    setTimeout(() => {
+        textIdx = (textIdx + 1) % loadingTexts.length;
+        mottoEl.innerText = loadingTexts[textIdx];
+        mottoEl.style.opacity = 1;
+    }, 150);
 }, 2000);
 
 // --- UTILS ---
 function getUserId() {
-// Try getting from Telegram first
-if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
-return tg.initDataUnsafe.user.id;
-}
-// Fallback: try getting from URL params (passed from bot.py)
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.has('uid')) {
-return urlParams.get('uid');
-}
-return 0;
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+        return tg.initDataUnsafe.user.id;
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('uid')) {
+        return urlParams.get('uid');
+    }
+    return 0;
 }
 
 function showToast(msg, type = 'normal') {
-const cont = document.getElementById('toast-container');
-const toast = document.createElement('div');
-toast.className = `toast ${type}`;
-toast.innerHTML = msg;
-cont.appendChild(toast);
-
-if(type === 'error') tg.HapticFeedback.notificationOccurred('error');
-else tg.HapticFeedback.impactOccurred('light');
-
-setTimeout(() => { toast.remove(); }, 3000);
+    const cont = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = msg;
+    cont.appendChild(toast);
+    if (type === 'error') tg.HapticFeedback.notificationOccurred('error');
+    else tg.HapticFeedback.impactOccurred('light');
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
 }
 
-// --- NEW YEAR EFFECTS ---
+// --- VISUAL EFFECTS ---
 function createSnow() {
     const snowContainer = document.createElement('div');
     snowContainer.id = 'snow-container';
@@ -731,1005 +479,892 @@ function createSnow() {
     snowContainer.style.width = '100%';
     snowContainer.style.height = '100%';
     snowContainer.style.pointerEvents = 'none';
-    snowContainer.style.zIndex = '9999'; // On top of everything
+    snowContainer.style.zIndex = '9999';
     document.body.appendChild(snowContainer);
-
     const flakes = ['❄', '❅', '❆', '•'];
-    
-    // Reduce flake count for mobile performance
     const flakeCount = window.innerWidth < 600 ? 15 : 30;
-
     for (let i = 0; i < flakeCount; i++) {
         const flake = document.createElement('div');
         flake.className = 'snowflake';
         flake.innerText = flakes[Math.floor(Math.random() * flakes.length)];
-        
-        // Random positioning
         flake.style.left = Math.random() * 100 + 'vw';
-        flake.style.animationDuration = (Math.random() * 3 + 4) + 's'; // 4-7s (slower)
+        flake.style.animationDuration = (Math.random() * 3 + 4) + 's';
         flake.style.fontSize = (Math.random() * 10 + 10) + 'px';
         flake.style.opacity = Math.random() * 0.7 + 0.3;
         flake.style.animationDelay = Math.random() * 5 + 's';
-        
         snowContainer.appendChild(flake);
     }
 }
 
 function createGarland() {
     const header = document.querySelector('.header-container');
-    if(!header) return;
-    
+    if (!header) return;
     const garland = document.createElement('div');
     garland.className = 'garland';
-    
     const colors = ['red', 'gold', 'green', 'blue'];
     const width = window.innerWidth;
-    const count = Math.floor(width / 30); // One light every 30px
-    
-    for(let i=0; i<count; i++) {
+    const count = Math.floor(width / 30);
+    for (let i = 0; i < count; i++) {
         const light = document.createElement('div');
         light.className = `light ${colors[i % colors.length]}`;
         garland.appendChild(light);
     }
-    
     header.prepend(garland);
 }
 
-// --- SCROLL OPTIMIZATION (UPDATED) ---
-// Возвращена логика с блокировкой (Lock) для предотвращения прыжков при медленном скролле
+// --- SCROLL LOGIC ---
 function updateHeaderHeight() {
     let lastScrollTop = 0;
     const collapsible = document.getElementById('collapsible-header');
-    
-    // Флаги оптимизации
-    let isLocked = false; 
+    let isLocked = false;
     let ticking = false;
-    const tolerance = 5; // Чуть уменьшили порог для отзывчивости
-
-    // Функция блокировки (Debounce анимации)
+    const tolerance = 5;
     const lockAnimation = () => {
         isLocked = true;
-        // Время блокировки = времени анимации CSS (300ms)
-        setTimeout(() => { 
+        setTimeout(() => {
             isLocked = false;
-            // Синхронизируем позицию после разблокировки
             lastScrollTop = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
         }, 300);
     };
-
     window.addEventListener('scroll', () => {
         if (!ticking) {
             window.requestAnimationFrame(() => {
                 const st = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
-                
-                // 1. Если заблокировано - выходим сразу, экономим ресурсы CPU
                 if (isLocked) {
                     ticking = false;
                     return;
                 }
-
-                // 2. Всегда показывать в самом верху (защита от "застревания")
                 if (st < 10) {
-                    if (collapsible.classList.contains('collapsed')) {
-                        collapsible.classList.remove('collapsed');
-                    }
+                    if (collapsible.classList.contains('collapsed')) collapsible.classList.remove('collapsed');
                     lastScrollTop = st;
                     ticking = false;
                     return;
                 }
-
                 const diff = st - lastScrollTop;
-
-                // 3. Основная логика
                 if (Math.abs(diff) > tolerance) {
                     if (diff > 0) {
-                        // Скролл ВНИЗ -> Скрываем
                         if (!collapsible.classList.contains('collapsed')) {
                             collapsible.classList.add('collapsed');
                             lockAnimation();
                         }
                     } else {
-                        // Скролл ВВЕРХ -> Показываем
                         if (collapsible.classList.contains('collapsed')) {
                             collapsible.classList.remove('collapsed');
                             lockAnimation();
                         }
                     }
-                    // Обновляем якорь только если произошло действие или значительный сдвиг
                     lastScrollTop = st;
                 }
-                
                 updateScrollSpy();
                 ticking = false;
             });
             ticking = true;
         }
-    }, { passive: true }); // Важно: passive: true улучшает производительность скролла
+    }, {
+        passive: true
+    });
 }
 
 function updateScrollSpy() {
-const sections = document.querySelectorAll('.category-section');
-const navBtns = document.querySelectorAll('.nav-btn');
-let current = '';
-
-if (window.scrollY < 100 && sections.length > 0) {
-current = sections[0].getAttribute('id');
-} else {
-sections.forEach(section => {
-const sectionTop = section.offsetTop;
-if (window.scrollY >= sectionTop - 180) {
-current = section.getAttribute('id');
-}
-});
-}
-
-navBtns.forEach(btn => {
-btn.classList.remove('active');
-if (current && btn.getAttribute('href') === '#' + current) {
-btn.classList.add('active');
-btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-}
-});
-}
-
-// --- DATA FETCHING ---
-function parsePrice(val) { return val ? parseInt(String(val).replace(/\D/g, ''), 10) || 0 : 0; }
-function getVal(item, keys) {
-for (let k of keys) {
-if (item[k] !== undefined) return item[k];
-const foundKey = Object.keys(item).find(objKey => objKey.trim().toLowerCase() === k.toLowerCase());
-if (foundKey) return item[foundKey];
-}
-return "";
-}
-
-function initMenu() {
-createSnow();
-createGarland();
-updateHeaderHeight();
-Papa.parse(GOOGLE_SHEET_URL, {
-download: true, header: true, skipEmptyLines: true,
-complete: function(results) {
-clearInterval(loadingInterval); // Stop animation
-document.getElementById('loading-screen').style.display = 'none';
-if (!results.data || results.data.length === 0) { document.getElementById('error-screen').style.display = 'flex'; return; }
-
-processData(results.data);
-renderMenu();
-checkRepeatOrder();
-},
-error: function() { clearInterval(loadingInterval); document.getElementById('loading-screen').style.display = 'none'; document.getElementById('error-screen').style.display = 'flex'; }
-});
-}
-
-function processData(rows) {
-// --- PARSE SETTINGS ---
-const settingsRow = rows.find(row => { const id = getVal(row, ['id', 'Идентификатор']); return id && id.toUpperCase() === 'SETTINGS'; });
-if(settingsRow) {
-const desc = getVal(settingsRow, ['description', 'Описание']);
-desc.split(';').forEach(pair => {
-const [k, v] = pair.split('=');
-if(k && v) {
-const key = k.trim(); const val = v.trim();
-if (key === 'alt_milks') ALT_MILKS = val.split(',');
-if (key === 'syrup_names') SYRUPS = val.split(',');
-if (key === 'sauce_names') SAUCES = val.split(',');
-if (key.startsWith('price_') || key.startsWith('hd_') || key === 'br_egg') PRICES[key.replace('price_', '')] = parsePrice(val);
-if (key === 'price_cinnamon') PRICES.cinnamon = parsePrice(val);
-if (key === 'enable_promos') PROMOS_ENABLED = (val.toLowerCase() === 'true');
-if (key === 'open_time') OPEN_HOUR = parseInt(val.split(':')[0]);
-if (key === 'close_time') CLOSE_HOUR = parseInt(val.split(':')[0]);
-}
-});
-}
-
-if (SYRUPS[0] !== "Нет") SYRUPS.unshift("Нет");
-if (SAUCES[0] !== "Нет") SAUCES.unshift("Нет");
-const promoContainer = document.getElementById('promo-container');
-if (promoContainer) promoContainer.style.display = PROMOS_ENABLED ? 'flex' : 'none';
-
-// --- PARSE PRODUCTS ---
-menuData = rows.map(item => {
-let pid = getVal(item, ['id', 'Идентификатор']).trim();
-if (!pid || pid.toUpperCase() === 'SETTINGS') return null;
-
-let cat = (getVal(item, ['category', 'Категория']).trim() || "Прочее").toUpperCase();
-if (cat.toLowerCase().includes('лимонад')) cat = 'ХОЛОДНЫЕ НАПИТКИ';
-
-let name = getVal(item, ['name', 'Название']).trim().toUpperCase();
-let priceVal = getVal(item, ['price', 'Цена']);
-let desc = getVal(item, ['description', 'Короткое описание']).trim();
-let fullDesc = getVal(item, ['fullDesc', 'Описание', 'full_description', 'Полное описание']) || desc;
-let availVal = getVal(item, ['available', 'В наличии']);
-let isAvail = (String(availVal).trim().toLowerCase() === 'true' || String(availVal).trim().toLowerCase() === 'да');
-let imgUrl = getVal(item, ['image', 'Фото']).trim();
-let popular = (String(getVal(item, ['popular', 'Популярный товар'])).trim().toLowerCase() === 'true');
-let badge = getVal(item, ['badge', 'Метка']);
-
-let cleanPrice = parsePrice(priceVal);
-
-// --- PARSE MODIFIERS ---
-let modsStr = getVal(item, ['modifiers', 'Модификаторы', 'mods']);
-let mods = {};
-if (modsStr) {
-modsStr.split(/[,;]/).forEach(m => {
-let [k, p] = m.split('=');
-if (k) {
-k = k.trim();
-if (k === 'alt_milk' && p && p.includes('|')) { mods[k] = p.split('|').map(val => parsePrice(val)); }
-else {
-let val = p ? parsePrice(p) : (PRICES[k] || PRICES['add_'+k] || 0);
-if (!p && k==='alt_milk') val = PRICES.alt_milk;
-if (!p && k==='shot') val = PRICES.shot;
-if (!p && k==='syrup') val = PRICES.syrup;
-if (!p && k==='sauce') val = PRICES.sauce_paid;
-if (!p && k==='egg') val = PRICES.breakfast_add_egg;
-if (!p && k==='milk') val = PRICES.add_milk;
-if (!p && k==='cream') val = PRICES.add_cream;
-if (!p && k==='honey') val = PRICES.add_honey;
-if (!p && k==='lemon') val = PRICES.add_lemon;
-if (!p && k==='cinnamon') val = PRICES.cinnamon;
-mods[k] = val;
-}
-}
-});
-}
-
-let volumes = [];
-let volStr = getVal(item, ['volumes', 'Варианты']);
-let type = 'simple';
-let hasVolumes = false;
-
-if(volStr && volStr.includes('=')) {
-type = 'complex'; hasVolumes = true;
-volumes = volStr.split(';').map(v => { let p = v.split('='); return { n: p[0].trim(), p: parsePrice(p[1]) }; });
-}
-
-let hasMilk = 'alt_milk' in mods;
-
-return {
-id: pid, cat: cat, name: name, desc: desc, fullDesc: fullDesc,
-img: imgUrl, available: isAvail, popular: popular,
-price: cleanPrice, basePrice: cleanPrice, badge: badge,
-type: type, hasVolumes: hasVolumes, hasMilk: hasMilk, volumes: volumes, mods: mods
-};
-}).filter(i => i);
-
-// Add Popular items
-let popularItems = [];
-menuData.forEach(p => { if (p.popular) { let clone = {...p}; clone.cat = "ПОПУЛЯРНОЕ"; popularItems.push(clone); } });
-menuData = [...popularItems, ...menuData];
-}
-
-function getDisplayData() {
-const favIds = new Set(favorites);
-const favItems = [];
-const normalItems = [];
-const addedToFav = new Set();
-menuData.forEach(p => {
-if (favIds.has(String(p.id)) && !addedToFav.has(p.id)) {
-favItems.push({...p, cat: "ИЗБРАННОЕ"});
-addedToFav.add(p.id);
-}
-normalItems.push(p);
-});
-return [...favItems, ...normalItems];
-}
-
-// --- RENDERING ---
-function renderMenu() {
-const app = document.getElementById('app');
-app.innerHTML = '';
-renderNav();
-checkWorkingHours();
-
-const displayData = getDisplayData();
-const uniqueCats = [...new Set(displayData.map(p => p.cat))];
-
-uniqueCats.sort((a, b) => {
-const idxA = CATEGORY_ORDER.map(c=>c.toUpperCase()).indexOf(a);
-const idxB = CATEGORY_ORDER.map(c=>c.toUpperCase()).indexOf(b);
-return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
-});
-
-uniqueCats.forEach(cat => {
-const section = document.createElement('div');
-section.className = 'category-section';
-section.id = `cat-${cat.replace(/\s+/g, '-')}`;
-section.innerHTML = `<div class="category-separator">${cat}</div>`;
-
-const grid = document.createElement('div');
-grid.className = 'grid';
-
-displayData.filter(p => p.cat === cat).forEach((p, idx) => {
-const card = document.createElement('div');
-card.className = `card ${!p.available ? 'unavailable' : ''}`;
-
-let priceDisplay = p.volumes.length > 0 ? `от ${p.volumes[0].p}` : p.price;
-let imgUrl = p.img || getImageByCategory(p.cat);
-
-let badgeHtml = !p.available ? `<div class="unavailable-badge">Будет позже</div>` : '';
-if(p.badge && p.available) badgeHtml = `<div class="card-badge">${p.badge}</div>`;
-
-const isFav = favorites.includes(String(p.id));
-const favHtml = `<div class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${p.id}')">${isFav ? '♥' : '♡'}</div>`;
-
-card.innerHTML = `
-<div class="card-img-container card-skeleton">
-<img src="${imgUrl}" onload="this.classList.add('loaded'); this.parentElement.classList.remove('card-skeleton')" onerror="this.onerror=null;this.src='${getImageByCategory(p.cat)}';">
-${badgeHtml}
-${favHtml}
-</div>
-<h3>${p.name}</h3>
-<div class="desc">${p.desc || ''}</div>
-<div class="price-row">
-<div class="price">${priceDisplay} ₸</div>
-<button class="add-btn">Выбрать</button>
-</div>
-`;
-card.onclick = () => handleItemClick(p.id);
-grid.appendChild(card);
-});
-section.appendChild(grid);
-app.appendChild(section);
-});
-}
-
-function handleItemClick(id) {
-const product = menuData.find(p => String(p.id) === String(id));
-if (!product || !product.available) return;
-openComplexModal(product);
-}
-
-function getImageByCategory(cat) { const map = { "Кофе": "https://cdn-icons-png.flaticon.com/512/751/751621.png", "Завтраки": "https://cdn-icons-png.flaticon.com/512/2771/2771406.png", "Круассаны": "https://cdn-icons-png.flaticon.com/512/3014/3014528.png", "Салаты": "https://cdn-icons-png.flaticon.com/512/2062/2062296.png", "Чай": "https://cdn-icons-png.flaticon.com/512/3054/3054889.png", "Лимонады": "https://cdn-icons-png.flaticon.com/512/2447/2447137.png", "Коктейли": "https://cdn-icons-png.flaticon.com/512/3081/3081986.png", "Хот-доги": "https://cdn-icons-png.flaticon.com/512/1980/1980788.png", "Пицца": "https://cdn-icons-png.flaticon.com/512/3132/3132693.png", "Закуски": "https://cdn-icons-png.flaticon.com/512/5787/5787016.png", "Сезонное": "https://cdn-icons-png.flaticon.com/512/4421/4421089.png", "Смузи": "https://cdn-icons-png.flaticon.com/512/1147/1147588.png", "Холодные напитки": "https://cdn-icons-png.flaticon.com/512/956/956850.png", "Пасты": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png" }; return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png"; }
-
-function renderNav() {
-const c = document.getElementById('nav-container');
-c.innerHTML = '';
-const displayData = getDisplayData();
-const cats = [...new Set(displayData.map(p => p.cat))];
-cats.forEach(cat => {
-const btn = document.createElement('a');
-btn.className = 'nav-btn';
-btn.innerText = cat;
-btn.href = `#cat-${cat.replace(/\s+/g, '-')}`;
-btn.onclick = (e) => {
-e.preventDefault();
-const el = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`);
-if(el) {
-const y = el.getBoundingClientRect().top + window.scrollY - 150;
-window.scrollTo({top: y, behavior: 'smooth'});
-}
-};
-c.appendChild(btn);
-});
-}
-
-// --- CART LOGIC ---
-function addToCart(item) {
-const existing = cart.find(i => i.name === item.name && JSON.stringify(i.options) === JSON.stringify(item.options));
-if (existing) {
-existing.qty = (existing.qty || 1) + (item.qty || 1);
-existing.priceTotal = existing.price * existing.qty;
-} else {
-cart.push({ ...item, qty: (item.qty || 1), priceTotal: item.price * (item.qty || 1) });
-}
-updateCartUI();
-tg.HapticFeedback.notificationOccurred('success');
-showToast("Добавлено в корзину");
-}
-
-function clearCart() {
-if(confirm('Очистить корзину?')) {
-cart = [];
-updateCartUI();
-closeCheckout();
-tg.HapticFeedback.notificationOccurred('warning');
-}
-}
-
-function removeFromCart(idx) {
-if(confirm('Удалить позицию?')) {
-cart.splice(idx, 1);
-if(cart.length === 0) closeCheckout();
-else renderCartList();
-calculateTotal();
-updateCartUI();
-}
-}
-
-function updateCartUI() {
-const btn = document.getElementById('cart-btn');
-const count = document.getElementById('cart-count');
-const txt = document.getElementById('cart-text');
-
-if (cart.length > 0) {
-const total = cart.reduce((s, i) => s + (i.priceTotal || i.price), 0);
-const qty = cart.reduce((s, i) => s + (i.qty || 1), 0);
-btn.style.display = 'block';
-txt.innerText = `Заказ: ${total} ₸`;
-count.innerText = qty;
-
-count.style.animation = 'none';
-count.offsetHeight;
-count.style.animation = 'pop 0.3s';
-} else {
-btn.style.display = 'none';
-}
-}
-
-// --- CHECKOUT & MODAL ---
-
-function toggleFavorite(e, id) {
-e.stopPropagation();
-id = String(id);
-const idx = favorites.indexOf(id);
-if(idx > -1) favorites.splice(idx, 1);
-else favorites.push(id);
-localStorage.setItem('coffee_favorites', JSON.stringify(favorites));
-renderMenu();
-tg.HapticFeedback.impactOccurred('medium');
-}
-
-function toggleAltMilk() {
-const altRadio = document.querySelector('input[name="milk"][value="alt"]');
-const selector = document.getElementById('alt-milk-selector');
-if (!selector) return;
-selector.style.display = (altRadio && altRadio.checked) ? 'block' : 'none';
-recalcPrice();
-}
-
-function toggleAccordion() {
-const acc = document.getElementById('extras-accordion');
-acc.classList.toggle('open');
-}
-
-function changeModalQty(delta) {
-let newQty = modalQty + delta;
-if(newQty < 1) newQty = 1;
-modalQty = newQty;
-document.getElementById('modal-qty').innerText = modalQty;
-recalcPrice();
-}
-
-function handleSyrupAmount(type) {
-if(type === 'more' && document.getElementById('syrup-more').checked) {
-document.getElementById('syrup-less').checked = false;
-}
-if(type === 'less' && document.getElementById('syrup-less').checked) {
-document.getElementById('syrup-more').checked = false;
-}
-}
-
-function openComplexModal(product) {
-currentModalProduct = product;
-modalQty = 1; // Reset quantity
-const content = document.getElementById('product-modal-content');
-
-let imgHtml = ''; if (product.img) { imgHtml = `<div class="modal-img-wrapper"><img src="${product.img}" class="modal-img" onerror="this.onerror=null;this.src='${getImageByCategory(product.cat)}';"></div>`; }
-let html = `<div class="modal-header"><div class="modal-title-block">${imgHtml}<div class="modal-title">${product.name}</div> <div class="modal-desc">${product.fullDesc || product.desc || ""}</div></div><div class="close-icon" onclick="closeProductModal(true)">✕</div></div>`;
-
-if (product.hasVolumes && product.volumes.length > 0) {
-html += `<div class="option-group"><label class="option-label">Порция</label><div class="radio-group">`;
-product.volumes.forEach((v, i) => { html += `<input type="radio" name="vol" id="v${i}" value="${i}" class="radio-input" ${i===0?'checked':''} onchange="recalcPrice()"><label for="v${i}" class="radio-label">${v.n}<br>${v.p}₸</label>`; });
-html += `</div></div>`;
-} else if (product.fixedVolume) { html += `<div class="option-group"><label class="option-label">Объем: ${product.fixedVolume}</label></div>`; }
-
-if (product.name.includes('ОБЛЕПИХОВЫЙ')) {
-    html += `<div class="option-group" id="strain-block" style="display:none;">
-        <label class="option-label">Процеживать?</label>
-        <div class="radio-group">
-            <input type="radio" name="strain" id="strain-yes" value="Процедить" class="radio-input" checked>
-            <label for="strain-yes" class="radio-label"><div>Процедить<br><span style="font-size:11px; color:var(--text-secondary); font-weight:400;">без ягод</span></div></label>
-            <input type="radio" name="strain" id="strain-no" value="Не процеживать" class="radio-input">
-            <label for="strain-no" class="radio-label"><div>Не процеживать<br><span style="font-size:11px; color:var(--text-secondary); font-weight:400;">с ягодами</span></div></label>
-        </div>
-    </div>`;
-}
-
-if(product.hasMilk) {
-let altMilkDisplayPrice = PRICES.alt_milk;
-if (product.mods && product.mods.alt_milk !== undefined) {
-if (Array.isArray(product.mods.alt_milk)) {
-altMilkDisplayPrice = product.mods.alt_milk[0];
-} else {
-altMilkDisplayPrice = product.mods.alt_milk;
-}
-}
-const altMilkText = altMilkDisplayPrice > 0 ? `+${altMilkDisplayPrice}` : '';
-
-html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group">
-<input type="radio" name="milk" id="m1" value="std" class="radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label">Обычное</label>
-<input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label"><div>Безлактозное<br>+${PRICES.milk_lf_price || 0}</div></label>
-<input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label"><div>Растительное<br><span id="alt-milk-price-display">${altMilkText}</span></div></label>
-</div><div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
-ALT_MILKS.forEach(m => html += `<option value="${m}">${m}</option>`);
-html += `</select></div></div>`;
-}
-
-if ('sauce' in product.mods) {
-let price = product.mods['sauce']; let displayPrice = price > 0 ? `+${price}` : 'Бесплатно';
-html += `<div class="option-group"><label class="option-label">Соус (${displayPrice})</label><select id="sauce-select" onchange="recalcPrice()">`;
-SAUCES.forEach(s => html += `<option value="${s}">${s}</option>`);
-html += `</select></div>`;
-}
-
-// --- SYRUP LOGIC SEPARATION ---
-let syrupHtml = '';
-if ('syrup' in product.mods) {
-// It's still an extra technically for price calculation, but we prepare HTML here
-let price = product.mods['syrup']; let displayPrice = price > 0 ? `+${price}` : 'Бесплатно';
-let sOpts = SYRUPS.map(s=>`<option value="${s}">${s}</option>`).join('');
-
-syrupHtml += `<div class="option-group" style="${String(product.id) === '32' ? 'margin-top:10px; margin-bottom:10px;' : 'margin-top:10px'}">
-<label class="option-label">Сироп (${displayPrice})</label>
-<select id="syr" onchange="recalcPrice()">${sOpts}</select>
-</div>`;
-
-// Syrup sliders
-syrupHtml += `
-<div id="syrup-amount-options" style="display:none; padding-left: 10px; margin-top: 5px; border-left: 2px solid var(--primary-color);">
-<div class="checkbox-row">
-<span>Побольше сиропа</span>
-<label class="toggle-switch">
-<input type="checkbox" id="syrup-more" onchange="handleSyrupAmount('more')">
-<span class="slider"></span>
-</label>
-</div>
-<div class="checkbox-row">
-<span>Поменьше сиропа</span>
-<label class="toggle-switch">
-<input type="checkbox" id="syrup-less" onchange="handleSyrupAmount('less')">
-<span class="slider"></span>
-</label>
-</div>
-</div>`;
-}
-
-// IF PRODUCT IS FRAPPUCCINO (ID 32), INSERT SYRUP HERE (OUTSIDE ACCORDION)
-if (String(product.id) === '32') {
-html += syrupHtml;
-}
-
-let extrasHtml = '';
-let hasExtras = false;
-
-// If it's NOT ID 32, add syrup to accordion content
-if (String(product.id) !== '32' && 'syrup' in product.mods) {
-hasExtras = true;
-extrasHtml += syrupHtml;
-}
-
-const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
-checkboxes.forEach(key => {
-if (key in product.mods) {
-hasExtras = true; let price = product.mods[key];
-extrasHtml += `<div class="checkbox-row"><span>${MOD_LABELS[key]} (+${price})</span><label class="toggle-switch"><input type="checkbox" id="mod-${key}" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
-}
-});
-
-if ('sugar' in product.mods) {
-hasExtras = true;
-extrasHtml += `<div style="margin-top:10px"><label class="option-label">Сахар</label><input type="number" id="sug" placeholder="0" min="0"></div>`;
-}
-
-if (hasExtras) {
-html += `<div class="accordion" id="extras-accordion">
-<div class="accordion-header" onclick="toggleAccordion()">
-<span>Дополнительно</span> <span class="accordion-arrow">▼</span>
-</div>
-<div class="accordion-content">${extrasHtml}</div>
-</div>`;
-}
-
-html += `
-<div class="modal-footer">
-<div class="qty-control-modal">
-<button class="qty-control-btn" onclick="changeModalQty(-1)">−</button>
-<div class="qty-control-val" id="modal-qty">1</div>
-<button class="qty-control-btn" onclick="changeModalQty(1)">+</button>
-</div>
-<button class="modal-add-btn" id="modal-btn" onclick="addComplexToCart()">Добавить</button>
-</div>`;
-
-content.innerHTML = html;
-document.getElementById('product-modal').style.display = 'flex';
-if(product.hasMilk) toggleAltMilk();
-recalcPrice();
-}
-
-function recalcPrice() {
-let p = 0; const prod = currentModalProduct;
-if(prod.hasVolumes && prod.volumes.length > 0) {
-const el = document.querySelector('input[name="vol"]:checked');
-p += el ? prod.volumes[el.value].p : prod.volumes[0].p;
-} else { p += (prod.basePrice || prod.price || 0); }
-
-if(prod.hasMilk) {
-const el = document.querySelector('input[name="milk"]:checked');
-
-let milkPrice = PRICES.alt_milk;
-if (prod.mods && prod.mods.alt_milk !== undefined) {
-if (Array.isArray(prod.mods.alt_milk)) {
-const volEl = document.querySelector('input[name="vol"]:checked');
-const volIndex = volEl ? parseInt(volEl.value) : 0;
-milkPrice = prod.mods.alt_milk[volIndex] !== undefined ? prod.mods.alt_milk[volIndex] : prod.mods.alt_milk[0];
-} else { milkPrice = prod.mods.alt_milk; }
-}
-const labelSpan = document.getElementById('alt-milk-price-display');
-if(labelSpan) labelSpan.innerText = milkPrice > 0 ? `+${milkPrice}` : '';
-
-if(el && el.value === 'alt') {
-p += milkPrice;
-}
-}
-const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
-checkboxes.forEach(key => { const el = document.getElementById(`mod-${key}`); if (el && el.checked) p += prod.mods[key]; });
-if(document.getElementById('sauce-select')) { const val = document.getElementById('sauce-select').value; if (val && val !== "Нет") p += prod.mods['sauce']; }
-
-// SYRUP LOGIC
-if(document.getElementById('syr')) {
-const val = document.getElementById('syr').value;
-const amountContainer = document.getElementById('syrup-amount-options');
-
-if (val && val !== "Нет") {
-p += prod.mods['syrup'];
-// Show amount options
-if(amountContainer) amountContainer.style.display = 'block';
-} else {
-// Hide and reset amount options
-if(amountContainer) {
-amountContainer.style.display = 'none';
-document.getElementById('syrup-more').checked = false;
-document.getElementById('syrup-less').checked = false;
-}
-}
-}
-
-const strainBlock = document.getElementById('strain-block');
-if (strainBlock && prod.name.includes('ОБЛЕПИХОВЫЙ')) {
-    const volEl = document.querySelector('input[name="vol"]:checked');
-    if (volEl) {
-        // Check if volume name contains '0.4'
-        const volName = prod.volumes[volEl.value].n;
-        if (volName.includes('0.4')) {
-            strainBlock.style.display = 'block';
-        } else {
-            strainBlock.style.display = 'none';
-        }
+    const sections = document.querySelectorAll('.category-section');
+    const navBtns = document.querySelectorAll('.nav-btn');
+    let current = '';
+    if (window.scrollY < 100 && sections.length > 0) {
+        current = sections[0].getAttribute('id');
     } else {
-        strainBlock.style.display = 'none';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            if (window.scrollY >= sectionTop - 180) {
+                current = section.getAttribute('id');
+            }
+        });
+    }
+    navBtns.forEach(btn => {
+        btn.classList.remove('active');
+        if (current && btn.getAttribute('href') === '#' + current) {
+            btn.classList.add('active');
+            btn.scrollIntoView({
+                behavior: 'smooth',
+                inline: 'center',
+                block: 'nearest'
+            });
+        }
+    });
+}
+
+// --- DATA FETCHING (FIREBASE REPLACEMENT) ---
+async function initMenu() {
+    createSnow();
+    createGarland();
+    updateHeaderHeight();
+    let checks = 0;
+    while (!window.firebaseReady && checks < 50) {
+        await new Promise(r => setTimeout(r, 100));
+        checks++;
+    }
+
+    try {
+        const settingsSnap = await window.getDoc(window.doc(window.db, "settings", "main"));
+        if (settingsSnap.exists()) {
+            const s = settingsSnap.data();
+            if (s.open_time) OPEN_HOUR = parseInt(s.open_time.split(':')[0]);
+            if (s.close_time) CLOSE_HOUR = parseInt(s.close_time.split(':')[0]);
+            if (s.enable_promos !== undefined) PROMOS_ENABLED = (String(s.enable_promos) === 'true');
+            if (s.alt_milks) ALT_MILKS = Array.isArray(s.alt_milks) ? s.alt_milks : s.alt_milks.split(',');
+            if (s.syrup_names) SYRUPS = Array.isArray(s.syrup_names) ? s.syrup_names : s.syrup_names.split(',');
+            if (s.sauce_names) SAUCES = Array.isArray(s.sauce_names) ? s.sauce_names : s.sauce_names.split(',');
+        }
+
+        if (SYRUPS[0] !== "Нет") SYRUPS.unshift("Нет");
+        if (SAUCES[0] !== "Нет") SAUCES.unshift("Нет");
+        const promoContainer = document.getElementById('promo-container');
+        if (promoContainer) promoContainer.style.display = PROMOS_ENABLED ? 'flex' : 'none';
+
+        const menuSnap = await window.getDocs(window.collection(window.db, "menu"));
+        const rawData = [];
+
+        menuSnap.forEach((doc) => {
+            const data = doc.data();
+            const volumes = data.volumes || [];
+            const hasVolumes = volumes.length > 0;
+
+            rawData.push({
+                id: doc.id,
+                cat: (data.category || "ПРОЧЕЕ").toUpperCase(),
+                name: data.name,
+                desc: data.description,
+                fullDesc: data.full_description || data.description,
+                img: data.image,
+                available: data.available,
+                popular: data.popular,
+                price: data.price || 0,
+                basePrice: data.price || 0,
+                badge: data.badge,
+                type: hasVolumes ? 'complex' : 'simple',
+                hasVolumes: hasVolumes,
+                volumes: volumes,
+                mods: data.modifiers || {},
+                hasMilk: (data.modifiers && 'alt_milk' in data.modifiers)
+            });
+        });
+
+        rawData.forEach(p => {
+            if (p.cat.toLowerCase().includes('лимонад')) p.cat = 'ХОЛОДНЫЕ НАПИТКИ';
+        });
+
+        let popularItems = [];
+        rawData.forEach(p => {
+            if (p.popular) {
+                let clone = { ...p
+                };
+                clone.cat = "ПОПУЛЯРНОЕ";
+                popularItems.push(clone);
+            }
+        });
+        menuData = [...popularItems, ...rawData];
+
+        clearInterval(loadingInterval);
+        document.getElementById('loading-screen').style.display = 'none';
+
+        if (menuData.length === 0) {
+            document.getElementById('error-screen').style.display = 'flex';
+            return;
+        }
+
+        renderMenu();
+        checkRepeatOrder();
+
+    } catch (e) {
+        console.error("Firebase Error:", e);
+        clearInterval(loadingInterval);
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('error-screen').style.display = 'flex';
     }
 }
 
-const btn = document.getElementById('modal-btn');
-if(btn) {
-const total = p * modalQty;
-btn.innerText = `Добавить за ${total} ₸`;
-btn.dataset.price = p;
+function getDisplayData() {
+    const favIds = new Set(favorites);
+    const favItems = [];
+    const normalItems = [];
+    const addedToFav = new Set();
+    menuData.forEach(p => {
+        if (favIds.has(String(p.id)) && !addedToFav.has(p.id)) {
+            favItems.push({ ...p,
+                cat: "ИЗБРАННОЕ"
+            });
+            addedToFav.add(p.id);
+        }
+        normalItems.push(p);
+    });
+    return [...favItems, ...normalItems];
 }
+
+function renderMenu() {
+    const app = document.getElementById('app');
+    app.innerHTML = '';
+    renderNav();
+    checkWorkingHours();
+    const displayData = getDisplayData();
+    const uniqueCats = [...new Set(displayData.map(p => p.cat))];
+    uniqueCats.sort((a, b) => {
+        const idxA = CATEGORY_ORDER.map(c => c.toUpperCase()).indexOf(a);
+        const idxB = CATEGORY_ORDER.map(c => c.toUpperCase()).indexOf(b);
+        return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+    });
+
+    uniqueCats.forEach(cat => {
+        const section = document.createElement('div');
+        section.className = 'category-section';
+        section.id = `cat-${cat.replace(/\s+/g, '-')}`;
+        section.innerHTML = `<div class="category-separator">${cat}</div>`;
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+        displayData.filter(p => p.cat === cat).forEach((p) => {
+            const card = document.createElement('div');
+            card.className = `card ${!p.available ? 'unavailable' : ''}`;
+            let priceDisplay = p.volumes.length > 0 ? `от ${p.volumes[0].p}` : p.price;
+            let imgUrl = p.img || getImageByCategory(p.cat);
+            let badgeHtml = !p.available ? `<div class="unavailable-badge">Будет позже</div>` : (p.badge ? `<div class="card-badge">${p.badge}</div>` : '');
+            const isFav = favorites.includes(String(p.id));
+            const favHtml = `<div class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${p.id}')">${isFav ? '♥' : '♡'}</div>`;
+            card.innerHTML = `<div class="card-img-container card-skeleton"><img src="${imgUrl}" onload="this.classList.add('loaded'); this.parentElement.classList.remove('card-skeleton')" onerror="this.onerror=null;this.src='${getImageByCategory(p.cat)}';">${badgeHtml}${favHtml}</div><h3>${p.name}</h3><div class="desc">${p.desc || ''}</div><div class="price-row"><div class="price">${priceDisplay} ₸</div><button class="add-btn">Выбрать</button></div>`;
+            card.onclick = () => handleItemClick(p.id);
+            grid.appendChild(card);
+        });
+        section.appendChild(grid);
+        app.appendChild(section);
+    });
+}
+
+function handleItemClick(id) {
+    const product = menuData.find(p => String(p.id) === String(id));
+    if (!product || !product.available) return;
+    openComplexModal(product);
+}
+
+function getImageByCategory(cat) {
+    const map = {
+        "Кофе": "https://cdn-icons-png.flaticon.com/512/751/751621.png",
+        "Завтраки": "https://cdn-icons-png.flaticon.com/512/2771/2771406.png",
+        "Круассаны": "https://cdn-icons-png.flaticon.com/512/3014/3014528.png",
+        "Салаты": "https://cdn-icons-png.flaticon.com/512/2062/2062296.png",
+        "Чай": "https://cdn-icons-png.flaticon.com/512/3054/3054889.png",
+        "Лимонады": "https://cdn-icons-png.flaticon.com/512/2447/2447137.png",
+        "Коктейли": "https://cdn-icons-png.flaticon.com/512/3081/3081986.png",
+        "Хот-доги": "https://cdn-icons-png.flaticon.com/512/1980/1980788.png",
+        "Пицца": "https://cdn-icons-png.flaticon.com/512/3132/3132693.png",
+        "Закуски": "https://cdn-icons-png.flaticon.com/512/5787/5787016.png",
+        "Сезонное": "https://cdn-icons-png.flaticon.com/512/4421/4421089.png",
+        "Смузи": "https://cdn-icons-png.flaticon.com/512/1147/1147588.png",
+        "Холодные напитки": "https://cdn-icons-png.flaticon.com/512/956/956850.png",
+        "Пасты": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png"
+    };
+    return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png";
+}
+
+function renderNav() {
+    const c = document.getElementById('nav-container');
+    c.innerHTML = '';
+    const displayData = getDisplayData();
+    const cats = [...new Set(displayData.map(p => p.cat))];
+    cats.forEach(cat => {
+        const btn = document.createElement('a');
+        btn.className = 'nav-btn';
+        btn.innerText = cat;
+        btn.href = `#cat-${cat.replace(/\s+/g, '-')}`;
+        btn.onclick = (e) => {
+            e.preventDefault();
+            const el = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`);
+            if (el) {
+                const y = el.getBoundingClientRect().top + window.scrollY - 150;
+                window.scrollTo({
+                    top: y,
+                    behavior: 'smooth'
+                });
+            }
+        };
+        c.appendChild(btn);
+    });
+}
+
+function addToCart(item) {
+    const existing = cart.find(i => i.name === item.name && JSON.stringify(i.options) === JSON.stringify(item.options));
+    if (existing) {
+        existing.qty = (existing.qty || 1) + (item.qty || 1);
+        existing.priceTotal = existing.price * existing.qty;
+    } else {
+        cart.push({ ...item,
+            qty: (item.qty || 1),
+            priceTotal: item.price * (item.qty || 1)
+        });
+    }
+    updateCartUI();
+    tg.HapticFeedback.notificationOccurred('success');
+    showToast("Добавлено в корзину");
+}
+
+function clearCart() {
+    if (confirm('Очистить корзину?')) {
+        cart = [];
+        updateCartUI();
+        closeCheckout();
+        tg.HapticFeedback.notificationOccurred('warning');
+    }
+}
+
+function removeFromCart(idx) {
+    if (confirm('Удалить позицию?')) {
+        cart.splice(idx, 1);
+        if (cart.length === 0) closeCheckout();
+        else renderCartList();
+        calculateTotal();
+        updateCartUI();
+    }
+}
+
+function updateCartUI() {
+    const btn = document.getElementById('cart-btn');
+    const count = document.getElementById('cart-count');
+    const txt = document.getElementById('cart-text');
+    if (cart.length > 0) {
+        const total = cart.reduce((s, i) => s + (i.priceTotal || i.price), 0);
+        const qty = cart.reduce((s, i) => s + (i.qty || 1), 0);
+        btn.style.display = 'block';
+        txt.innerText = `Заказ: ${total} ₸`;
+        count.innerText = qty;
+        count.style.animation = 'none';
+        count.offsetHeight;
+        count.style.animation = 'pop 0.3s';
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+function toggleFavorite(e, id) {
+    e.stopPropagation();
+    id = String(id);
+    const idx = favorites.indexOf(id);
+    if (idx > -1) favorites.splice(idx, 1);
+    else favorites.push(id);
+    localStorage.setItem('coffee_favorites', JSON.stringify(favorites));
+    renderMenu();
+    tg.HapticFeedback.impactOccurred('medium');
+}
+
+function toggleAltMilk() {
+    const altRadio = document.querySelector('input[name="milk"][value="alt"]');
+    const selector = document.getElementById('alt-milk-selector');
+    if (!selector) return;
+    selector.style.display = (altRadio && altRadio.checked) ? 'block' : 'none';
+    recalcPrice();
+}
+
+function toggleAccordion() {
+    const acc = document.getElementById('extras-accordion');
+    acc.classList.toggle('open');
+}
+
+function changeModalQty(delta) {
+    let newQty = modalQty + delta;
+    if (newQty < 1) newQty = 1;
+    modalQty = newQty;
+    document.getElementById('modal-qty').innerText = modalQty;
+    recalcPrice();
+}
+
+function handleSyrupAmount(type) {
+    if (type === 'more' && document.getElementById('syrup-more').checked) {
+        document.getElementById('syrup-less').checked = false;
+    }
+    if (type === 'less' && document.getElementById('syrup-less').checked) {
+        document.getElementById('syrup-more').checked = false;
+    }
+}
+
+function openComplexModal(product) {
+    currentModalProduct = product;
+    modalQty = 1;
+    const content = document.getElementById('product-modal-content');
+    let imgHtml = '';
+    if (product.img) {
+        imgHtml = `<div class="modal-img-wrapper"><img src="${product.img}" class="modal-img" onerror="this.onerror=null;this.src='${getImageByCategory(product.cat)}';"></div>`;
+    }
+    let html = `<div class="modal-header"><div class="modal-title-block">${imgHtml}<div class="modal-title">${product.name}</div> <div class="modal-desc">${product.fullDesc || product.desc || ""}</div></div><div class="close-icon" onclick="closeProductModal(true)">✕</div></div>`;
+
+    if (product.hasVolumes && product.volumes.length > 0) {
+        html += `<div class="option-group"><label class="option-label">Порция</label><div class="radio-group">`;
+        product.volumes.forEach((v, i) => {
+            html += `<input type="radio" name="vol" id="v${i}" value="${i}" class="radio-input" ${i===0?'checked':''} onchange="recalcPrice()"><label for="v${i}" class="radio-label">${v.n}<br>${v.p}₸</label>`;
+        });
+        html += `</div></div>`;
+    } else if (product.fixedVolume) {
+        html += `<div class="option-group"><label class="option-label">Объем: ${product.fixedVolume}</label></div>`;
+    }
+
+    if (product.name.includes('ОБЛЕПИХОВЫЙ')) {
+        html += `<div class="option-group" id="strain-block" style="display:none;"><label class="option-label">Процеживать?</label><div class="radio-group"><input type="radio" name="strain" id="strain-yes" value="Процедить" class="radio-input" checked><label for="strain-yes" class="radio-label"><div>Процедить<br><span style="font-size:11px; color:var(--text-secondary); font-weight:400;">без ягод</span></div></label><input type="radio" name="strain" id="strain-no" value="Не процеживать" class="radio-input"><label for="strain-no" class="radio-label"><div>Не процеживать<br><span style="font-size:11px; color:var(--text-secondary); font-weight:400;">с ягодами</span></div></label></div></div>`;
+    }
+    if (product.hasMilk) {
+        let altMilkDisplayPrice = PRICES.alt_milk;
+        if (product.mods && product.mods.alt_milk !== undefined) {
+            if (Array.isArray(product.mods.alt_milk)) {
+                altMilkDisplayPrice = product.mods.alt_milk[0];
+            } else {
+                altMilkDisplayPrice = product.mods.alt_milk;
+            }
+        }
+        const altMilkText = altMilkDisplayPrice > 0 ? `+${altMilkDisplayPrice}` : '';
+        html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group"><input type="radio" name="milk" id="m1" value="std" class="radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label">Обычное</label><input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label"><div>Безлактозное<br>+${PRICES.milk_lf_price || 0}</div></label><input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label"><div>Растительное<br><span id="alt-milk-price-display">${altMilkText}</span></div></label></div><div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
+        ALT_MILKS.forEach(m => html += `<option value="${m}">${m}</option>`);
+        html += `</select></div></div>`;
+    }
+    if ('sauce' in product.mods) {
+        let price = product.mods['sauce'];
+        let displayPrice = price > 0 ? `+${price}` : 'Бесплатно';
+        html += `<div class="option-group"><label class="option-label">Соус (${displayPrice})</label><select id="sauce-select" onchange="recalcPrice()">`;
+        SAUCES.forEach(s => html += `<option value="${s}">${s}</option>`);
+        html += `</select></div>`;
+    }
+
+    let syrupHtml = '';
+    if ('syrup' in product.mods) {
+        let price = product.mods['syrup'];
+        let displayPrice = price > 0 ? `+${price}` : 'Бесплатно';
+        let sOpts = SYRUPS.map(s => `<option value="${s}">${s}</option>`).join('');
+        syrupHtml += `<div class="option-group" style="${String(product.id) === '32' ? 'margin-top:10px; margin-bottom:10px;' : 'margin-top:10px'}"><label class="option-label">Сироп (${displayPrice})</label><select id="syr" onchange="recalcPrice()">${sOpts}</select></div><div id="syrup-amount-options" style="display:none; padding-left: 10px; margin-top: 5px; border-left: 2px solid var(--primary-color);"><div class="checkbox-row"><span>Побольше сиропа</span><label class="toggle-switch"><input type="checkbox" id="syrup-more" onchange="handleSyrupAmount('more')"><span class="slider"></span></label></div><div class="checkbox-row"><span>Поменьше сиропа</span><label class="toggle-switch"><input type="checkbox" id="syrup-less" onchange="handleSyrupAmount('less')"><span class="slider"></span></label></div></div>`;
+    }
+    if (String(product.id) === '32') {
+        html += syrupHtml;
+    }
+    let extrasHtml = '';
+    let hasExtras = false;
+    if (String(product.id) !== '32' && 'syrup' in product.mods) {
+        hasExtras = true;
+        extrasHtml += syrupHtml;
+    }
+    const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
+    checkboxes.forEach(key => {
+        if (key in product.mods) {
+            hasExtras = true;
+            let price = product.mods[key];
+            extrasHtml += `<div class="checkbox-row"><span>${MOD_LABELS[key]} (+${price})</span><label class="toggle-switch"><input type="checkbox" id="mod-${key}" onchange="recalcPrice()"><span class="slider"></span></label></div>`;
+        }
+    });
+    if ('sugar' in product.mods) {
+        hasExtras = true;
+        extrasHtml += `<div style="margin-top:10px"><label class="option-label">Сахар</label><input type="number" id="sug" placeholder="0" min="0"></div>`;
+    }
+    if (hasExtras) {
+        html += `<div class="accordion" id="extras-accordion"><div class="accordion-header" onclick="toggleAccordion()"><span>Дополнительно</span> <span class="accordion-arrow">▼</span></div><div class="accordion-content">${extrasHtml}</div></div>`;
+    }
+
+    html += `<div class="modal-footer"><div class="qty-control-modal"><button class="qty-control-btn" onclick="changeModalQty(-1)">−</button><div class="qty-control-val" id="modal-qty">1</div><button class="qty-control-btn" onclick="changeModalQty(1)">+</button></div><button class="modal-add-btn" id="modal-btn" onclick="addComplexToCart()">Добавить</button></div>`;
+    content.innerHTML = html;
+    document.getElementById('product-modal').style.display = 'flex';
+    if (product.hasMilk) toggleAltMilk();
+    recalcPrice();
+}
+
+function recalcPrice() {
+    let p = 0;
+    const prod = currentModalProduct;
+    if (prod.hasVolumes && prod.volumes.length > 0) {
+        const el = document.querySelector('input[name="vol"]:checked');
+        p += el ? prod.volumes[el.value].p : prod.volumes[0].p;
+    } else {
+        p += (prod.basePrice || prod.price || 0);
+    }
+    if (prod.hasMilk) {
+        const el = document.querySelector('input[name="milk"]:checked');
+        let milkPrice = PRICES.alt_milk;
+        if (prod.mods && prod.mods.alt_milk !== undefined) {
+            if (Array.isArray(prod.mods.alt_milk)) {
+                const volEl = document.querySelector('input[name="vol"]:checked');
+                const volIndex = volEl ? parseInt(volEl.value) : 0;
+                milkPrice = prod.mods.alt_milk[volIndex] !== undefined ? prod.mods.alt_milk[volIndex] : prod.mods.alt_milk[0];
+            } else {
+                milkPrice = prod.mods.alt_milk;
+            }
+        }
+        const labelSpan = document.getElementById('alt-milk-price-display');
+        if (labelSpan) labelSpan.innerText = milkPrice > 0 ? `+${milkPrice}` : '';
+        if (el && el.value === 'alt') {
+            p += milkPrice;
+        }
+    }
+    const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
+    checkboxes.forEach(key => {
+        const el = document.getElementById(`mod-${key}`);
+        if (el && el.checked) p += prod.mods[key];
+    });
+    if (document.getElementById('sauce-select')) {
+        const val = document.getElementById('sauce-select').value;
+        if (val && val !== "Нет") p += prod.mods['sauce'];
+    }
+    if (document.getElementById('syr')) {
+        const val = document.getElementById('syr').value;
+        const amountContainer = document.getElementById('syrup-amount-options');
+        if (val && val !== "Нет") {
+            p += prod.mods['syrup'];
+            if (amountContainer) amountContainer.style.display = 'block';
+        } else {
+            if (amountContainer) {
+                amountContainer.style.display = 'none';
+                document.getElementById('syrup-more').checked = false;
+                document.getElementById('syrup-less').checked = false;
+            }
+        }
+    }
+    const strainBlock = document.getElementById('strain-block');
+    if (strainBlock && prod.name.includes('ОБЛЕПИХОВЫЙ')) {
+        const volEl = document.querySelector('input[name="vol"]:checked');
+        if (volEl) {
+            const volName = prod.volumes[volEl.value].n;
+            if (volName.includes('0.4')) {
+                strainBlock.style.display = 'block';
+            } else {
+                strainBlock.style.display = 'none';
+            }
+        } else {
+            strainBlock.style.display = 'none';
+        }
+    }
+    const btn = document.getElementById('modal-btn');
+    if (btn) {
+        const total = p * modalQty;
+        btn.innerText = `Добавить за ${total} ₸`;
+        btn.dataset.price = p;
+    }
 }
 
 function addComplexToCart() {
-const btn = document.getElementById('modal-btn'); if(!btn) return;
-const price = parseInt(btn.dataset.price);
-const opts = []; const prod = currentModalProduct;
-
-if(prod.hasVolumes && prod.volumes.length > 0) { const v = document.querySelector('input[name="vol"]:checked').value; opts.push(`Порция: ${prod.volumes[v].n}`); }
-if(prod.hasMilk) {
-const m = document.querySelector('input[name="milk"]:checked').value;
-if(m==='lf') opts.push("Молоко: Безлактозное");
-if(m==='alt') { const t = document.getElementById('alt-milk-type').value; opts.push(`Молоко: Растительное (${t})`); }
+    const btn = document.getElementById('modal-btn');
+    if (!btn) return;
+    const price = parseInt(btn.dataset.price);
+    const opts = [];
+    const prod = currentModalProduct;
+    if (prod.hasVolumes && prod.volumes.length > 0) {
+        const v = document.querySelector('input[name="vol"]:checked').value;
+        opts.push(`Порция: ${prod.volumes[v].n}`);
+    }
+    if (prod.hasMilk) {
+        const m = document.querySelector('input[name="milk"]:checked').value;
+        if (m === 'lf') opts.push("Молоко: Безлактозное");
+        if (m === 'alt') {
+            const t = document.getElementById('alt-milk-type').value;
+            opts.push(`Молоко: Растительное (${t})`);
+        }
+    }
+    const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
+    checkboxes.forEach(key => {
+        const el = document.getElementById(`mod-${key}`);
+        if (el && el.checked) opts.push(`Доп: ${MOD_LABELS[key]}`);
+    });
+    if (document.getElementById('sauce-select')) {
+        const val = document.getElementById('sauce-select').value;
+        if (val && val !== "Нет") opts.push(`Соус: ${val}`);
+    }
+    if (document.getElementById('sug')) {
+        const s = document.getElementById('sug').value;
+        if (s) opts.push(`Сахар: ${s}`);
+    }
+    if (document.getElementById('syr')) {
+        const val = document.getElementById('syr').value;
+        if (val && val !== "Нет") {
+            let syrupStr = `Сироп: ${val}`;
+            if (document.getElementById('syrup-more').checked) syrupStr += " (Побольше)";
+            if (document.getElementById('syrup-less').checked) syrupStr += " (Поменьше)";
+            opts.push(syrupStr);
+        }
+    }
+    const strainBlock = document.getElementById('strain-block');
+    if (strainBlock && strainBlock.style.display !== 'none') {
+        const strainVal = document.querySelector('input[name="strain"]:checked').value;
+        opts.push(`Опция: ${strainVal}`);
+    }
+    addToCart({
+        name: prod.name,
+        price: price,
+        options: opts,
+        cat: prod.cat,
+        qty: modalQty
+    });
+    closeProductModal(true);
+    checkUpsell(prod);
 }
-const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
-checkboxes.forEach(key => { const el = document.getElementById(`mod-${key}`); if (el && el.checked) opts.push(`Доп: ${MOD_LABELS[key]}`); });
 
-if(document.getElementById('sauce-select')) { const val = document.getElementById('sauce-select').value; if (val && val !== "Нет") opts.push(`Соус: ${val}`); }
-if(document.getElementById('sug')) { const s = document.getElementById('sug').value; if (s) opts.push(`Сахар: ${s}`); }
-
-// SYRUP ADD LOGIC
-if(document.getElementById('syr')) {
-const val = document.getElementById('syr').value;
-if (val && val !== "Нет") {
-let syrupStr = `Сироп: ${val}`;
-if(document.getElementById('syrup-more').checked) syrupStr += " (Побольше)";
-if(document.getElementById('syrup-less').checked) syrupStr += " (Поменьше)";
-opts.push(syrupStr);
+function closeProductModal(force) {
+    if (force === true) {
+        document.getElementById('product-modal').style.display = 'none';
+        return;
+    }
+    const e = force;
+    if (e && e.target.id === 'product-modal') document.getElementById('product-modal').style.display = 'none';
 }
-}
-
-const strainBlock = document.getElementById('strain-block');
-if (strainBlock && strainBlock.style.display !== 'none') {
-    const strainVal = document.querySelector('input[name="strain"]:checked').value;
-    opts.push(`Опция: ${strainVal}`);
-}
-
-addToCart({ name: prod.name, price: price, options: opts, cat: prod.cat, qty: modalQty });
-closeProductModal(true);
-checkUpsell(prod);
-}
-
-function closeProductModal(force) { if (force === true) { document.getElementById('product-modal').style.display = 'none'; return; } const e = force; if (e && e.target.id === 'product-modal') document.getElementById('product-modal').style.display = 'none'; }
 
 function openCheckout() {
-if(cart.length === 0) return;
-document.getElementById('checkout-modal').style.display = 'flex';
-renderCartList();
-calculateTotal();
-validateForm();
-
-// NEW LOGIC START
-const hasPizza = cart.some(i => i.cat === 'ПИЦЦА');
-const h = new Date().getHours();
-const pizzaWarning = document.getElementById('pizza-warning');
-if (hasPizza && h < 11) {
-    pizzaWarning.style.display = 'block';
-} else {
-    pizzaWarning.style.display = 'none';
-}
-// NEW LOGIC END
-
-// Auto-fill user data
-const u = tg.initDataUnsafe?.user;
-if(u && !document.getElementById('client-name').value) {
-document.getElementById('client-name').value = u.first_name;
-}
-loadUserData();
+    if (cart.length === 0) return;
+    document.getElementById('checkout-modal').style.display = 'flex';
+    renderCartList();
+    calculateTotal();
+    validateForm();
+    const hasPizza = cart.some(i => i.cat === 'ПИЦЦА');
+    const h = new Date().getHours();
+    const pizzaWarning = document.getElementById('pizza-warning');
+    if (hasPizza && h < 11) {
+        pizzaWarning.style.display = 'block';
+    } else {
+        pizzaWarning.style.display = 'none';
+    }
+    const u = tg.initDataUnsafe?.user;
+    if (u && !document.getElementById('client-name').value) {
+        document.getElementById('client-name').value = u.first_name;
+    }
+    loadUserData();
 }
 
 function renderCartList() {
-const c = document.getElementById('cart-list-container');
-c.innerHTML = '';
-cart.forEach((item, i) => {
-c.innerHTML += `
-<div class="cart-item">
-<div style="flex:1">
-<div style="font-weight:700; font-family: var(--font-title);">${item.name}</div>
-<div style="font-size:11px; color:var(--text-secondary);">${item.options ? item.options.join(', ') : ''}</div>
-<div style="font-weight:bold; color:var(--primary-color); margin-top:4px;">${item.priceTotal} ₸</div>
-</div>
-<div style="display:flex; align-items:center; gap:8px;">
-<div class="cart-qty-btn" onclick="modQty(${i}, -1)">-</div>
-<div style="font-weight:bold; width:20px; text-align:center;">${item.qty}</div>
-<div class="cart-qty-btn" onclick="modQty(${i}, 1)">+</div>
-<div class="cart-del-btn" onclick="removeFromCart(${i})">🗑️</div>
-</div>
-</div>`;
-});
+    const c = document.getElementById('cart-list-container');
+    c.innerHTML = '';
+    cart.forEach((item, i) => {
+        c.innerHTML += `<div class="cart-item"><div style="flex:1"><div style="font-weight:700; font-family: var(--font-title);">${item.name}</div><div style="font-size:11px; color:var(--text-secondary);">${item.options ? item.options.join(', ') : ''}</div><div style="font-weight:bold; color:var(--primary-color); margin-top:4px;">${item.priceTotal} ₸</div></div><div style="display:flex; align-items:center; gap:8px;"><div class="cart-qty-btn" onclick="modQty(${i}, -1)">-</div><div style="font-weight:bold; width:20px; text-align:center;">${item.qty}</div><div class="cart-qty-btn" onclick="modQty(${i}, 1)">+</div><div class="cart-del-btn" onclick="removeFromCart(${i})">🗑️</div></div></div>`;
+    });
 }
 
 function modQty(idx, delta) {
-const item = cart[idx];
-item.qty = (item.qty || 1) + delta;
-
-if(item.qty <= 0) {
-// Confirm delete handled in separate function, here we just stop at 1 usually,
-// or we can allow drop to 0 to remove. Let's force min 1 for +/- buttons and use trash for delete.
-item.qty = 1;
-}
-
-item.priceTotal = item.price * item.qty;
-renderCartList();
-calculateTotal();
-updateCartUI();
+    const item = cart[idx];
+    item.qty = (item.qty || 1) + delta;
+    if (item.qty <= 0) {
+        item.qty = 1;
+    }
+    item.priceTotal = item.price * item.qty;
+    renderCartList();
+    calculateTotal();
+    updateCartUI();
 }
 
 function calculateTotal() {
-let total = cart.reduce((s, i) => s + (i.priceTotal || i.price), 0);
-if(appliedDiscount > 0) total = Math.round(total * (1 - appliedDiscount));
-document.getElementById('checkout-total-sum').innerText = `Итого: ${total} ₸ ${appliedDiscount > 0 ? `(-${Math.round(appliedDiscount*100)}%)` : ''}`;
-return total;
+    let total = cart.reduce((s, i) => s + (i.priceTotal || i.price), 0);
+    if (appliedDiscount > 0) total = Math.round(total * (1 - appliedDiscount));
+    document.getElementById('checkout-total-sum').innerText = `Итого: ${total} ₸ ${appliedDiscount > 0 ? `(-${Math.round(appliedDiscount*100)}%)` : ''}`;
+    return total;
 }
 
 function validateForm() {
-const name = document.getElementById('client-name').value.trim();
-const phone = document.getElementById('client-phone').value.trim();
-const address = document.getElementById('delivery-address').value.trim();
-const payPhone = document.getElementById('payment-phone').value.trim();
-
-const isDel = document.getElementById('d-delivery').checked;
-const isCard = document.getElementById('p-kaspi').checked || document.getElementById('p-halyk').checked;
-
-let valid = name.length > 0 && phone.length > 5;
-if(isDel && address.length < 5) valid = false;
-if(isCard && payPhone.length < 5) valid = false;
-
-document.getElementById('submit-btn').disabled = !valid;
+    const name = document.getElementById('client-name').value.trim();
+    const phone = document.getElementById('client-phone').value.trim();
+    const address = document.getElementById('delivery-address').value.trim();
+    const payPhone = document.getElementById('payment-phone').value.trim();
+    const isDel = document.getElementById('d-delivery').checked;
+    const isCard = document.getElementById('p-kaspi').checked || document.getElementById('p-halyk').checked;
+    let valid = name.length > 0 && phone.length > 5;
+    if (isDel && address.length < 5) valid = false;
+    if (isCard && payPhone.length < 5) valid = false;
+    document.getElementById('submit-btn').disabled = !valid;
 }
 
-function closeCheckout() { document.getElementById('checkout-modal').style.display = 'none'; }
+function closeCheckout() {
+    document.getElementById('checkout-modal').style.display = 'none';
+}
 
-// --- HELPER FUNCTIONS ---
 function checkWorkingHours() {
-const now = new Date();
-const h = now.getHours();
-const m = now.getMinutes();
-
-const isOpen = h >= OPEN_HOUR && h < CLOSE_HOUR;
-const b = document.getElementById('work-status');
-
-if(b){
-b.innerText = isOpen ? `Открыто (${OPEN_HOUR}:00 - ${CLOSE_HOUR}:00)` : `Закрыто (работаем с ${OPEN_HOUR}:00)`;
-b.style.background = isOpen ? '#e6fffa' : '#fee2e2';
-b.style.color = isOpen ? '#047857' : '#991b1b';
-}
-
-// Closing soon logic
-if (isOpen && h === (CLOSE_HOUR - 1)) {
-document.getElementById('closing-soon-warning').style.display = 'block';
-} else {
-document.getElementById('closing-soon-warning').style.display = 'none';
-}
-
-document.getElementById('closed-warning').style.display = isOpen ? 'none' : 'block';
-return isOpen;
+    const now = new Date();
+    const h = now.getHours();
+    const isOpen = h >= OPEN_HOUR && h < CLOSE_HOUR;
+    const b = document.getElementById('work-status');
+    if (b) {
+        b.innerText = isOpen ? `Открыто (${OPEN_HOUR}:00 - ${CLOSE_HOUR}:00)` : `Закрыто (работаем с ${OPEN_HOUR}:00)`;
+        b.style.background = isOpen ? '#e6fffa' : '#fee2e2';
+        b.style.color = isOpen ? '#047857' : '#991b1b';
+    }
+    if (isOpen && h === (CLOSE_HOUR - 1)) {
+        document.getElementById('closing-soon-warning').style.display = 'block';
+    } else {
+        document.getElementById('closing-soon-warning').style.display = 'none';
+    }
+    document.getElementById('closed-warning').style.display = isOpen ? 'none' : 'block';
+    return isOpen;
 }
 
 function filterMenu() {
-const q = document.getElementById('search-input').value.toLowerCase();
-const cards = document.querySelectorAll('.card');
-let found = 0;
-cards.forEach(c => {
-const txt = c.innerText.toLowerCase();
-if(txt.includes(q)) { c.style.display = 'flex'; found++; }
-else c.style.display = 'none';
-});
-document.getElementById('no-results').style.display = found ? 'none' : 'block';
-
-// Hide empty categories
-document.querySelectorAll('.category-section').forEach(sec => {
-const visibleCards = sec.querySelectorAll('.card[style="display: flex;"]');
-sec.style.display = visibleCards.length > 0 ? 'block' : 'none';
-});
+    const q = document.getElementById('search-input').value.toLowerCase();
+    const cards = document.querySelectorAll('.card');
+    let found = 0;
+    cards.forEach(c => {
+        const txt = c.innerText.toLowerCase();
+        if (txt.includes(q)) {
+            c.style.display = 'flex';
+            found++;
+        } else c.style.display = 'none';
+    });
+    document.getElementById('no-results').style.display = found ? 'none' : 'block';
+    document.querySelectorAll('.category-section').forEach(sec => {
+        const visibleCards = sec.querySelectorAll('.card[style="display: flex;"]');
+        sec.style.display = visibleCards.length > 0 ? 'block' : 'none';
+    });
 }
 
-// --- REPEAT ORDER & UPSELL ---
 function checkRepeatOrder() {
-const lastOrder = localStorage.getItem('coffee_last_order');
-if (lastOrder) {
-try {
-const items = JSON.parse(lastOrder);
-if (items.length > 0) {
-const uniqueNames = [...new Set(items.map(i => i.name))];
-const desc = uniqueNames.join(', ') + (items.length > uniqueNames.length ? ` (+ еще ${items.length - uniqueNames.length})` : '');
-const price = items.reduce((s, i) => s + (i.priceTotal || i.price), 0);
-
-document.getElementById('repeat-desc').innerText = desc;
-document.getElementById('repeat-price').innerText = price + " ₸";
-document.getElementById('repeat-order-container').style.display = 'block';
-}
-} catch(e) { console.error(e); }
-}
+    const lastOrder = localStorage.getItem('coffee_last_order');
+    if (lastOrder) {
+        try {
+            const items = JSON.parse(lastOrder);
+            if (items.length > 0) {
+                const uniqueNames = [...new Set(items.map(i => i.name))];
+                const desc = uniqueNames.join(', ') + (items.length > uniqueNames.length ? ` (+ еще ${items.length - uniqueNames.length})` : '');
+                const price = items.reduce((s, i) => s + (i.priceTotal || i.price), 0);
+                document.getElementById('repeat-desc').innerText = desc;
+                document.getElementById('repeat-price').innerText = price + " ₸";
+                document.getElementById('repeat-order-container').style.display = 'block';
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
 }
 
 function loadLastOrder() {
-const lastOrder = localStorage.getItem('coffee_last_order');
-if (lastOrder) {
-const items = JSON.parse(lastOrder);
-items.forEach(item => addToCart(item));
-document.getElementById('repeat-order-container').style.display = 'none';
-}
+    const lastOrder = localStorage.getItem('coffee_last_order');
+    if (lastOrder) {
+        const items = JSON.parse(lastOrder);
+        items.forEach(item => addToCart(item));
+        document.getElementById('repeat-order-container').style.display = 'none';
+    }
 }
 
 function checkUpsell(triggerProduct) {
-if (upsellShown) return;
-const triggerCat = triggerProduct.cat.toUpperCase();
-let targetCats = [];
-for (const [key, targets] of Object.entries(UPSELL_RULES)) {
-if (triggerCat.includes(key)) { targetCats = targets; break; }
+    if (upsellShown) return;
+    const triggerCat = triggerProduct.cat.toUpperCase();
+    let targetCats = [];
+    for (const [key, targets] of Object.entries(UPSELL_RULES)) {
+        if (triggerCat.includes(key)) {
+            targetCats = targets;
+            break;
+        }
+    }
+    if (targetCats.length === 0) return;
+    const potential = menuData.filter(p => p.available && targetCats.some(tc => p.cat.toUpperCase().includes(tc)) && p.id !== triggerProduct.id);
+    if (potential.length === 0) return;
+    currentUpsellItem = potential[Math.floor(Math.random() * potential.length)];
+    document.querySelector('.upsell-title').innerText = "К ЭТОМУ ОТЛИЧНО ПОДОЙДЕТ!";
+    document.querySelector('.upsell-img').src = currentUpsellItem.img || getImageByCategory(currentUpsellItem.cat);
+    document.querySelector('.upsell-product').innerText = currentUpsellItem.name;
+    let price = currentUpsellItem.price || currentUpsellItem.basePrice;
+    if (currentUpsellItem.hasVolumes && currentUpsellItem.volumes.length > 0) price = currentUpsellItem.volumes[0].p;
+    document.getElementById('upsell-price').innerText = price + " ₸";
+    setTimeout(() => {
+        document.getElementById('upsell-modal').style.display = 'flex';
+        upsellShown = true;
+    }, 500);
 }
-if (targetCats.length === 0) return;
-const potential = menuData.filter(p => p.available && targetCats.some(tc => p.cat.toUpperCase().includes(tc)) && p.id !== triggerProduct.id);
-if (potential.length === 0) return;
 
-currentUpsellItem = potential[Math.floor(Math.random() * potential.length)];
-document.querySelector('.upsell-title').innerText = "К ЭТОМУ ОТЛИЧНО ПОДОЙДЕТ!";
-document.querySelector('.upsell-img').src = currentUpsellItem.img || getImageByCategory(currentUpsellItem.cat);
-document.querySelector('.upsell-product').innerText = currentUpsellItem.name;
-let price = currentUpsellItem.price || currentUpsellItem.basePrice;
-if (currentUpsellItem.hasVolumes && currentUpsellItem.volumes.length > 0) price = currentUpsellItem.volumes[0].p;
-document.getElementById('upsell-price').innerText = price + " ₸";
-setTimeout(() => { document.getElementById('upsell-modal').style.display = 'flex'; upsellShown = true; }, 500);
+function closeUpsell() {
+    document.getElementById('upsell-modal').style.display = 'none';
 }
-
-function closeUpsell() { document.getElementById('upsell-modal').style.display = 'none'; }
 
 function acceptUpsell() {
-if (!currentUpsellItem) return;
-closeUpsell();
-if (currentUpsellItem.type === 'complex' || currentUpsellItem.hasMilk || Object.keys(currentUpsellItem.mods).length > 0) {
-setTimeout(() => { openComplexModal(currentUpsellItem); }, 100);
-} else {
-let price = currentUpsellItem.price || currentUpsellItem.basePrice;
-addToCart({ name: currentUpsellItem.name, price: price, options: [], cat: currentUpsellItem.cat, qty: 1 });
-}
+    if (!currentUpsellItem) return;
+    closeUpsell();
+    if (currentUpsellItem.type === 'complex' || currentUpsellItem.hasMilk || Object.keys(currentUpsellItem.mods).length > 0) {
+        setTimeout(() => {
+            openComplexModal(currentUpsellItem);
+        }, 100);
+    } else {
+        let price = currentUpsellItem.price || currentUpsellItem.basePrice;
+        addToCart({
+            name: currentUpsellItem.name,
+            price: price,
+            options: [],
+            cat: currentUpsellItem.cat,
+            qty: 1
+        });
+    }
 }
 
-// --- USER DATA ---
 function loadUserData() {
-const n=localStorage.getItem('coffee_username'); if(n && document.getElementById('client-name')) document.getElementById('client-name').value=n;
-const p=localStorage.getItem('coffee_phone'); if(p && document.getElementById('client-phone')) document.getElementById('client-phone').value=p;
-const a=localStorage.getItem('coffee_address'); if(a && document.getElementById('delivery-address')) document.getElementById('delivery-address').value=a;
+    const n = localStorage.getItem('coffee_username');
+    if (n && document.getElementById('client-name')) document.getElementById('client-name').value = n;
+    const p = localStorage.getItem('coffee_phone');
+    if (p && document.getElementById('client-phone')) document.getElementById('client-phone').value = p;
+    const a = localStorage.getItem('coffee_address');
+    if (a && document.getElementById('delivery-address')) document.getElementById('delivery-address').value = a;
 }
-function saveUserData(n,p,a) { localStorage.setItem('coffee_username',n); localStorage.setItem('coffee_phone',p); if(a)localStorage.setItem('coffee_address',a); }
+
+function saveUserData(n, p, a) {
+    localStorage.setItem('coffee_username', n);
+    localStorage.setItem('coffee_phone', p);
+    if (a) localStorage.setItem('coffee_address', a);
+}
 
 function applyPromo() {
-const codeInput = document.getElementById('promo-code');
-const btn = document.getElementById('apply-promo-btn');
-const code = codeInput.value.trim().toUpperCase();
-
-if (!code) return;
-btn.disabled = true; btn.innerText = "...";
-codeInput.style.borderColor = "#eee";
-
-// Use our helper to get the ID
-const uid = getUserId();
-
-fetch(`${BACKEND_URL}/api/check_promo`, {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ code: code, userId: uid })
-})
-.then(res => res.json())
-.then(data => {
-if (data.status === "OK") {
-appliedDiscount = data.discount;
-appliedPromoCode = code;
-codeInput.style.borderColor = "#88d100";
-showToast(`Промокод: -${Math.round(appliedDiscount * 100)}%`);
-calculateTotal();
-} else {
-appliedDiscount = 0; appliedPromoCode = "";
-codeInput.style.borderColor = "red";
-let errorMsg = "Ошибка промокода";
-if(data.status === "USED") errorMsg = "Вы уже использовали этот код";
-if(data.status === "LIMIT") errorMsg = "Лимит исчерпан";
-if(data.status === "NOT_FOUND") errorMsg = "Код не найден";
-showToast(errorMsg, 'error');
-calculateTotal(); // Recalculate to remove any pending discount
-}
-})
-.catch(() => {
-showToast("Ошибка проверки", 'error');
-appliedDiscount = 0;
-calculateTotal();
-})
-.finally(() => { btn.disabled = false; btn.innerText = "ОК"; });
+    const codeInput = document.getElementById('promo-code');
+    const btn = document.getElementById('apply-promo-btn');
+    const code = codeInput.value.trim().toUpperCase();
+    if (!code) return;
+    btn.disabled = true;
+    btn.innerText = "...";
+    codeInput.style.borderColor = "#eee";
+    const uid = getUserId();
+    fetch(`${BACKEND_URL}/api/check_promo`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            code: code,
+            userId: uid
+        })
+    }).then(res => res.json()).then(data => {
+        if (data.status === "OK") {
+            appliedDiscount = data.discount;
+            appliedPromoCode = code;
+            codeInput.style.borderColor = "#88d100";
+            showToast(`Промокод: -${Math.round(appliedDiscount * 100)}%`);
+            calculateTotal();
+        } else {
+            appliedDiscount = 0;
+            appliedPromoCode = "";
+            codeInput.style.borderColor = "red";
+            let errorMsg = "Ошибка промокода";
+            if (data.status === "USED") errorMsg = "Вы уже использовали этот код";
+            if (data.status === "LIMIT") errorMsg = "Лимит исчерпан";
+            if (data.status === "NOT_FOUND") errorMsg = "Код не найден";
+            showToast(errorMsg, 'error');
+            calculateTotal();
+        }
+    }).catch(() => {
+        showToast("Ошибка проверки", 'error');
+        appliedDiscount = 0;
+        calculateTotal();
+    }).finally(() => {
+        btn.disabled = false;
+        btn.innerText = "ОК";
+    });
 }
 
 function submitOrder() {
-    if (document.activeElement) { document.activeElement.blur(); }
-    
-    // --- НАЧАЛО БЛОКА ПРОВЕРКИ ПИЦЦЫ ---
+    if (document.activeElement) {
+        document.activeElement.blur();
+    }
     const now = new Date();
     const currentHour = now.getHours();
-    const hasPizza = cart.some(i => i.cat === 'ПИЦЦА'); 
-    
+    const hasPizza = cart.some(i => i.cat === 'ПИЦЦА');
     if (hasPizza) {
-        // 1. Получаем выбранные параметры
         const delTypeEl = document.querySelector('input[name="deliveryType"]:checked');
-        const delType = delTypeEl ? delTypeEl.value : 'pickup'; 
-        
         const timeTypeEl = document.querySelector('input[name="orderTimeType"]:checked');
         const isAsap = timeTypeEl && timeTypeEl.value === 'asap';
         const isTime = timeTypeEl && timeTypeEl.value === 'time';
-        
-        // 2. Сценарий: "Как можно скорее" (ASAP)
         if (isAsap && currentHour < 11) {
-            // ТЕКСТ ИЗМЕНЕН: четкое правило про 11:00
             showToast(`🚫 Мы готовим пиццу с 11:00. Пожалуйста, выберите время получения после 11:00.`, 'error');
-            return; 
+            return;
         }
-
-        // 3. Сценарий: "Ко времени"
         if (isTime) {
             const specTime = document.getElementById('specific-time').value;
             if (specTime) {
                 const selectedHour = parseInt(specTime.split(':')[0], 10);
                 if (selectedHour < 11) {
-                    // ТЕКСТ ИЗМЕНЕН
                     showToast(`🚫 Мы готовим пиццу с 11:00. Вы выбрали ${specTime}, пожалуйста, сдвиньте время на 11:00 или позже.`, 'error');
-                    return; 
+                    return;
                 }
             } else {
                 showToast("⚠️ Пожалуйста, укажите время заказа.", 'error');
@@ -1737,54 +1372,45 @@ function submitOrder() {
             }
         }
     }
-    // --- КОНЕЦ БЛОКА ПРОВЕРКИ ПИЦЦЫ ---
-
-    // --- СТАНДАРТНАЯ ОТПРАВКА (Без изменений) ---
     const btn = document.getElementById('submit-btn');
-    btn.disabled = true; 
+    btn.disabled = true;
     btn.innerText = "Отправка...";
-    
     const name = document.getElementById('client-name').value.trim();
     const phone = document.getElementById('client-phone').value.trim();
     const address = document.getElementById('delivery-address').value.trim();
-    
     const delTypeElFinal = document.querySelector('input[name="deliveryType"]:checked');
     const delTypeFinal = delTypeElFinal ? delTypeElFinal.value : 'pickup';
-    
-    let prettyDelivery = 'Самовывоз'; 
-    if(delTypeFinal==='delivery') prettyDelivery='Доставка'; 
-    if(delTypeFinal==='dinein') prettyDelivery='В зале';
-    
+    let prettyDelivery = 'Самовывоз';
+    if (delTypeFinal === 'delivery') prettyDelivery = 'Доставка';
+    if (delTypeFinal === 'dinein') prettyDelivery = 'В зале';
     const payTypeEl = document.querySelector('input[name="paymentType"]:checked');
     const payType = payTypeEl ? payTypeEl.value : 'Kaspi';
     const payPhone = document.getElementById('payment-phone').value.trim();
     let comment = document.getElementById('order-comment').value.trim();
-
-    let orderTimeInfo = ""; 
+    let orderTimeInfo = "";
     const timeTypeElFinal = document.querySelector('input[name="orderTimeType"]:checked');
-    
-    if(timeTypeElFinal && timeTypeElFinal.value === 'time') {
+    if (timeTypeElFinal && timeTypeElFinal.value === 'time') {
         const specTime = document.getElementById('specific-time').value;
-        if(!specTime) { 
-            showToast("Выберите время", 'error'); 
-            btn.disabled = false; 
-            btn.innerText = "ОТПРАВИТЬ ЗАКАЗ"; 
-            return; 
+        if (!specTime) {
+            showToast("Выберите время", 'error');
+            btn.disabled = false;
+            btn.innerText = "ОТПРАВИТЬ ЗАКАЗ";
+            return;
         }
         orderTimeInfo = `⏰ К ${specTime}`;
-    } else { 
-        orderTimeInfo = `⚡ Как можно скорее`; 
+    } else {
+        orderTimeInfo = `⚡ Как можно скорее`;
     }
-
     saveUserData(name, phone, address);
     const total = calculateTotal();
     const orderData = {
         cart: cart,
         total: total,
         info: {
-            name, phone,
+            name,
+            phone,
             deliveryType: prettyDelivery,
-            address: (delTypeFinal==='delivery'?address:''),
+            address: (delTypeFinal === 'delivery' ? address : ''),
             paymentType: payType,
             paymentPhone: payPhone,
             comment,
@@ -1793,112 +1419,107 @@ function submitOrder() {
             promoCode: appliedPromoCode
         }
     };
-
     localStorage.setItem('coffee_last_order', JSON.stringify(cart));
     tg.sendData(JSON.stringify(orderData));
-    
-    setTimeout(function() { 
-        cart = []; 
-        updateCartUI(); 
-        closeCheckout(); 
-        tg.close(); 
+    setTimeout(function() {
+        cart = [];
+        updateCartUI();
+        closeCheckout();
+        tg.close();
     }, 100);
 }
 
 function toggleDelivery() {
-const isDel = document.getElementById('d-delivery').checked;
-document.getElementById('address-block').style.display = isDel ? 'block' : 'none';
-document.getElementById('delivery-msg').style.display = isDel ? 'block' : 'none';
-validateForm();
+    const isDel = document.getElementById('d-delivery').checked;
+    document.getElementById('address-block').style.display = isDel ? 'block' : 'none';
+    document.getElementById('delivery-msg').style.display = isDel ? 'block' : 'none';
+    validateForm();
 }
-// Updated togglePayment logic to switch labels
+
 function togglePayment() {
-const isKaspi = document.getElementById('p-kaspi').checked;
-const isHalyk = document.getElementById('p-halyk').checked;
-
-const label = document.getElementById('payment-phone-label');
-const hint = document.getElementById('payment-hint');
-
-if (isKaspi) {
-label.innerText = "Номер телефона Kaspi";
-hint.innerText = "Вам придет счет на оплату в приложение Kaspi.kz";
-} else if (isHalyk) {
-label.innerText = "Номер телефона Halyk";
-hint.innerText = "Вам придет счет на оплату в приложение Halyk";
+    const isKaspi = document.getElementById('p-kaspi').checked;
+    const isHalyk = document.getElementById('p-halyk').checked;
+    const label = document.getElementById('payment-phone-label');
+    const hint = document.getElementById('payment-hint');
+    if (isKaspi) {
+        label.innerText = "Номер телефона Kaspi";
+        hint.innerText = "Вам придет счет на оплату в приложение Kaspi.kz";
+    } else if (isHalyk) {
+        label.innerText = "Номер телефона Halyk";
+        hint.innerText = "Вам придет счет на оплату в приложение Halyk";
+    }
+    validateForm();
 }
-validateForm();
-}
+
 function toggleTimePicker() {
-const isTime = document.getElementById('t-time').checked;
-document.getElementById('time-picker-container').style.display = isTime ? 'block' : 'none';
+    const isTime = document.getElementById('t-time').checked;
+    document.getElementById('time-picker-container').style.display = isTime ? 'block' : 'none';
 }
 
-// Phone Mask
 function maskPhone(e) {
-let val = e.target.value.replace(/\D/g, '');
-if (!val) {
-e.target.value = '';
-validateForm();
-return;
+    let val = e.target.value.replace(/\D/g, '');
+    if (!val) {
+        e.target.value = '';
+        validateForm();
+        return;
+    }
+    if (['7', '8'].includes(val[0])) {
+        if (val[0] === '8') val = '7' + val.slice(1);
+        let formatted = '+7';
+        if (val.length > 1) {
+            formatted += ' (' + val.substring(1, 4);
+        }
+        if (val.length >= 5) {
+            formatted += ') ' + val.substring(4, 7);
+        }
+        if (val.length >= 8) {
+            formatted += '-' + val.substring(7, 9);
+        }
+        if (val.length >= 10) {
+            formatted += '-' + val.substring(9, 11);
+        }
+        e.target.value = formatted;
+    } else {
+        e.target.value = '+' + val;
+    }
+    validateForm();
 }
-
-if (['7', '8'].includes(val[0])) {
-if (val[0] === '8') val = '7' + val.slice(1);
-
-let formatted = '+7';
-if (val.length > 1) {
-formatted += ' (' + val.substring(1, 4);
-}
-if (val.length >= 5) {
-formatted += ') ' + val.substring(4, 7);
-}
-if (val.length >= 8) {
-formatted += '-' + val.substring(7, 9);
-}
-if (val.length >= 10) {
-formatted += '-' + val.substring(9, 11);
-}
-e.target.value = formatted;
-} else {
-e.target.value = '+' + val;
-}
-validateForm();
-}
-
-// Add specific keydown handler to allow deleting the prefix easily
 document.getElementById('client-phone').addEventListener('keydown', function(e) {
-if (e.key === 'Backspace' && this.value.length <= 4) {
-this.value = '';
-validateForm(); // Update button state
-}
+    if (e.key === 'Backspace' && this.value.length <= 4) {
+        this.value = '';
+        validateForm();
+    }
 });
-
 document.getElementById('payment-phone').addEventListener('keydown', function(e) {
-if (e.key === 'Backspace' && this.value.length <= 4) {
-this.value = '';
-validateForm(); // Update button state
-}
+    if (e.key === 'Backspace' && this.value.length <= 4) {
+        this.value = '';
+        validateForm();
+    }
 });
 
-// Yandex Widget Toggle Logic
 function toggleYandexWidget(headerEl) {
-const content = headerEl.nextElementSibling;
-const arrow = headerEl.querySelector('.yandex-widget-arrow');
-
-if (content.style.display === 'none') {
-content.style.display = 'flex'; // Changed to flex for centering
-arrow.style.transform = 'rotate(180deg)';
-} else {
-content.style.display = 'none';
-arrow.style.transform = 'rotate(0deg)';
+    const content = headerEl.nextElementSibling;
+    const arrow = headerEl.querySelector('.yandex-widget-arrow');
+    if (content.style.display === 'none') {
+        content.style.display = 'flex';
+        arrow.style.transform = 'rotate(180deg)';
+    } else {
+        content.style.display = 'none';
+        arrow.style.transform = 'rotate(0deg)';
+    }
 }
+window.addEventListener('offline', () => {
+    document.getElementById('error-screen').style.display = 'flex';
+});
+window.addEventListener('online', () => {
+    location.reload();
+});
+try {
+    initMenu();
+    setInterval(renderMenu, 60000);
+} catch (e) {
+    console.error(e);
 }
-
-window.addEventListener('offline', () => { document.getElementById('error-screen').style.display = 'flex'; });
-window.addEventListener('online', () => { location.reload(); });
-
-// Startup
-try { initMenu(); setInterval(renderMenu, 60000); } catch (e) { console.error(e); }
 </script>
 </body>
 </html>
