@@ -10,7 +10,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  // 🔴🔴🔴 ВСТАВЬТЕ СЮДА ВАШ КОНФИГ ИЗ FIREBASE CONSOLE 🔴🔴🔴
+  // 🔴🔴🔴 ВСТАВЬТЕ СЮДА ВАШ КОНФИГ 🔴🔴🔴
   const firebaseConfig = {
   apiKey: "AIzaSyCjmU7YTy6aKzd-0GxnS7DSClLmIFCVrWU",
   authDomain: "coffeemolldb.firebaseapp.com",
@@ -21,7 +21,6 @@
   measurementId: "G-W4CDJ2PDX0"
 };
 
-  // Инициализация Firebase
   try {
       const app = initializeApp(firebaseConfig);
       window.db = getFirestore(app);
@@ -30,7 +29,6 @@
       window.doc = doc;
       window.getDoc = getDoc;
       window.firebaseReady = true;
-      console.log("Firebase initialized");
   } catch (e) {
       console.error("Firebase init error:", e);
       alert("Ошибка настройки Firebase. Проверьте консоль.");
@@ -968,35 +966,63 @@ function openComplexModal(product) {
 function recalcPrice() {
     let p = 0;
     const prod = currentModalProduct;
+    let volIndex = 0; // Индекс выбранного объема (по умолчанию 0)
+
+    // 1. Считаем базовую цену + определяем индекс объема
     if (prod.hasVolumes && prod.volumes.length > 0) {
         const el = document.querySelector('input[name="vol"]:checked');
-        p += el ? prod.volumes[el.value].p : prod.volumes[0].p;
+        if (el) {
+            volIndex = parseInt(el.value); // Запоминаем индекс!
+            p += prod.volumes[volIndex].p;
+        } else {
+            p += prod.volumes[0].p;
+        }
     } else {
         p += (prod.basePrice || prod.price || 0);
     }
+
+    // 2. Считаем модификаторы
+    // А) Молоко
     if (prod.hasMilk) {
         const el = document.querySelector('input[name="milk"]:checked');
-        let milkPrice = PRICES.alt_milk;
+        let milkPrice = PRICES.alt_milk; // Дефолтная цена из констант
+
+        // Если у товара есть свои настройки цен на молоко
         if (prod.mods && prod.mods.alt_milk !== undefined) {
-            if (Array.isArray(prod.mods.alt_milk)) {
-                const volEl = document.querySelector('input[name="vol"]:checked');
-                const volIndex = volEl ? parseInt(volEl.value) : 0;
-                milkPrice = prod.mods.alt_milk[volIndex] !== undefined ? prod.mods.alt_milk[volIndex] : prod.mods.alt_milk[0];
+            const modVal = prod.mods.alt_milk;
+            if (Array.isArray(modVal)) {
+                // Если это массив [300, 400], берем цену по индексу объема
+                // Если объемов меньше чем цен, берем последнюю доступную
+                milkPrice = modVal[volIndex] !== undefined ? modVal[volIndex] : modVal[modVal.length - 1];
             } else {
-                milkPrice = prod.mods.alt_milk;
+                milkPrice = modVal;
             }
         }
+        
+        // Обновляем отображение цены в UI (+300)
         const labelSpan = document.getElementById('alt-milk-price-display');
         if (labelSpan) labelSpan.innerText = milkPrice > 0 ? `+${milkPrice}` : '';
+        
         if (el && el.value === 'alt') {
             p += milkPrice;
         }
     }
+
+    // Б) Остальные чекбоксы
     const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
     checkboxes.forEach(key => {
         const el = document.getElementById(`mod-${key}`);
-        if (el && el.checked) p += prod.mods[key];
+        if (el && el.checked) {
+            let itemPrice = prod.mods[key];
+            // Если цена зависит от объема (массив)
+            if(Array.isArray(itemPrice)) {
+                itemPrice = itemPrice[volIndex] !== undefined ? itemPrice[volIndex] : itemPrice[itemPrice.length-1];
+            }
+            p += itemPrice;
+        }
     });
+
+    // В) Соусы и Сиропы
     if (document.getElementById('sauce-select')) {
         const val = document.getElementById('sauce-select').value;
         if (val && val !== "Нет") p += prod.mods['sauce'];
@@ -1015,20 +1041,20 @@ function recalcPrice() {
             }
         }
     }
+
+    // Г) Облепиха (Процеживание)
     const strainBlock = document.getElementById('strain-block');
-    if (strainBlock && prod.name.includes('ОБЛЕПИХОВЫЙ')) {
+    if (strainBlock && prod.name.toUpperCase().includes('ОБЛЕПИХОВЫЙ')) {
         const volEl = document.querySelector('input[name="vol"]:checked');
-        if (volEl) {
-            const volName = prod.volumes[volEl.value].n;
-            if (volName.includes('0.4')) {
-                strainBlock.style.display = 'block';
-            } else {
-                strainBlock.style.display = 'none';
-            }
+        // Если выбран объем 0.4 (обычно это индекс 1 или в названии есть 0.4)
+        if (volEl && prod.volumes[volEl.value].n.includes('0.4')) {
+            strainBlock.style.display = 'block';
         } else {
             strainBlock.style.display = 'none';
         }
     }
+
+    // 3. Обновляем кнопку
     const btn = document.getElementById('modal-btn');
     if (btn) {
         const total = p * modalQty;
@@ -1523,3 +1549,4 @@ try {
 </script>
 </body>
 </html>
+
