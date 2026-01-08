@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,397 +8,526 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #f4f6f9; font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-        .login-container { max-width: 400px; margin: 80px auto; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .main-container { max-width: 1400px; margin: 30px auto; display: none; padding: 0 15px; }
-        
-        .nav-pills .nav-link { color: #495057; margin-right: 5px; border-radius: 8px; font-weight: 500; transition: 0.2s; }
-        .nav-pills .nav-link.active { background-color: #212529; color: #88d100; }
-        .nav-pills .nav-link:hover { background-color: #e9ecef; }
-        
-        .card-shadow { background: white; border-radius: 12px; border: none; box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 20px; }
-        
-        .item-row { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0; transition: 0.1s; background: white; }
-        .item-row:hover { background: #f8f9fa; }
-        .item-img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: #eee; margin-right: 15px; }
-        
-        .status-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
-        .status-available { background: #d1e7dd; color: #0f5132; }
-        .status-unavailable { background: #f8d7da; color: #842029; }
-        .status-popular { background: #fff3cd; color: #856404; margin-left: 5px; }
+        body {
+            background: #f4f6f9;
+            font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
 
-        .promo-code { font-family: monospace; font-size: 1.1em; letter-spacing: 1px; background: #f1f3f5; padding: 2px 8px; border-radius: 4px; font-weight: bold; border: 1px solid #dee2e6; }
-        .order-card { border-left: 4px solid #88d100; transition: transform 0.2s; }
-        .order-card:hover { transform: translateY(-2px); }
+        .login-container {
+            max-width: 400px;
+            margin: 80px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
 
-        .modal-header { background: #f8f9fa; border-bottom: 1px solid #eee; }
-        .preview-img { width: 100%; height: 200px; object-fit: contain; background: #f8f9fa; border-radius: 8px; border: 1px dashed #dee2e6; display: flex; align-items: center; justify-content: center; color: #adb5bd; }
-        
+        .main-container {
+            max-width: 1400px;
+            margin: 30px auto;
+            display: none;
+            padding: 0 15px;
+        }
+
+        .nav-pills .nav-link {
+            color: #495057;
+            margin-right: 5px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #212529;
+            color: #88d100;
+        }
+
+        .nav-pills .nav-link:hover {
+            background-color: #e9ecef;
+        }
+
+        .card-shadow {
+            background: white;
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            margin-bottom: 20px;
+        }
+
+        .item-row {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: 0.1s;
+            background: white;
+        }
+
+        .item-row:hover {
+            background: #f8f9fa;
+        }
+
+        .item-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #eee;
+            margin-right: 15px;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .status-available {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-unavailable {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .status-popular {
+            background: #fff3cd;
+            color: #856404;
+            margin-left: 5px;
+        }
+
+        .promo-code {
+            font-family: monospace;
+            font-size: 1.1em;
+            letter-spacing: 1px;
+            background: #f1f3f5;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            border: 1px solid #dee2e6;
+        }
+
+        .order-card {
+            border-left: 4px solid #88d100;
+            transition: transform 0.2s;
+        }
+
+        .order-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .modal-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+
+        .preview-img {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px dashed #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #adb5bd;
+        }
+
         /* Стили для поля цены модификатора */
-        .mod-price-inp { font-family: monospace; letter-spacing: 0.5px; }
+        .mod-price-inp {
+            font-family: monospace;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
+
 <body>
 
-<!-- ВХОД -->
-<div class="container" id="login-screen">
-    <div class="login-container text-center">
-        <h3 class="mb-4 fw-bold">☕ CoffeeMoll <span style="color:#88d100">Admin</span></h3>
-        <input type="email" id="email" class="form-control mb-3" placeholder="Email">
-        <input type="password" id="password" class="form-control mb-3" placeholder="Пароль">
-        <button onclick="login()" class="btn btn-dark w-100 py-2 fw-bold">Войти</button>
-    </div>
-</div>
-
-<!-- ПАНЕЛЬ -->
-<div class="main-container" id="dashboard">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="m-0 fw-bold">Панель управления</h4>
-        <div class="d-flex align-items-center gap-3">
-            <span class="badge bg-light text-dark border" id="admin-email"></span>
-            <button onclick="logout()" class="btn btn-outline-danger btn-sm"><i class="fas fa-sign-out-alt"></i> Выйти</button>
+    <!-- ВХОД -->
+    <div class="container" id="login-screen">
+        <div class="login-container text-center">
+            <h3 class="mb-4 fw-bold">☕ CoffeeMoll <span style="color:#88d100">Admin</span></h3>
+            <input type="email" id="email" class="form-control mb-3" placeholder="Email">
+            <input type="password" id="password" class="form-control mb-3" placeholder="Пароль">
+            <button onclick="login()" class="btn btn-dark w-100 py-2 fw-bold">Войти</button>
         </div>
     </div>
 
-    <!-- Навигация -->
-    <ul class="nav nav-pills mb-4" id="pills-tab">
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-menu"><i class="fas fa-coffee"></i> Меню</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-orders" onclick="loadOrders()"><i class="fas fa-list-ul"></i> Заказы</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-promos" onclick="loadPromos()"><i class="fas fa-ticket-alt"></i> Промокоды</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-reviews" onclick="loadReviews()"><i class="fas fa-star"></i> Отзывы</button></li>
-    </ul>
+    <!-- ПАНЕЛЬ -->
+    <div class="main-container" id="dashboard">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="m-0 fw-bold">Панель управления</h4>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-light text-dark border" id="admin-email"></span>
+                <button onclick="logout()" class="btn btn-outline-danger btn-sm"><i class="fas fa-sign-out-alt"></i>
+                    Выйти</button>
+            </div>
+        </div>
 
-    <div class="tab-content">
-        
-        <!-- 1. МЕНЮ -->
-        <div class="tab-pane fade show active" id="tab-menu">
-            <div class="card card-shadow p-4">
-                <div class="row g-3 align-items-end mb-4">
-                    <div class="col-md-3">
-                        <label class="small text-muted fw-bold">Глобальные настройки</label>
-                        <div class="form-check form-switch mt-1">
-                            <input class="form-check-input" type="checkbox" id="promo-switch" onchange="updateSettings()">
-                            <label class="form-check-label">Включить Промокоды</label>
+        <!-- Навигация -->
+        <ul class="nav nav-pills mb-4" id="pills-tab">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-menu"><i
+                        class="fas fa-coffee"></i> Меню</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-orders"
+                    onclick="loadOrders()"><i class="fas fa-list-ul"></i> Заказы</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-promos"
+                    onclick="loadPromos()"><i class="fas fa-ticket-alt"></i> Промокоды</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-reviews"
+                    onclick="loadReviews()"><i class="fas fa-star"></i> Отзывы</button></li>
+        </ul>
+
+        <div class="tab-content">
+
+            <!-- 1. МЕНЮ -->
+            <div class="tab-pane fade show active" id="tab-menu">
+                <div class="card card-shadow p-4">
+                    <div class="row g-3 align-items-end mb-4">
+                        <div class="col-md-3">
+                            <label class="small text-muted fw-bold">Глобальные настройки</label>
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input" type="checkbox" id="promo-switch"
+                                    onchange="updateSettings()">
+                                <label class="form-check-label">Включить Промокоды</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small text-muted fw-bold">Время работы</label>
+                            <div class="input-group input-group-sm mt-1">
+                                <span class="input-group-text">C</span>
+                                <input type="time" class="form-control" id="open-time" onchange="updateSettings()">
+                                <span class="input-group-text">До</span>
+                                <input type="time" class="form-control" id="close-time" onchange="updateSettings()">
+                            </div>
+                        </div>
+                        <div class="col-md-5 text-end">
+                            <button class="btn btn-light border me-2" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#settingsCollapse">⚙️ Настроить списки</button>
                         </div>
                     </div>
+
+                    <div class="collapse mb-4" id="settingsCollapse">
+                        <div class="card card-body bg-light border-0">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="small fw-bold mb-1">Сиропы (через запятую)</label>
+                                    <textarea id="set-syrups" class="form-control form-control-sm" rows="4"
+                                        onchange="updateSettings()"></textarea>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="small fw-bold mb-1">Альтернативное молоко</label>
+                                    <textarea id="set-milks" class="form-control form-control-sm" rows="4"
+                                        onchange="updateSettings()"></textarea>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="small fw-bold mb-1">Соусы</label>
+                                    <textarea id="set-sauces" class="form-control form-control-sm" rows="4"
+                                        onchange="updateSettings()"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-white border-end-0"><i
+                                class="fas fa-search text-muted"></i></span>
+                        <input type="text" id="search" class="form-control border-start-0" placeholder="Поиск блюда..."
+                            oninput="renderList()">
+                    </div>
+                </div>
+
+                <div id="menu-list" class="card card-shadow p-0 overflow-hidden"></div>
+            </div>
+
+            <!-- 2. ЗАКАЗЫ -->
+            <div class="tab-pane fade" id="tab-orders">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="m-0 fw-bold">История заказов</h5>
+                    <button class="btn btn-light border btn-sm shadow-sm" onclick="loadOrders()"><i
+                            class="fas fa-sync-alt"></i> Обновить</button>
+                </div>
+                <div id="orders-container"></div>
+            </div>
+
+            <!-- 3. ПРОМОКОДЫ -->
+            <div class="tab-pane fade" id="tab-promos">
+                <div class="row g-4">
                     <div class="col-md-4">
-                        <label class="small text-muted fw-bold">Время работы</label>
-                        <div class="input-group input-group-sm mt-1">
-                            <span class="input-group-text">C</span>
-                            <input type="time" class="form-control" id="open-time" onchange="updateSettings()">
-                            <span class="input-group-text">До</span>
-                            <input type="time" class="form-control" id="close-time" onchange="updateSettings()">
+                        <div class="card card-shadow p-4 h-100">
+                            <h6 class="fw-bold mb-3"><i class="fas fa-plus-circle text-success"></i> Создать промокод
+                            </h6>
+                            <div class="mb-3">
+                                <label class="small text-muted">Код (напр. SUMMER)</label>
+                                <input type="text" id="new-promo-code" class="form-control text-uppercase fw-bold">
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="small text-muted">Скидка %</label>
+                                    <input type="number" id="new-promo-disc" class="form-control" placeholder="20">
+                                </div>
+                                <div class="col-6">
+                                    <label class="small text-muted">Лимит</label>
+                                    <input type="number" id="new-promo-limit" class="form-control" placeholder="100">
+                                </div>
+                            </div>
+                            <button class="btn btn-success w-100 fw-bold py-2" onclick="addPromo()">Создать</button>
                         </div>
                     </div>
-                    <div class="col-md-5 text-end">
-                        <button class="btn btn-light border me-2" type="button" data-bs-toggle="collapse" data-bs-target="#settingsCollapse">⚙️ Настроить списки</button>
+                    <div class="col-md-8">
+                        <div id="promos-container"></div>
                     </div>
                 </div>
-                
-                <div class="collapse mb-4" id="settingsCollapse">
-                    <div class="card card-body bg-light border-0">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="small fw-bold mb-1">Сиропы (через запятую)</label>
-                                <textarea id="set-syrups" class="form-control form-control-sm" rows="4" onchange="updateSettings()"></textarea>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="small fw-bold mb-1">Альтернативное молоко</label>
-                                <textarea id="set-milks" class="form-control form-control-sm" rows="4" onchange="updateSettings()"></textarea>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="small fw-bold mb-1">Соусы</label>
-                                <textarea id="set-sauces" class="form-control form-control-sm" rows="4" onchange="updateSettings()"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="input-group shadow-sm">
-                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-                    <input type="text" id="search" class="form-control border-start-0" placeholder="Поиск блюда..." oninput="renderList()">
-                </div>
             </div>
-            
-            <div id="menu-list" class="card card-shadow p-0 overflow-hidden"></div>
-        </div>
 
-        <!-- 2. ЗАКАЗЫ -->
-        <div class="tab-pane fade" id="tab-orders">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="m-0 fw-bold">История заказов</h5>
-                <button class="btn btn-light border btn-sm shadow-sm" onclick="loadOrders()"><i class="fas fa-sync-alt"></i> Обновить</button>
-            </div>
-            <div id="orders-container"></div>
-        </div>
-
-        <!-- 3. ПРОМОКОДЫ -->
-        <div class="tab-pane fade" id="tab-promos">
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card card-shadow p-4 h-100">
-                        <h6 class="fw-bold mb-3"><i class="fas fa-plus-circle text-success"></i> Создать промокод</h6>
-                        <div class="mb-3">
-                            <label class="small text-muted">Код (напр. SUMMER)</label>
-                            <input type="text" id="new-promo-code" class="form-control text-uppercase fw-bold">
-                        </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <label class="small text-muted">Скидка %</label>
-                                <input type="number" id="new-promo-disc" class="form-control" placeholder="20">
-                            </div>
-                            <div class="col-6">
-                                <label class="small text-muted">Лимит</label>
-                                <input type="number" id="new-promo-limit" class="form-control" placeholder="100">
-                            </div>
-                        </div>
-                        <button class="btn btn-success w-100 fw-bold py-2" onclick="addPromo()">Создать</button>
-                    </div>
+            <!-- 4. ОТЗЫВЫ -->
+            <div class="tab-pane fade" id="tab-reviews">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="m-0 fw-bold">Отзывы клиентов</h5>
+                    <button class="btn btn-light border btn-sm shadow-sm" onclick="loadReviews()"><i
+                            class="fas fa-sync-alt"></i> Обновить</button>
                 </div>
-                <div class="col-md-8">
-                    <div id="promos-container"></div>
-                </div>
+                <div id="reviews-container"></div>
             </div>
-        </div>
-
-        <!-- 4. ОТЗЫВЫ -->
-        <div class="tab-pane fade" id="tab-reviews">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="m-0 fw-bold">Отзывы клиентов</h5>
-                <button class="btn btn-light border btn-sm shadow-sm" onclick="loadReviews()"><i class="fas fa-sync-alt"></i> Обновить</button>
-            </div>
-            <div id="reviews-container"></div>
         </div>
     </div>
-</div>
 
-<!-- МОДАЛКА РЕДАКТИРОВАНИЯ ТОВАРА -->
-<div class="modal fade" id="editModal" tabindex="-1">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title fw-bold">Редактирование товара</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body bg-light">
-          <input type="hidden" id="edit-id">
-          
-          <div class="row g-4">
-              <!-- Левая колонка: Основное -->
-              <div class="col-md-4">
-                  <div class="card p-3 border-0 shadow-sm h-100">
-                      <h6 class="text-muted fw-bold small mb-3">ОСНОВНАЯ ИНФОРМАЦИЯ</h6>
-                      
-                      <!-- Изображение -->
-                      <div class="mb-3">
-                          <img id="edit-img-preview" src="" class="preview-img mb-2" onerror="this.src='https://via.placeholder.com/300x200?text=Нет+фото'">
-                          <input type="text" id="edit-image" class="form-control form-control-sm" placeholder="Ссылка на картинку..." oninput="document.getElementById('edit-img-preview').src = this.value">
-                      </div>
+    <!-- МОДАЛКА РЕДАКТИРОВАНИЯ ТОВАРА -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Редактирование товара</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-light">
+                    <input type="hidden" id="edit-id">
 
-                      <div class="mb-3">
-                          <label class="form-label small">Категория</label>
-                          <input type="text" id="edit-category" class="form-control fw-bold" list="cat-list">
-                          <datalist id="cat-list">
-                              <option value="КОФЕ">
-                              <option value="ЧАЙ">
-                              <option value="ДЕСЕРТЫ">
-                              <option value="СЕЗОННОЕ">
-                              <option value="ХОЛОДНЫЕ НАПИТКИ">
-                          </datalist>
-                      </div>
+                    <div class="row g-4">
+                        <!-- Левая колонка: Основное -->
+                        <div class="col-md-4">
+                            <div class="card p-3 border-0 shadow-sm h-100">
+                                <h6 class="text-muted fw-bold small mb-3">ОСНОВНАЯ ИНФОРМАЦИЯ</h6>
 
-                      <div class="mb-3">
-                          <label class="form-label small">Название</label>
-                          <input type="text" id="edit-name" class="form-control fw-bold">
-                      </div>
+                                <!-- Изображение -->
+                                <div class="mb-3">
+                                    <img id="edit-img-preview" src="" class="preview-img mb-2"
+                                        onerror="this.src='https://via.placeholder.com/300x200?text=Нет+фото'">
+                                    <input type="text" id="edit-image" class="form-control form-control-sm"
+                                        placeholder="Ссылка на картинку..."
+                                        oninput="document.getElementById('edit-img-preview').src = this.value">
+                                </div>
 
-                      <div class="row g-2 mb-3">
-                          <div class="col-6">
-                              <label class="form-label small">Цена</label>
-                              <input type="number" id="edit-price" class="form-control">
-                          </div>
-                          <div class="col-6">
-                              <label class="form-label small">Бейдж</label>
-                              <input type="text" id="edit-badge" class="form-control" placeholder="ХИТ">
-                          </div>
-                      </div>
+                                <div class="mb-3">
+                                    <label class="form-label small">Категория</label>
+                                    <input type="text" id="edit-category" class="form-control fw-bold" list="cat-list">
+                                    <datalist id="cat-list">
+                                        <option value="КОФЕ">
+                                        <option value="ЧАЙ">
+                                        <option value="ДЕСЕРТЫ">
+                                        <option value="СЕЗОННОЕ">
+                                        <option value="ХОЛОДНЫЕ НАПИТКИ">
+                                    </datalist>
+                                </div>
 
-                      <div class="form-check form-switch mb-2">
-                          <input class="form-check-input" type="checkbox" id="edit-available">
-                          <label class="form-check-label fw-bold text-success">Доступен для заказа</label>
-                      </div>
-                      <div class="form-check form-switch">
-                          <input class="form-check-input" type="checkbox" id="edit-popular">
-                          <label class="form-check-label fw-bold text-warning">Популярное (Хит)</label>
-                      </div>
-                  </div>
-              </div>
+                                <div class="mb-3">
+                                    <label class="form-label small">Название</label>
+                                    <input type="text" id="edit-name" class="form-control fw-bold">
+                                </div>
 
-              <!-- Средняя колонка: Описание и Объемы -->
-              <div class="col-md-4">
-                  <div class="card p-3 border-0 shadow-sm mb-3">
-                      <h6 class="text-muted fw-bold small mb-3">ОПИСАНИЕ</h6>
-                      <div class="mb-2">
-                          <label class="small text-muted">Короткое (в списке)</label>
-                          <textarea id="edit-desc" class="form-control" rows="2"></textarea>
-                      </div>
-                      <div class="mb-0">
-                          <label class="small text-muted">Полное (в карточке)</label>
-                          <textarea id="edit-full-desc" class="form-control" rows="4"></textarea>
-                      </div>
-                  </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label small">Цена</label>
+                                        <input type="number" id="edit-price" class="form-control">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small">Бейдж</label>
+                                        <input type="text" id="edit-badge" class="form-control" placeholder="ХИТ">
+                                    </div>
+                                </div>
 
-                  <div class="card p-3 border-0 shadow-sm">
-                      <div class="d-flex justify-content-between align-items-center mb-2">
-                          <h6 class="text-muted fw-bold small m-0">ОБЪЕМЫ / ПОРЦИИ</h6>
-                          <button class="btn btn-sm btn-success py-0 px-2 fw-bold" onclick="addVolumeRow()">+</button>
-                      </div>
-                      <div class="small text-muted fst-italic mb-2" style="font-size: 0.75rem;">Если заданы объемы, основная цена игнорируется</div>
-                      <div id="volumes-container"></div>
-                  </div>
-              </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="edit-available">
+                                    <label class="form-check-label fw-bold text-success">Доступен для заказа</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="edit-popular">
+                                    <label class="form-check-label fw-bold text-warning">Популярное (Хит)</label>
+                                </div>
+                            </div>
+                        </div>
 
-              <!-- Правая колонка: Модификаторы -->
-              <div class="col-md-4">
-                  <div class="card p-3 border-0 shadow-sm h-100">
-                      <h6 class="text-muted fw-bold small mb-3">МОДИФИКАТОРЫ (ЦЕНА)</h6>
-                      <div class="small text-muted mb-2 fst-italic" style="font-size: 0.75rem;">
-                          Для разных объемов пишите цены через "|", например: 300|400
-                      </div>
-                      <div id="modifiers-container" style="max-height: 500px; overflow-y: auto; padding-right: 5px;"></div>
-                  </div>
-              </div>
-          </div>
-      </div>
-      <div class="modal-footer bg-light border-top-0">
-        <button class="btn btn-light border" data-bs-dismiss="modal">Отмена</button>
-        <button class="btn btn-success fw-bold px-4" onclick="saveItem()">Сохранить изменения</button>
-      </div>
+                        <!-- Средняя колонка: Описание и Объемы -->
+                        <div class="col-md-4">
+                            <div class="card p-3 border-0 shadow-sm mb-3">
+                                <h6 class="text-muted fw-bold small mb-3">ОПИСАНИЕ</h6>
+                                <div class="mb-2">
+                                    <label class="small text-muted">Короткое (в списке)</label>
+                                    <textarea id="edit-desc" class="form-control" rows="2"></textarea>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="small text-muted">Полное (в карточке)</label>
+                                    <textarea id="edit-full-desc" class="form-control" rows="4"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="card p-3 border-0 shadow-sm">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="text-muted fw-bold small m-0">ОБЪЕМЫ / ПОРЦИИ</h6>
+                                    <button class="btn btn-sm btn-success py-0 px-2 fw-bold"
+                                        onclick="addVolumeRow()">+</button>
+                                </div>
+                                <div class="small text-muted fst-italic mb-2" style="font-size: 0.75rem;">Если заданы
+                                    объемы, основная цена игнорируется</div>
+                                <div id="volumes-container"></div>
+                            </div>
+                        </div>
+
+                        <!-- Правая колонка: Модификаторы -->
+                        <div class="col-md-4">
+                            <div class="card p-3 border-0 shadow-sm h-100">
+                                <h6 class="text-muted fw-bold small mb-3">МОДИФИКАТОРЫ (ЦЕНА)</h6>
+                                <div class="small text-muted mb-2 fst-italic" style="font-size: 0.75rem;">
+                                    Для разных объемов пишите цены через "|", например: 300|400
+                                </div>
+                                <div id="modifiers-container"
+                                    style="max-height: 500px; overflow-y: auto; padding-right: 5px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0">
+                    <button class="btn btn-light border" data-bs-dismiss="modal">Отмена</button>
+                    <button class="btn btn-success fw-bold px-4" onclick="saveItem()">Сохранить изменения</button>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- МОДАЛКА ИСТОРИИ ПРОМО -->
-<div class="modal fade" id="promoHistoryModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fw-bold">История: <span id="hist-promo-code" class="text-success"></span></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-          <div id="promo-history-list">Загрузка...</div>
-      </div>
+    <!-- МОДАЛКА ИСТОРИИ ПРОМО -->
+    <div class="modal fade" id="promoHistoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">История: <span id="hist-promo-code" class="text-success"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="promo-history-list">Загрузка...</div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, doc, updateDoc, onSnapshot, getDocs, setDoc, deleteDoc, query, orderBy, limit, where, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, doc, updateDoc, onSnapshot, getDocs, setDoc, deleteDoc, query, orderBy, limit, where, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-  // 🔴🔴🔴 ВСТАВЬТЕ СЮДА ВАШ КОНФИГ 🔴🔴🔴
-  const firebaseConfig = {
-  apiKey: "AIzaSyCjmU7YTy6aKzd-0GxnS7DSClLmIFCVrWU",
-  authDomain: "coffeemolldb.firebaseapp.com",
-  projectId: "coffeemolldb",
-  storageBucket: "coffeemolldb.firebasestorage.app",
-  messagingSenderId: "599284136702",
-  appId: "1:599284136702:web:d84ef0a10a1dde699743af",
-  measurementId: "G-W4CDJ2PDX0"
-};
+        // 🔴🔴🔴 ВСТАВЬТЕ СЮДА ВАШ КОНФИГ 🔴🔴🔴
+        const firebaseConfig = {
+            apiKey: "AIzaSyCjmU7YTy6aKzd-0GxnS7DSClLmIFCVrWU",
+            authDomain: "coffeemolldb.firebaseapp.com",
+            projectId: "coffeemolldb",
+            storageBucket: "coffeemolldb.firebasestorage.app",
+            messagingSenderId: "599284136702",
+            appId: "1:599284136702:web:d84ef0a10a1dde699743af",
+            measurementId: "G-W4CDJ2PDX0"
+        };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-  let menuData = [];
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        let menuData = [];
 
-  const MOD_CONFIG = [
-      { key: 'milk', label: 'Молоко', def: 50 }, 
-      { key: 'alt_milk', label: 'Альт. молоко', def: 400 },
-      { key: 'cream', label: 'Сливки', def: 50 }, 
-      { key: 'syrup', label: 'Сироп', def: 0 },
-      { key: 'sugar', label: 'Сахар', def: 0 }, 
-      { key: 'honey', label: 'Мед', def: 100 },
-      { key: 'lemon', label: 'Лимон', def: 50 }, 
-      { key: 'cinnamon', label: 'Корица', def: 0 },
-      { key: 'shot', label: 'Доп. шот', def: 300 }, 
-      { key: 'egg', label: 'Яйцо', def: 70 },
-      { key: 'cheese', label: 'Сыр', def: 150 }, 
-      { key: 'jalapeno', label: 'Халапеньо', def: 150 },
-      { key: 'onion', label: 'Лук фри', def: 150 }, 
-      { key: 'sauce', label: 'Соус', def: 150 }
-  ];
+        const MOD_CONFIG = [
+            { key: 'milk', label: 'Молоко', def: 50 },
+            { key: 'alt_milk', label: 'Альт. молоко', def: 400 },
+            { key: 'cream', label: 'Сливки', def: 50 },
+            { key: 'syrup', label: 'Сироп', def: 0 },
+            { key: 'sugar', label: 'Сахар', def: 0 },
+            { key: 'honey', label: 'Мед', def: 100 },
+            { key: 'lemon', label: 'Лимон', def: 50 },
+            { key: 'cinnamon', label: 'Корица', def: 0 },
+            { key: 'shot', label: 'Доп. шот', def: 300 },
+            { key: 'egg', label: 'Яйцо', def: 70 },
+            { key: 'cheese', label: 'Сыр', def: 150 },
+            { key: 'jalapeno', label: 'Халапеньо', def: 150 },
+            { key: 'onion', label: 'Лук фри', def: 150 },
+            { key: 'sauce', label: 'Соус', def: 150 }
+        ];
 
-  window.login = () => {
-      const e = document.getElementById('email').value;
-      const p = document.getElementById('password').value;
-      signInWithEmailAndPassword(auth, e, p).catch(err => alert("Ошибка: " + err.message));
-  }
-  window.logout = () => signOut(auth);
+        window.login = () => {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            signInWithEmailAndPassword(auth, e, p).catch(err => alert("Ошибка: " + err.message));
+        }
+        window.logout = () => signOut(auth);
 
-  onAuthStateChanged(auth, (user) => {
-      document.getElementById('login-screen').style.display = user ? 'none' : 'block';
-      document.getElementById('dashboard').style.display = user ? 'block' : 'none';
-      if(user) { 
-          document.getElementById('admin-email').innerText = user.email;
-          initData(); initSettings(); loadOrders(); loadPromos(); loadReviews();
-      }
-  });
+        onAuthStateChanged(auth, (user) => {
+            document.getElementById('login-screen').style.display = user ? 'none' : 'block';
+            document.getElementById('dashboard').style.display = user ? 'block' : 'none';
+            if (user) {
+                document.getElementById('admin-email').innerText = user.email;
+                initData(); initSettings(); loadOrders(); loadPromos(); loadReviews();
+            }
+        });
 
-  // === 1. МЕНЮ ===
-  function initData() {
-      onSnapshot(collection(db, "menu"), (s) => {
-          menuData = []; s.forEach(d => menuData.push({ _id: d.id, ...d.data() }));
-          renderList();
-      });
-  }
-  
-  // Функции настроек (без изменений)
-  function initSettings() {
-      onSnapshot(doc(db, "settings", "main"), (d) => {
-          if(!d.exists()) return;
-          const data = d.data();
-          document.getElementById('open-time').value = data.open_time || "09:00";
-          document.getElementById('close-time').value = data.close_time || "23:00";
-          document.getElementById('promo-switch').checked = (String(data.enable_promos) === "true");
-          document.getElementById('set-syrups').value = data.syrup_names || "";
-          document.getElementById('set-milks').value = data.alt_milks || "";
-          document.getElementById('set-sauces').value = data.sauce_names || "";
-      });
-  }
-  window.updateSettings = async () => {
-      await updateDoc(doc(db, "settings", "main"), {
-          open_time: document.getElementById('open-time').value,
-          close_time: document.getElementById('close-time').value,
-          enable_promos: String(document.getElementById('promo-switch').checked),
-          syrup_names: document.getElementById('set-syrups').value,
-          alt_milks: document.getElementById('set-milks').value,
-          sauce_names: document.getElementById('set-sauces').value
-      });
-  }
+        // === 1. МЕНЮ ===
+        function initData() {
+            onSnapshot(collection(db, "menu"), (s) => {
+                menuData = []; s.forEach(d => menuData.push({ _id: d.id, ...d.data() }));
+                renderList();
+            });
+        }
 
-  // Рендер списка
-  window.renderList = () => {
-      const q = document.getElementById('search').value.toLowerCase();
-      const cont = document.getElementById('menu-list'); cont.innerHTML = '';
-      const cats = {};
-      const order = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "ПАСТЫ", "ЗАКУСКИ"];
-      
-      menuData.forEach(i => { if(i.name.toLowerCase().includes(q)) { if(!cats[i.category]) cats[i.category]=[]; cats[i.category].push(i); } });
-      const sorted = Object.keys(cats).sort((a,b) => { let ia = order.indexOf(a.toUpperCase()), ib = order.indexOf(b.toUpperCase()); return (ia===-1?999:ia) - (ib===-1?999:ib); });
+        // Функции настроек (без изменений)
+        function initSettings() {
+            onSnapshot(doc(db, "settings", "main"), (d) => {
+                if (!d.exists()) return;
+                const data = d.data();
+                document.getElementById('open-time').value = data.open_time || "09:00";
+                document.getElementById('close-time').value = data.close_time || "23:00";
+                document.getElementById('promo-switch').checked = (String(data.enable_promos) === "true");
+                document.getElementById('set-syrups').value = data.syrup_names || "";
+                document.getElementById('set-milks').value = data.alt_milks || "";
+                document.getElementById('set-sauces').value = data.sauce_names || "";
+            });
+        }
+        window.updateSettings = async () => {
+            await updateDoc(doc(db, "settings", "main"), {
+                open_time: document.getElementById('open-time').value,
+                close_time: document.getElementById('close-time').value,
+                enable_promos: String(document.getElementById('promo-switch').checked),
+                syrup_names: document.getElementById('set-syrups').value,
+                alt_milks: document.getElementById('set-milks').value,
+                sauce_names: document.getElementById('set-sauces').value
+            });
+        }
 
-      sorted.forEach(c => {
-          cont.innerHTML += `<div class="p-2 bg-light fw-bold small text-uppercase text-muted border-bottom">${c}</div>`;
-          cats[c].forEach(i => {
-              const pr = (i.volumes && i.volumes.length) ? `от ${i.volumes[0].p} ₸` : `${i.price} ₸`;
-              const statusClass = i.available ? 'status-available' : 'status-unavailable';
-              const statusText = i.available ? 'В наличии' : 'Нет';
-              const popularBadge = i.popular ? '<span class="status-badge status-popular">🔥 ХИТ</span>' : '';
-              const imgUrl = i.image || '';
+        // Рендер списка
+        window.renderList = () => {
+            const q = document.getElementById('search').value.toLowerCase();
+            const cont = document.getElementById('menu-list'); cont.innerHTML = '';
+            const cats = {};
+            const order = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "ПАСТЫ", "ЗАКУСКИ"];
 
-              cont.innerHTML += `
+            menuData.forEach(i => { if (i.name.toLowerCase().includes(q)) { if (!cats[i.category]) cats[i.category] = []; cats[i.category].push(i); } });
+            const sorted = Object.keys(cats).sort((a, b) => { let ia = order.indexOf(a.toUpperCase()), ib = order.indexOf(b.toUpperCase()); return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib); });
+
+            sorted.forEach(c => {
+                cont.innerHTML += `<div class="p-2 bg-light fw-bold small text-uppercase text-muted border-bottom">${c}</div>`;
+                cats[c].forEach(i => {
+                    const pr = (i.volumes && i.volumes.length) ? `от ${i.volumes[0].p} ₸` : `${i.price} ₸`;
+                    const statusClass = i.available ? 'status-available' : 'status-unavailable';
+                    const statusText = i.available ? 'В наличии' : 'Нет';
+                    const popularBadge = i.popular ? '<span class="status-badge status-popular">🔥 ХИТ</span>' : '';
+                    const imgUrl = i.image || '';
+
+                    cont.innerHTML += `
               <div class="item-row">
                   <img src="${imgUrl}" class="item-img" onerror="this.style.background='#f0f0f0'">
                   <div style="flex:1">
@@ -409,164 +539,192 @@
                   </div>
                   <button class="btn btn-sm btn-light border" onclick="openEdit('${i._id}')"><i class="fas fa-pen"></i></button>
               </div>`;
-          });
-      });
-  }
+                });
+            });
+        }
 
-  // === РЕДАКТИРОВАНИЕ ===
-  const modal = new bootstrap.Modal(document.getElementById('editModal'));
-  
-  window.openEdit = (id) => {
-      const i = menuData.find(x => x._id === id);
-      document.getElementById('edit-id').value = id;
-      
-      // Заполнение полей
-      document.getElementById('edit-name').value = i.name || "";
-      document.getElementById('edit-category').value = i.category || "";
-      document.getElementById('edit-price').value = i.price || 0;
-      document.getElementById('edit-image').value = i.image || "";
-      document.getElementById('edit-img-preview').src = i.image || "";
-      document.getElementById('edit-desc').value = i.description || "";
-      document.getElementById('edit-full-desc').value = i.full_description || i.description || ""; 
-      document.getElementById('edit-badge').value = i.badge || "";
-      
-      document.getElementById('edit-available').checked = i.available !== false; 
-      document.getElementById('edit-popular').checked = i.popular === true;
+        // === РЕДАКТИРОВАНИЕ ===
+        const modal = new bootstrap.Modal(document.getElementById('editModal'));
 
-      // Модификаторы
-      const mc = document.getElementById('modifiers-container'); mc.innerHTML = '';
-      const cm = i.modifiers || {};
-      MOD_CONFIG.forEach(c => {
-          const chk = c.key in cm;
-          let pr = c.def;
-          // Если модификатор включен, берем его значение
-          if (chk) {
-              const val = cm[c.key];
-              if (Array.isArray(val)) {
-                  // Если массив [300, 400], превращаем в строку "300|400"
-                  pr = val.join('|');
-              } else {
-                  pr = val;
-              }
-          }
-          
-          mc.innerHTML += `
+        window.openEdit = (id) => {
+            const i = menuData.find(x => x._id === id);
+            document.getElementById('edit-id').value = id;
+
+            // Заполнение полей
+            document.getElementById('edit-name').value = i.name || "";
+            document.getElementById('edit-category').value = i.category || "";
+            document.getElementById('edit-price').value = i.price || 0;
+            document.getElementById('edit-image').value = i.image || "";
+            document.getElementById('edit-img-preview').src = i.image || "";
+            document.getElementById('edit-desc').value = i.description || "";
+            document.getElementById('edit-full-desc').value = i.full_description || i.description || "";
+            document.getElementById('edit-badge').value = i.badge || "";
+
+            document.getElementById('edit-available').checked = i.available !== false;
+            document.getElementById('edit-popular').checked = i.popular === true;
+
+            // Модификаторы
+            const mc = document.getElementById('modifiers-container'); mc.innerHTML = '';
+            const cm = i.modifiers || {};
+            MOD_CONFIG.forEach(c => {
+                const chk = c.key in cm;
+                let pr = c.def;
+                // Если модификатор включен, берем его значение
+                if (chk) {
+                    const val = cm[c.key];
+                    if (Array.isArray(val)) {
+                        // Если массив [300, 400], превращаем в строку "300|400"
+                        pr = val.join('|');
+                    } else {
+                        pr = val;
+                    }
+                }
+
+                mc.innerHTML += `
           <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
               <div class="form-check mb-0">
-                  <input class="form-check-input mod-cb" type="checkbox" id="m_${c.key}" data-key="${c.key}" ${chk?'checked':''}>
+                  <input class="form-check-input mod-cb" type="checkbox" id="m_${c.key}" data-key="${c.key}" ${chk ? 'checked' : ''}>
                   <label class="form-check-label small" for="m_${c.key}">${c.label}</label>
               </div>
               <input type="text" class="form-control form-control-sm text-end mod-price-inp" style="width:100px" id="mp_${c.key}" value="${pr}" placeholder="Цена">
           </div>`;
-      });
+            });
 
-      // Объемы
-      document.getElementById('volumes-container').innerHTML = '';
-      (i.volumes || []).forEach(v => addVolumeRow(v.n, v.p));
-      
-      modal.show();
-  }
+            // Объемы
+            document.getElementById('volumes-container').innerHTML = '';
+            (i.volumes || []).forEach(v => addVolumeRow(v.n, v.p));
 
-  window.addVolumeRow = (n='', p='') => {
-      const div = document.createElement('div');
-      div.className = 'd-flex gap-2 mb-2 vol-row';
-      div.innerHTML = `
+            modal.show();
+        }
+
+        window.addVolumeRow = (n = '', p = '') => {
+            const div = document.createElement('div');
+            div.className = 'd-flex gap-2 mb-2 vol-row';
+            div.innerHTML = `
           <input type="text" class="form-control form-control-sm" placeholder="Название (0.3)" value="${n}">
           <input type="number" class="form-control form-control-sm" placeholder="Цена" value="${p}" style="width: 100px;">
           <button class="btn btn-sm text-danger border-0 px-2" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
       `;
-      document.getElementById('volumes-container').appendChild(div);
-  }
+            document.getElementById('volumes-container').appendChild(div);
+        }
 
-  window.saveItem = async () => {
-      const id = document.getElementById('edit-id').value;
-      
-      // Сбор модификаторов
-      const mods = {}; 
-      document.querySelectorAll('.mod-cb').forEach(cb => { 
-          if(cb.checked) {
-              const rawVal = document.getElementById(`mp_${cb.dataset.key}`).value;
-              let val;
-              // Проверяем, есть ли разделитель '|'
-              if (rawVal.includes('|')) {
-                  // Превращаем "300|400" в [300, 400]
-                  val = rawVal.split('|').map(v => parseInt(v.trim()) || 0);
-              } else {
-                  val = parseInt(rawVal) || 0;
-              }
-              mods[cb.dataset.key] = val; 
-          }
-      });
+        window.saveItem = async () => {
+            const id = document.getElementById('edit-id').value;
 
-      // Сбор объемов
-      const vols = [];
-      document.querySelectorAll('.vol-row').forEach(r => { 
-          const inputs = r.querySelectorAll('input'); 
-          if(inputs[0].value) vols.push({n: inputs[0].value, p: parseInt(inputs[1].value)||0}); 
-      });
-      
-      // Объект обновления
-      const updateData = {
-          name: document.getElementById('edit-name').value,
-          category: document.getElementById('edit-category').value,
-          price: parseInt(document.getElementById('edit-price').value)||0,
-          image: document.getElementById('edit-image').value,
-          description: document.getElementById('edit-desc').value,
-          full_description: document.getElementById('edit-full-desc').value,
-          badge: document.getElementById('edit-badge').value,
-          available: document.getElementById('edit-available').checked,
-          popular: document.getElementById('edit-popular').checked,
-          modifiers: mods, 
-          volumes: vols
-      };
+            // Сбор модификаторов
+            const mods = {};
+            document.querySelectorAll('.mod-cb').forEach(cb => {
+                if (cb.checked) {
+                    const rawVal = document.getElementById(`mp_${cb.dataset.key}`).value;
+                    let val;
+                    // Проверяем, есть ли разделитель '|'
+                    if (rawVal.includes('|')) {
+                        // Превращаем "300|400" в [300, 400]
+                        val = rawVal.split('|').map(v => parseInt(v.trim()) || 0);
+                    } else {
+                        val = parseInt(rawVal) || 0;
+                    }
+                    mods[cb.dataset.key] = val;
+                }
+            });
 
-      try {
-          await updateDoc(doc(db, "menu", id), updateData);
-          modal.hide();
-      } catch(e) {
-          alert("Ошибка сохранения: " + e.message);
-      }
-  }
+            // Сбор объемов
+            const vols = [];
+            document.querySelectorAll('.vol-row').forEach(r => {
+                const inputs = r.querySelectorAll('input');
+                if (inputs[0].value) vols.push({ n: inputs[0].value, p: parseInt(inputs[1].value) || 0 });
+            });
 
-  // === 2. ЗАКАЗЫ (Как было) ===
-  window.loadOrders = async () => {
-      const cont = document.getElementById('orders-container');
-      cont.innerHTML = '<div class="text-center p-3 text-muted">Загрузка заказов...</div>';
-      try {
-          const q = query(collection(db, "orders"), limit(50));
-          const snap = await getDocs(q);
-          if(snap.empty) { cont.innerHTML = '<div class="text-center text-muted p-4">История заказов пуста</div>'; return; }
-          let orders = [];
-          snap.forEach(doc => orders.push({ id: doc.id, ...doc.data() }));
-          orders.sort((a, b) => {
-              const tA = (a.timestamp && a.timestamp.seconds) ? a.timestamp.seconds : (new Date(a.date_str || 0).getTime() / 1000);
-              const tB = (b.timestamp && b.timestamp.seconds) ? b.timestamp.seconds : (new Date(b.date_str || 0).getTime() / 1000);
-              return tB - tA;
-          });
-          cont.innerHTML = '';
-          orders.forEach(d => {
-              const od = d.order_data || {};
-              const info = od.info || {};
-              const cart = od.cart || [];
-              const total = d.total_price || od.total || 0;
-              let dateStr = "???";
-              if (d.timestamp && d.timestamp.seconds) dateStr = new Date(d.timestamp.seconds * 1000).toLocaleString('ru-RU');
-              else if (d.date_str) dateStr = d.date_str;
+            // Объект обновления
+            const updateData = {
+                name: document.getElementById('edit-name').value,
+                category: document.getElementById('edit-category').value,
+                price: parseInt(document.getElementById('edit-price').value) || 0,
+                image: document.getElementById('edit-image').value,
+                description: document.getElementById('edit-desc').value,
+                full_description: document.getElementById('edit-full-desc').value,
+                badge: document.getElementById('edit-badge').value,
+                available: document.getElementById('edit-available').checked,
+                popular: document.getElementById('edit-popular').checked,
+                modifiers: mods,
+                volumes: vols
+            };
 
-              let itemsHtml = '';
-              if (Array.isArray(cart)) {
-                  cart.forEach(i => {
-                      let opts = (i.options || []).map(o => `• ${o}`).join('<br>');
-                      if(opts) opts = `<div class="small text-muted ps-3 mt-1" style="font-size:0.8em">${opts}</div>`;
-                      itemsHtml += `<div class="border-bottom pb-2 mb-2"><div class="d-flex justify-content-between"><span>${i.name}</span><span class="badge bg-light text-dark border">x${i.qty}</span></div>${opts}</div>`;
-                  });
-              }
+            try {
+                await updateDoc(doc(db, "menu", id), updateData);
+                modal.hide();
+            } catch (e) {
+                alert("Ошибка сохранения: " + e.message);
+            }
+        }
 
-              cont.innerHTML += `
-              <div class="card card-shadow order-card p-3 mb-3">
-                  <div class="d-flex justify-content-between small text-muted mb-2"><span>${dateStr}</span><span>${d.status || 'new'}</span></div>
+        // === 2. ЗАКАЗЫ (Как было) ===
+        let orderUnsubscribe = null;
+        window.loadOrders = async () => {
+            const cont = document.getElementById('orders-container');
+            if (orderUnsubscribe) orderUnsubscribe(); // Отписываемся от предыдущего слушателя если он был
+
+            cont.innerHTML = '<div class="text-center p-3 text-muted">Подключение к потоку заказов...</div>';
+
+            const q = query(collection(db, "orders"), orderBy("timestamp", "desc"), limit(50));
+
+            let firstLoad = true;
+            orderUnsubscribe = onSnapshot(q, (snap) => {
+                if (snap.empty) {
+                    cont.innerHTML = '<div class="text-center text-muted p-4">История заказов пуста</div>';
+                    return;
+                }
+
+                // Если это не первая загрузка и добавились новые документы
+                if (!firstLoad) {
+                    snap.docChanges().forEach((change) => {
+                        if (change.type === "added") {
+                            playNotificationSound();
+                        }
+                    });
+                }
+                firstLoad = false;
+
+                let orders = [];
+                snap.forEach(doc => orders.push({ id: doc.id, ...doc.data() }));
+
+                cont.innerHTML = '';
+                orders.forEach(d => {
+                    const od = d.order_data || {};
+                    const info = od.info || {};
+                    const cart = od.cart || [];
+                    const total = d.total_price || od.total || 0;
+                    let dateStr = "???";
+                    if (d.timestamp && d.timestamp.seconds) dateStr = new Date(d.timestamp.seconds * 1000).toLocaleString('ru-RU');
+                    else if (d.date_str) dateStr = d.date_str;
+
+                    const statusColors = {
+                        'new': 'bg-primary',
+                        'pending': 'bg-warning',
+                        'accepted': 'bg-info',
+                        'ready': 'bg-success',
+                        'given': 'bg-secondary',
+                        'rejected': 'bg-danger'
+                    };
+                    const currentStatus = d.status || 'new';
+
+                    let itemsHtml = '';
+                    if (Array.isArray(cart)) {
+                        cart.forEach(i => {
+                            let opts = (i.options || []).map(o => `• ${o}`).join('<br>');
+                            if (opts) opts = `<div class="small text-muted ps-3 mt-1" style="font-size:0.8em">${opts}</div>`;
+                            itemsHtml += `<div class="border-bottom pb-2 mb-2"><div class="d-flex justify-content-between"><span>${i.name}</span><span class="badge bg-light text-dark border">x${i.qty}</span></div>${opts}</div>`;
+                        });
+                    }
+
+                    cont.innerHTML += `
+              <div class="card card-shadow order-card p-3 mb-3" style="border-left-color: ${currentStatus === 'new' ? '#007bff' : (currentStatus === 'rejected' ? '#dc3545' : '#88d100')}">
+                  <div class="d-flex justify-content-between small text-muted mb-2">
+                    <span>${dateStr}</span>
+                    <span class="badge ${statusColors[currentStatus] || 'bg-secondary'}">${currentStatus.toUpperCase()}</span>
+                  </div>
                   <div class="d-flex justify-content-between mb-2">
-                      <div class="fw-bold">${info.name || 'Клиент'} <span class="fw-normal text-muted">${info.phone||''}</span></div>
+                      <div class="fw-bold">${info.name || 'Клиент'} <span class="fw-normal text-muted">${info.phone || ''}</span></div>
                       <div class="fs-5 fw-bold text-success">${total} ₸</div>
                   </div>
                   <button class="btn btn-sm btn-outline-secondary w-100 mb-2" onclick="toggleOrder('${d.id}')">Показать состав (${cart.length})</button>
@@ -574,26 +732,45 @@
                       ${itemsHtml}
                       ${info.address ? `<div class="mt-2 border-top pt-2">📍 ${info.address}</div>` : ''}
                       ${info.comment ? `<div class="text-danger">💬 ${info.comment}</div>` : ''}
+                      <div class="mt-2 pt-2 border-top d-flex gap-2">
+                          <button class="btn btn-xs btn-outline-danger" onclick="updateOrderStatus('${d.id}', 'rejected')">Отмена</button>
+                          <button class="btn btn-xs btn-outline-success" onclick="updateOrderStatus('${d.id}', 'ready')">Готов</button>
+                      </div>
                   </div>
               </div>`;
-          });
-      } catch (e) { cont.innerHTML = "Ошибка: " + e.message; }
-  }
-  window.toggleOrder = (id) => {
-      const el = document.getElementById(`order-details-${id}`);
-      el.style.display = el.style.display === 'none' ? 'block' : 'none';
-  }
+                });
+            }, (err) => {
+                cont.innerHTML = "Ошибка потока: " + err.message;
+            });
+        }
 
-  // === 3. ПРОМОКОДЫ ===
-  window.loadPromos = async () => {
-      const cont = document.getElementById('promos-container');
-      const snap = await getDocs(collection(db, "promocodes"));
-      cont.innerHTML = '';
-      if(snap.empty) cont.innerHTML = '<div class="text-muted p-3">Пусто</div>';
-      snap.forEach(d => {
-          const p = d.data();
-          const disc = Math.round((p.discount || 0) * 100);
-          cont.innerHTML += `
+        window.updateOrderStatus = async (id, status) => {
+            try {
+                await updateDoc(doc(db, "orders", id), { status: status });
+            } catch (e) {
+                alert("Ошибка обновления статуса: " + e.message);
+            }
+        }
+
+        function playNotificationSound() {
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.play().catch(e => console.log("Sound play failed (interaction required):", e));
+        }
+        window.toggleOrder = (id) => {
+            const el = document.getElementById(`order-details-${id}`);
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // === 3. ПРОМОКОДЫ ===
+        window.loadPromos = async () => {
+            const cont = document.getElementById('promos-container');
+            const snap = await getDocs(collection(db, "promocodes"));
+            cont.innerHTML = '';
+            if (snap.empty) cont.innerHTML = '<div class="text-muted p-3">Пусто</div>';
+            snap.forEach(d => {
+                const p = d.data();
+                const disc = Math.round((p.discount || 0) * 100);
+                cont.innerHTML += `
           <div class="card card-shadow p-3 mb-2 d-flex flex-row justify-content-between align-items-center">
               <div>
                   <span class="promo-code">${d.id}</span> <span class="badge bg-success">-${disc}%</span>
@@ -604,75 +781,77 @@
                   <button class="btn btn-sm btn-outline-danger" onclick="delPromo('${d.id}')"><i class="fas fa-trash"></i></button>
               </div>
           </div>`;
-      });
-  }
-  
-  // === ИСТОРИЯ ПРОМО ===
-  const historyModal = new bootstrap.Modal(document.getElementById('promoHistoryModal'));
-  window.showPromoHistory = async (code) => {
-      document.getElementById('hist-promo-code').innerText = code;
-      const list = document.getElementById('promo-history-list'); list.innerHTML = 'Загрузка...';
-      historyModal.show();
-      const q = query(collection(db, "promo_history"), where("code", "==", code));
-      const snap = await getDocs(q);
-      list.innerHTML = '';
-      if(snap.empty) list.innerHTML = '<div class="text-muted small">Пусто</div>';
-      snap.forEach(d => {
-          const h = d.data();
-          let date = h.timestamp?.seconds ? new Date(h.timestamp.seconds*1000).toLocaleString() : '';
-          list.innerHTML += `<div class="d-flex justify-content-between border-bottom py-2 small"><div><b>${h.user_id}</b><br><span class="text-muted">${date}</span></div><button class="btn btn-sm btn-outline-danger py-0" onclick="resetPromoUsage('${code}','${d.id}')">Сброс</button></div>`;
-      });
-  }
-  window.resetPromoUsage = async (code, docId) => {
-      if(!confirm("Сбросить?")) return;
-      await runTransaction(db, async (t) => {
-          const pRef = doc(db, "promocodes", code);
-          const snap = await t.get(pRef);
-          if(!snap.exists()) throw "Error";
-          t.delete(doc(db, "promo_history", docId));
-          t.update(pRef, { limit: (snap.data().limit || 0) + 1 });
-      });
-      showPromoHistory(code); loadPromos();
-  }
+            });
+        }
 
-  window.addPromo = async () => {
-      const code = document.getElementById('new-promo-code').value.toUpperCase().trim();
-      const disc = parseFloat(document.getElementById('new-promo-disc').value);
-      const limit = parseInt(document.getElementById('new-promo-limit').value);
-      if(!code || !disc) return alert("Заполните поля");
-      await setDoc(doc(db, "promocodes", code), { discount: disc/100, limit: limit, created_at: new Date() });
-      document.getElementById('new-promo-code').value = ''; loadPromos();
-  }
-  window.delPromo = async (id) => { if(confirm("Удалить?")) { await deleteDoc(doc(db, "promocodes", id)); loadPromos(); } }
+        // === ИСТОРИЯ ПРОМО ===
+        const historyModal = new bootstrap.Modal(document.getElementById('promoHistoryModal'));
+        window.showPromoHistory = async (code) => {
+            document.getElementById('hist-promo-code').innerText = code;
+            const list = document.getElementById('promo-history-list'); list.innerHTML = 'Загрузка...';
+            historyModal.show();
+            const q = query(collection(db, "promo_history"), where("code", "==", code));
+            const snap = await getDocs(q);
+            list.innerHTML = '';
+            if (snap.empty) list.innerHTML = '<div class="text-muted small">Пусто</div>';
+            snap.forEach(d => {
+                const h = d.data();
+                let date = h.timestamp?.seconds ? new Date(h.timestamp.seconds * 1000).toLocaleString() : '';
+                list.innerHTML += `<div class="d-flex justify-content-between border-bottom py-2 small"><div><b>${h.user_id}</b><br><span class="text-muted">${date}</span></div><button class="btn btn-sm btn-outline-danger py-0" onclick="resetPromoUsage('${code}','${d.id}')">Сброс</button></div>`;
+            });
+        }
+        window.resetPromoUsage = async (code, docId) => {
+            if (!confirm("Сбросить?")) return;
+            await runTransaction(db, async (t) => {
+                const pRef = doc(db, "promocodes", code);
+                const snap = await t.get(pRef);
+                if (!snap.exists()) throw "Error";
+                t.delete(doc(db, "promo_history", docId));
+                t.update(pRef, { limit: (snap.data().limit || 0) + 1 });
+            });
+            showPromoHistory(code); loadPromos();
+        }
 
-  // === 4. ОТЗЫВЫ ===
-  window.loadReviews = async () => {
-      const cont = document.getElementById('reviews-container');
-      const q = query(collection(db, "reviews"), limit(50));
-      const snap = await getDocs(q);
-      let revs = [];
-      snap.forEach(d => revs.push(d.data()));
-      revs.sort((a,b) => new Date(b.date_str||0) - new Date(a.date_str||0));
-      cont.innerHTML = '';
-      if(revs.length === 0) cont.innerHTML = '<div class="text-muted text-center p-3">Нет отзывов</div>';
-      revs.forEach(r => {
-          const avg = Math.round(((r.service_rate||0) + (r.food_rate||0))/2) || 5;
-          const stars = '⭐'.repeat(avg);
-          cont.innerHTML += `<div class="card card-shadow p-3 mb-2"><div class="d-flex justify-content-between small text-muted"><span>${r.name||'Гость'}</span><span>${r.date_str||''}</span></div><div class="mb-1">${stars}</div><p class="small mb-0 text-secondary">${r.comment||r.text||''}</p>${r.tips ? `<div class="small text-success fw-bold mt-1">${r.tips} ₸ чаевых</div>` : ''}</div>`;
-      });
-  }
+        window.addPromo = async () => {
+            const code = document.getElementById('new-promo-code').value.toUpperCase().trim();
+            const disc = parseFloat(document.getElementById('new-promo-disc').value);
+            const limit = parseInt(document.getElementById('new-promo-limit').value);
+            if (!code || !disc) return alert("Заполните поля");
+            await setDoc(doc(db, "promocodes", code), { discount: disc / 100, limit: limit, created_at: new Date() });
+            document.getElementById('new-promo-code').value = ''; loadPromos();
+        }
+        window.delPromo = async (id) => { if (confirm("Удалить?")) { await deleteDoc(doc(db, "promocodes", id)); loadPromos(); } }
 
-  // Экспорт
-  window.loadOrders = window.loadOrders;
-  window.loadPromos = window.loadPromos;
-  window.addPromo = window.addPromo;
-  window.delPromo = window.delPromo;
-  window.loadReviews = window.loadReviews;
-  window.showPromoHistory = window.showPromoHistory;
-  window.resetPromoUsage = window.resetPromoUsage;
-  window.toggleOrder = window.toggleOrder;
+        // === 4. ОТЗЫВЫ ===
+        window.loadReviews = async () => {
+            const cont = document.getElementById('reviews-container');
+            const q = query(collection(db, "reviews"), limit(50));
+            const snap = await getDocs(q);
+            let revs = [];
+            snap.forEach(d => revs.push(d.data()));
+            revs.sort((a, b) => new Date(b.date_str || 0) - new Date(a.date_str || 0));
+            cont.innerHTML = '';
+            if (revs.length === 0) cont.innerHTML = '<div class="text-muted text-center p-3">Нет отзывов</div>';
+            revs.forEach(r => {
+                const avg = Math.round(((r.service_rate || 0) + (r.food_rate || 0)) / 2) || 5;
+                const stars = '⭐'.repeat(avg);
+                cont.innerHTML += `<div class="card card-shadow p-3 mb-2"><div class="d-flex justify-content-between small text-muted"><span>${r.name || 'Гость'}</span><span>${r.date_str || ''}</span></div><div class="mb-1">${stars}</div><p class="small mb-0 text-secondary">${r.comment || r.text || ''}</p>${r.tips ? `<div class="small text-success fw-bold mt-1">${r.tips} ₸ чаевых</div>` : ''}</div>`;
+            });
+        }
 
-</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        // Экспорт
+        window.loadOrders = window.loadOrders;
+        window.loadPromos = window.loadPromos;
+        window.addPromo = window.addPromo;
+        window.delPromo = window.delPromo;
+        window.loadReviews = window.loadReviews;
+        window.showPromoHistory = window.showPromoHistory;
+        window.resetPromoUsage = window.resetPromoUsage;
+        window.toggleOrder = window.toggleOrder;
+        window.updateOrderStatus = window.updateOrderStatus;
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
