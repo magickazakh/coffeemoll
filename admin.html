@@ -7,10 +7,6 @@
     <title>CoffeeMoll Control</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- SUPABASE JS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         body {
             background: #f4f6f9;
@@ -141,6 +137,7 @@
             color: #adb5bd;
         }
 
+        /* Стили для поля цены модификатора */
         .mod-price-inp {
             font-family: monospace;
             letter-spacing: 0.5px;
@@ -157,7 +154,6 @@
             <input type="email" id="email" class="form-control mb-3" placeholder="Email">
             <input type="password" id="password" class="form-control mb-3" placeholder="Пароль">
             <button onclick="login()" class="btn btn-dark w-100 py-2 fw-bold">Войти</button>
-            <div class="mt-3 text-muted small">Вход через Supabase Auth</div>
         </div>
     </div>
 
@@ -185,6 +181,7 @@
         </ul>
 
         <div class="tab-content">
+
             <!-- 1. МЕНЮ -->
             <div class="tab-pane fade show active" id="tab-menu">
                 <div class="card card-shadow p-4">
@@ -309,10 +306,12 @@
                     <input type="hidden" id="edit-id">
 
                     <div class="row g-4">
-                        <!-- Левая колонка -->
+                        <!-- Левая колонка: Основное -->
                         <div class="col-md-4">
                             <div class="card p-3 border-0 shadow-sm h-100">
                                 <h6 class="text-muted fw-bold small mb-3">ОСНОВНАЯ ИНФОРМАЦИЯ</h6>
+
+                                <!-- Изображение -->
                                 <div class="mb-3">
                                     <img id="edit-img-preview" src="" class="preview-img mb-2"
                                         onerror="this.src='https://via.placeholder.com/300x200?text=Нет+фото'">
@@ -320,6 +319,7 @@
                                         placeholder="Ссылка на картинку..."
                                         oninput="document.getElementById('edit-img-preview').src = this.value">
                                 </div>
+
                                 <div class="mb-3">
                                     <label class="form-label small">Категория</label>
                                     <input type="text" id="edit-category" class="form-control fw-bold" list="cat-list">
@@ -331,10 +331,12 @@
                                         <option value="ХОЛОДНЫЕ НАПИТКИ">
                                     </datalist>
                                 </div>
+
                                 <div class="mb-3">
                                     <label class="form-label small">Название</label>
                                     <input type="text" id="edit-name" class="form-control fw-bold">
                                 </div>
+
                                 <div class="row g-2 mb-3">
                                     <div class="col-6">
                                         <label class="form-label small">Цена</label>
@@ -345,6 +347,7 @@
                                         <input type="text" id="edit-badge" class="form-control" placeholder="ХИТ">
                                     </div>
                                 </div>
+
                                 <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" id="edit-available">
                                     <label class="form-check-label fw-bold text-success">Доступен для заказа</label>
@@ -356,7 +359,7 @@
                             </div>
                         </div>
 
-                        <!-- Средняя колонка -->
+                        <!-- Средняя колонка: Описание и Объемы -->
                         <div class="col-md-4">
                             <div class="card p-3 border-0 shadow-sm mb-3">
                                 <h6 class="text-muted fw-bold small mb-3">ОПИСАНИЕ</h6>
@@ -369,20 +372,26 @@
                                     <textarea id="edit-full-desc" class="form-control" rows="4"></textarea>
                                 </div>
                             </div>
+
                             <div class="card p-3 border-0 shadow-sm">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="text-muted fw-bold small m-0">ОБЪЕМЫ / ПОРЦИИ</h6>
                                     <button class="btn btn-sm btn-success py-0 px-2 fw-bold"
                                         onclick="addVolumeRow()">+</button>
                                 </div>
+                                <div class="small text-muted fst-italic mb-2" style="font-size: 0.75rem;">Если заданы
+                                    объемы, основная цена игнорируется</div>
                                 <div id="volumes-container"></div>
                             </div>
                         </div>
 
-                        <!-- Правая колонка -->
+                        <!-- Правая колонка: Модификаторы -->
                         <div class="col-md-4">
                             <div class="card p-3 border-0 shadow-sm h-100">
                                 <h6 class="text-muted fw-bold small mb-3">МОДИФИКАТОРЫ (ЦЕНА)</h6>
+                                <div class="small text-muted mb-2 fst-italic" style="font-size: 0.75rem;">
+                                    Для разных объемов пишите цены через "|", например: 300|400
+                                </div>
                                 <div id="modifiers-container"
                                     style="max-height: 500px; overflow-y: auto; padding-right: 5px;"></div>
                             </div>
@@ -413,19 +422,25 @@
         </div>
     </div>
 
-    <!-- BOOTSTRAP JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, doc, updateDoc, onSnapshot, getDocs, setDoc, deleteDoc, query, orderBy, limit, where, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    <script>
-        // 🔴🔴🔴 ВСТАВЬТЕ СЮДА ВАШИ КЛЮЧИ OT SUPABASE 🔴🔴🔴
-        const SUPABASE_URL = "https://eupoogmtejlmbfpyofgj.supabase.co"; 
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1cG9vZ210ZWpsbWJmcHlvZmdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5ODMxOTgsImV4cCI6MjA4MzU1OTE5OH0.QJpNXXSr4qxzm6PV5GUE-N9d6U403YPXTb-Aghh2Y3g";
+        // 🔴🔴🔴 ВСТАВЬТЕ СЮДА ВАШ КОНФИГ 🔴🔴🔴
+        const firebaseConfig = {
+            apiKey: "AIzaSyCjmU7YTy6aKzd-0GxnS7DSClLmIFCVrWU",
+            authDomain: "coffeemolldb.firebaseapp.com",
+            projectId: "coffeemolldb",
+            storageBucket: "coffeemolldb.firebasestorage.app",
+            messagingSenderId: "599284136702",
+            appId: "1:599284136702:web:d84ef0a10a1dde699743af",
+            measurementId: "G-W4CDJ2PDX0"
+        };
 
-        if (SUPABASE_URL === "YOUR_SUPABASE_URL") {
-            alert("⚠️ Пожалуйста, откройте admin.html и вставьте SUPABASE_URL и SUPABASE_ANON_KEY!");
-        }
-
-        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
         let menuData = [];
 
         const MOD_CONFIG = [
@@ -445,20 +460,14 @@
             { key: 'sauce', label: 'Соус', def: 150 }
         ];
 
-        // === AUTH ===
-        window.login = async () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const { data, error } = await sb.auth.signInWithPassword({ email, password });
-            if (error) alert("Ошибка: " + error.message);
+        window.login = () => {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            signInWithEmailAndPassword(auth, e, p).catch(err => alert("Ошибка: " + err.message));
         }
+        window.logout = () => signOut(auth);
 
-        window.logout = async () => {
-            await sb.auth.signOut();
-        }
-
-        sb.auth.onAuthStateChange((event, session) => {
-            const user = session?.user;
+        onAuthStateChanged(auth, (user) => {
             document.getElementById('login-screen').style.display = user ? 'none' : 'block';
             document.getElementById('dashboard').style.display = user ? 'block' : 'none';
             if (user) {
@@ -469,49 +478,34 @@
 
         // === 1. МЕНЮ ===
         function initData() {
-            // Realtime subscription for Menu
-            sb
-                .channel('menu_changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => {
-                    fetchMenu();
-                })
-                .subscribe();
-
-            fetchMenu();
-        }
-
-        async function fetchMenu() {
-            const { data, error } = await sb.from('menu_items').select('*');
-            if (data) {
-                menuData = data;
+            onSnapshot(collection(db, "menu"), (s) => {
+                menuData = []; s.forEach(d => menuData.push({ _id: d.id, ...d.data() }));
                 renderList();
-            }
-        }
-
-        function initSettings() {
-            sb.from('settings').select('*').eq('id', 'main').single().then(({ data }) => {
-                if (!data) return;
-                document.getElementById('open-time').value = data.open_time || "09:00";
-                document.getElementById('close-time').value = data.close_time || "23:00";
-                document.getElementById('promo-switch').checked = (String(data.enable_promos) === "true");
-
-                // Arrays to string
-                document.getElementById('set-syrups').value = Array.isArray(data.syrup_names) ? data.syrup_names.join(',') : (data.syrup_names || "");
-                document.getElementById('set-milks').value = Array.isArray(data.alt_milks) ? data.alt_milks.join(',') : (data.alt_milks || "");
-                document.getElementById('set-sauces').value = Array.isArray(data.sauce_names) ? data.sauce_names.join(',') : (data.sauce_names || "");
             });
         }
 
+        // Функции настроек (без изменений)
+        function initSettings() {
+            onSnapshot(doc(db, "settings", "main"), (d) => {
+                if (!d.exists()) return;
+                const data = d.data();
+                document.getElementById('open-time').value = data.open_time || "09:00";
+                document.getElementById('close-time').value = data.close_time || "23:00";
+                document.getElementById('promo-switch').checked = (String(data.enable_promos) === "true");
+                document.getElementById('set-syrups').value = data.syrup_names || "";
+                document.getElementById('set-milks').value = data.alt_milks || "";
+                document.getElementById('set-sauces').value = data.sauce_names || "";
+            });
+        }
         window.updateSettings = async () => {
-            const updates = {
+            await updateDoc(doc(db, "settings", "main"), {
                 open_time: document.getElementById('open-time').value,
                 close_time: document.getElementById('close-time').value,
-                enable_promos: document.getElementById('promo-switch').checked,
-                syrup_names: document.getElementById('set-syrups').value.split(',').map(s => s.trim()).filter(s => s),
-                alt_milks: document.getElementById('set-milks').value.split(',').map(s => s.trim()).filter(s => s),
-                sauce_names: document.getElementById('set-sauces').value.split(',').map(s => s.trim()).filter(s => s)
-            };
-            await sb.from('settings').update(updates).eq('id', 'main');
+                enable_promos: String(document.getElementById('promo-switch').checked),
+                syrup_names: document.getElementById('set-syrups').value,
+                alt_milks: document.getElementById('set-milks').value,
+                sauce_names: document.getElementById('set-sauces').value
+            });
         }
 
         // Рендер списка
@@ -521,14 +515,13 @@
             const cats = {};
             const order = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "ПАСТЫ", "ЗАКУСКИ"];
 
-            menuData.forEach(i => { if ((i.name || "").toLowerCase().includes(q)) { if (!cats[i.category]) cats[i.category] = []; cats[i.category].push(i); } });
+            menuData.forEach(i => { if (i.name.toLowerCase().includes(q)) { if (!cats[i.category]) cats[i.category] = []; cats[i.category].push(i); } });
             const sorted = Object.keys(cats).sort((a, b) => { let ia = order.indexOf(a.toUpperCase()), ib = order.indexOf(b.toUpperCase()); return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib); });
 
             sorted.forEach(c => {
                 cont.innerHTML += `<div class="p-2 bg-light fw-bold small text-uppercase text-muted border-bottom">${c}</div>`;
                 cats[c].forEach(i => {
-                    const vols = i.volumes || [];
-                    const pr = (vols.length) ? `от ${vols[0].p} ₸` : `${i.price} ₸`;
+                    const pr = (i.volumes && i.volumes.length) ? `от ${i.volumes[0].p} ₸` : `${i.price} ₸`;
                     const statusClass = i.available ? 'status-available' : 'status-unavailable';
                     const statusText = i.available ? 'В наличии' : 'Нет';
                     const popularBadge = i.popular ? '<span class="status-badge status-popular">🔥 ХИТ</span>' : '';
@@ -544,7 +537,7 @@
                   <div class="text-end me-3">
                       <span class="status-badge ${statusClass}">${statusText}</span>
                   </div>
-                  <button class="btn btn-sm btn-light border" onclick="openEdit('${i.id}')"><i class="fas fa-pen"></i></button>
+                  <button class="btn btn-sm btn-light border" onclick="openEdit('${i._id}')"><i class="fas fa-pen"></i></button>
               </div>`;
                 });
             });
@@ -554,8 +547,10 @@
         const modal = new bootstrap.Modal(document.getElementById('editModal'));
 
         window.openEdit = (id) => {
-            const i = menuData.find(x => x.id === id);
+            const i = menuData.find(x => x._id === id);
             document.getElementById('edit-id').value = id;
+
+            // Заполнение полей
             document.getElementById('edit-name').value = i.name || "";
             document.getElementById('edit-category').value = i.category || "";
             document.getElementById('edit-price').value = i.price || 0;
@@ -564,19 +559,27 @@
             document.getElementById('edit-desc').value = i.description || "";
             document.getElementById('edit-full-desc').value = i.full_description || i.description || "";
             document.getElementById('edit-badge').value = i.badge || "";
+
             document.getElementById('edit-available').checked = i.available !== false;
             document.getElementById('edit-popular').checked = i.popular === true;
 
+            // Модификаторы
             const mc = document.getElementById('modifiers-container'); mc.innerHTML = '';
             const cm = i.modifiers || {};
             MOD_CONFIG.forEach(c => {
                 const chk = c.key in cm;
                 let pr = c.def;
+                // Если модификатор включен, берем его значение
                 if (chk) {
                     const val = cm[c.key];
-                    if (Array.isArray(val)) pr = val.join('|');
-                    else pr = val;
+                    if (Array.isArray(val)) {
+                        // Если массив [300, 400], превращаем в строку "300|400"
+                        pr = val.join('|');
+                    } else {
+                        pr = val;
+                    }
                 }
+
                 mc.innerHTML += `
           <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
               <div class="form-check mb-0">
@@ -587,8 +590,10 @@
           </div>`;
             });
 
+            // Объемы
             document.getElementById('volumes-container').innerHTML = '';
             (i.volumes || []).forEach(v => addVolumeRow(v.n, v.p));
+
             modal.show();
         }
 
@@ -605,23 +610,32 @@
 
         window.saveItem = async () => {
             const id = document.getElementById('edit-id').value;
+
+            // Сбор модификаторов
             const mods = {};
             document.querySelectorAll('.mod-cb').forEach(cb => {
                 if (cb.checked) {
                     const rawVal = document.getElementById(`mp_${cb.dataset.key}`).value;
                     let val;
-                    if (rawVal.includes('|')) val = rawVal.split('|').map(v => parseInt(v.trim()) || 0);
-                    else val = parseInt(rawVal) || 0;
+                    // Проверяем, есть ли разделитель '|'
+                    if (rawVal.includes('|')) {
+                        // Превращаем "300|400" в [300, 400]
+                        val = rawVal.split('|').map(v => parseInt(v.trim()) || 0);
+                    } else {
+                        val = parseInt(rawVal) || 0;
+                    }
                     mods[cb.dataset.key] = val;
                 }
             });
 
+            // Сбор объемов
             const vols = [];
             document.querySelectorAll('.vol-row').forEach(r => {
                 const inputs = r.querySelectorAll('input');
                 if (inputs[0].value) vols.push({ n: inputs[0].value, p: parseInt(inputs[1].value) || 0 });
             });
 
+            // Объект обновления
             const updateData = {
                 name: document.getElementById('edit-name').value,
                 category: document.getElementById('edit-category').value,
@@ -637,67 +651,73 @@
             };
 
             try {
-                await sb.from('menu_items').update(updateData).eq('id', id);
+                await updateDoc(doc(db, "menu", id), updateData);
                 modal.hide();
-                fetchMenu();
             } catch (e) {
                 alert("Ошибка сохранения: " + e.message);
             }
         }
 
-        // === 2. ЗАКАЗЫ ===
-        let orderSub = null;
+        // === 2. ЗАКАЗЫ (Как было) ===
+        let orderUnsubscribe = null;
         window.loadOrders = async () => {
             const cont = document.getElementById('orders-container');
-            cont.innerHTML = '<div class="text-center p-3 text-muted">Загрузка заказов...</div>';
+            if (orderUnsubscribe) orderUnsubscribe(); // Отписываемся от предыдущего слушателя если он был
 
-            // Initial Fetch
-            const { data: orders, error } = await sb.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
+            cont.innerHTML = '<div class="text-center p-3 text-muted">Подключение к потоку заказов...</div>';
 
-            if (orders) renderOrders(orders);
+            const q = query(collection(db, "orders"), orderBy("timestamp", "desc"), limit(50));
 
-            // Subscribe
-            if (orderSub) sb.removeChannel(orderSub);
-            orderSub = sb.channel('order_updates')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
-                    // On any change, simple re-fetch for now to stay synced
-                    loadOrders(); // Warning: loop potential if logging
-                })
-                .subscribe();
-        }
+            let firstLoad = true;
+            orderUnsubscribe = onSnapshot(q, (snap) => {
+                if (snap.empty) {
+                    cont.innerHTML = '<div class="text-center text-muted p-4">История заказов пуста</div>';
+                    return;
+                }
 
-        function renderOrders(orders) {
-            const cont = document.getElementById('orders-container');
-            cont.innerHTML = '';
-            if (orders.length === 0) {
-                cont.innerHTML = '<div class="text-center text-muted p-4">История заказов пуста</div>';
-                return;
-            }
+                // Если это не первая загрузка и добавились новые документы
+                if (!firstLoad) {
+                    snap.docChanges().forEach((change) => {
+                        if (change.type === "added") {
+                            playNotificationSound();
+                        }
+                    });
+                }
+                firstLoad = false;
 
-            const statusColors = {
-                'new': 'bg-primary',
-                'pending': 'bg-warning',
-                'accepted': 'bg-info',
-                'ready': 'bg-success',
-                'given': 'bg-secondary',
-                'rejected': 'bg-danger'
-            };
+                let orders = [];
+                snap.forEach(doc => orders.push({ id: doc.id, ...doc.data() }));
 
-            orders.forEach(d => {
-                const info = d.info || {};
-                const cart = d.cart || [];
-                const total = d.total_price || 0;
-                let dateStr = new Date(d.created_at).toLocaleString('ru-RU');
-                const currentStatus = d.status || 'new';
+                cont.innerHTML = '';
+                orders.forEach(d => {
+                    const od = d.order_data || {};
+                    const info = od.info || {};
+                    const cart = od.cart || [];
+                    const total = d.total_price || od.total || 0;
+                    let dateStr = "???";
+                    if (d.timestamp && d.timestamp.seconds) dateStr = new Date(d.timestamp.seconds * 1000).toLocaleString('ru-RU');
+                    else if (d.date_str) dateStr = d.date_str;
 
-                let itemsHtml = '';
-                cart.forEach(i => {
-                    let opts = (i.options || []).map(o => `• ${o}`).join('<br>');
-                    if (opts) opts = `<div class="small text-muted ps-3 mt-1" style="font-size:0.8em">${opts}</div>`;
-                    itemsHtml += `<div class="border-bottom pb-2 mb-2"><div class="d-flex justify-content-between"><span>${i.name}</span><span class="badge bg-light text-dark border">x${i.qty}</span></div>${opts}</div>`;
-                });
+                    const statusColors = {
+                        'new': 'bg-primary',
+                        'pending': 'bg-warning',
+                        'accepted': 'bg-info',
+                        'ready': 'bg-success',
+                        'given': 'bg-secondary',
+                        'rejected': 'bg-danger'
+                    };
+                    const currentStatus = d.status || 'new';
 
-                cont.innerHTML += `
+                    let itemsHtml = '';
+                    if (Array.isArray(cart)) {
+                        cart.forEach(i => {
+                            let opts = (i.options || []).map(o => `• ${o}`).join('<br>');
+                            if (opts) opts = `<div class="small text-muted ps-3 mt-1" style="font-size:0.8em">${opts}</div>`;
+                            itemsHtml += `<div class="border-bottom pb-2 mb-2"><div class="d-flex justify-content-between"><span>${i.name}</span><span class="badge bg-light text-dark border">x${i.qty}</span></div>${opts}</div>`;
+                        });
+                    }
+
+                    cont.innerHTML += `
               <div class="card card-shadow order-card p-3 mb-3" style="border-left-color: ${currentStatus === 'new' ? '#007bff' : (currentStatus === 'rejected' ? '#dc3545' : '#88d100')}">
                   <div class="d-flex justify-content-between small text-muted mb-2">
                     <span>${dateStr}</span>
@@ -718,14 +738,24 @@
                       </div>
                   </div>
               </div>`;
+                });
+            }, (err) => {
+                cont.innerHTML = "Ошибка потока: " + err.message;
             });
         }
 
         window.updateOrderStatus = async (id, status) => {
-            await sb.from('orders').update({ status: status }).eq('id', id);
-            loadOrders();
+            try {
+                await updateDoc(doc(db, "orders", id), { status: status });
+            } catch (e) {
+                alert("Ошибка обновления статуса: " + e.message);
+            }
         }
 
+        function playNotificationSound() {
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.play().catch(e => console.log("Sound play failed (interaction required):", e));
+        }
         window.toggleOrder = (id) => {
             const el = document.getElementById(`order-details-${id}`);
             el.style.display = el.style.display === 'none' ? 'block' : 'none';
@@ -734,39 +764,24 @@
         // === 3. ПРОМОКОДЫ ===
         window.loadPromos = async () => {
             const cont = document.getElementById('promos-container');
-            const { data: promos } = await sb.from('promocodes').select('*');
+            const snap = await getDocs(collection(db, "promocodes"));
             cont.innerHTML = '';
-            promos.forEach(d => {
-                const disc = Math.round((d.discount || 0) * 100);
+            if (snap.empty) cont.innerHTML = '<div class="text-muted p-3">Пусто</div>';
+            snap.forEach(d => {
+                const p = d.data();
+                const disc = Math.round((p.discount || 0) * 100);
                 cont.innerHTML += `
           <div class="card card-shadow p-3 mb-2 d-flex flex-row justify-content-between align-items-center">
               <div>
-                  <span class="promo-code">${d.code}</span> <span class="badge bg-success">-${disc}%</span>
-                  <div class="small text-muted mt-1">Осталось: ${d.limit || 0}</div>
+                  <span class="promo-code">${d.id}</span> <span class="badge bg-success">-${disc}%</span>
+                  <div class="small text-muted mt-1">Осталось: ${p.limit || 0}</div>
               </div>
               <div>
-                  <button class="btn btn-sm btn-outline-secondary me-1" onclick="showPromoHistory('${d.code}')"><i class="fas fa-history"></i></button>
-                  <button class="btn btn-sm btn-outline-danger" onclick="delPromo('${d.code}')"><i class="fas fa-trash"></i></button>
+                  <button class="btn btn-sm btn-outline-secondary me-1" onclick="showPromoHistory('${d.id}')"><i class="fas fa-history"></i></button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="delPromo('${d.id}')"><i class="fas fa-trash"></i></button>
               </div>
           </div>`;
             });
-        }
-
-        window.addPromo = async () => {
-            const code = document.getElementById('new-promo-code').value.toUpperCase().trim();
-            const limit = parseInt(document.getElementById('new-promo-limit').value);
-            const discount = parseInt(document.getElementById('new-promo-disc').value) / 100;
-            if (code && limit && discount) {
-                await sb.from('promocodes').insert({ code, limit, discount });
-                loadPromos();
-            }
-        }
-
-        window.delPromo = async (code) => {
-            if (confirm('Удалить?')) {
-                await sb.from('promocodes').delete().eq('code', code);
-                loadPromos();
-            }
         }
 
         // === ИСТОРИЯ ПРОМО ===
@@ -775,40 +790,68 @@
             document.getElementById('hist-promo-code').innerText = code;
             const list = document.getElementById('promo-history-list'); list.innerHTML = 'Загрузка...';
             historyModal.show();
-
-            const { data: history } = await sb.from('promo_history').select('*').eq('code', code);
+            const q = query(collection(db, "promo_history"), where("code", "==", code));
+            const snap = await getDocs(q);
             list.innerHTML = '';
-            if (!history || history.length === 0) list.innerHTML = '<div class="text-muted small">Пусто</div>';
-
-            history.forEach(h => {
-                let date = new Date(h.created_at).toLocaleString();
-                list.innerHTML += `<div class="d-flex justify-content-between border-bottom py-2 small"><div><b>${h.user_id}</b><br><span class="text-muted">${date}</span></div></div>`;
+            if (snap.empty) list.innerHTML = '<div class="text-muted small">Пусто</div>';
+            snap.forEach(d => {
+                const h = d.data();
+                let date = h.timestamp?.seconds ? new Date(h.timestamp.seconds * 1000).toLocaleString() : '';
+                list.innerHTML += `<div class="d-flex justify-content-between border-bottom py-2 small"><div><b>${h.user_id}</b><br><span class="text-muted">${date}</span></div><button class="btn btn-sm btn-outline-danger py-0" onclick="resetPromoUsage('${code}','${d.id}')">Сброс</button></div>`;
             });
         }
+        window.resetPromoUsage = async (code, docId) => {
+            if (!confirm("Сбросить?")) return;
+            await runTransaction(db, async (t) => {
+                const pRef = doc(db, "promocodes", code);
+                const snap = await t.get(pRef);
+                if (!snap.exists()) throw "Error";
+                t.delete(doc(db, "promo_history", docId));
+                t.update(pRef, { limit: (snap.data().limit || 0) + 1 });
+            });
+            showPromoHistory(code); loadPromos();
+        }
+
+        window.addPromo = async () => {
+            const code = document.getElementById('new-promo-code').value.toUpperCase().trim();
+            const disc = parseFloat(document.getElementById('new-promo-disc').value);
+            const limit = parseInt(document.getElementById('new-promo-limit').value);
+            if (!code || !disc) return alert("Заполните поля");
+            await setDoc(doc(db, "promocodes", code), { discount: disc / 100, limit: limit, created_at: new Date() });
+            document.getElementById('new-promo-code').value = ''; loadPromos();
+        }
+        window.delPromo = async (id) => { if (confirm("Удалить?")) { await deleteDoc(doc(db, "promocodes", id)); loadPromos(); } }
 
         // === 4. ОТЗЫВЫ ===
         window.loadReviews = async () => {
             const cont = document.getElementById('reviews-container');
-            cont.innerHTML = 'Загрузка...';
-            const { data: reviews } = await sb.from('reviews').select('*').order('created_at', { ascending: false });
+            const q = query(collection(db, "reviews"), limit(50));
+            const snap = await getDocs(q);
+            let revs = [];
+            snap.forEach(d => revs.push(d.data()));
+            revs.sort((a, b) => new Date(b.date_str || 0) - new Date(a.date_str || 0));
             cont.innerHTML = '';
-            reviews.forEach(r => {
-                let date = new Date(r.created_at).toLocaleString();
-                cont.innerHTML += `
-                 <div class="card card-shadow p-3 mb-2">
-                    <div class="d-flex justify-content-between small text-muted"><span>${date}</span> <span>ID: ${r.user_id}</span></div>
-                    <div class="fw-bold mt-1">${r.name || 'Аноним'}</div>
-                    <div class="my-2">
-                        Сервис: <b>${r.service_rate}</b> | Еда: <b>${r.food_rate}</b>
-                    </div>
-                    ${r.tips && r.tips !== 'Нет' ? `<div class="text-success small mb-2">💰 Чаевые: ${r.tips}</div>` : ''}
-                    <div class="bg-light p-2 rounded small">"${r.comment}"</div>
-                 </div>
-                 `;
+            if (revs.length === 0) cont.innerHTML = '<div class="text-muted text-center p-3">Нет отзывов</div>';
+            revs.forEach(r => {
+                const avg = Math.round(((r.service_rate || 0) + (r.food_rate || 0)) / 2) || 5;
+                const stars = '⭐'.repeat(avg);
+                cont.innerHTML += `<div class="card card-shadow p-3 mb-2"><div class="d-flex justify-content-between small text-muted"><span>${r.name || 'Гость'}</span><span>${r.date_str || ''}</span></div><div class="mb-1">${stars}</div><p class="small mb-0 text-secondary">${r.comment || r.text || ''}</p>${r.tips ? `<div class="small text-success fw-bold mt-1">${r.tips} ₸ чаевых</div>` : ''}</div>`;
             });
         }
 
+        // Экспорт
+        window.loadOrders = window.loadOrders;
+        window.loadPromos = window.loadPromos;
+        window.addPromo = window.addPromo;
+        window.delPromo = window.delPromo;
+        window.loadReviews = window.loadReviews;
+        window.showPromoHistory = window.showPromoHistory;
+        window.resetPromoUsage = window.resetPromoUsage;
+        window.toggleOrder = window.toggleOrder;
+        window.updateOrderStatus = window.updateOrderStatus;
+
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

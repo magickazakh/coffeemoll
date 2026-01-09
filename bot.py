@@ -5,12 +5,14 @@ import sys
 import os
 import re 
 import time
-import html
+import html # <--- ДОБАВЛЕН ИМПОРТ ДЛЯ ЗАЩИТЫ ТЕКСТА
 from datetime import datetime, timedelta, timezone
 from aiohttp import web
 
-# --- SUPABASE IMPORTS ---
-from supabase import create_client, Client
+# --- FIREBASE IMPORTS ---
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
 # ------------------------
 
 from aiogram import Bot, Dispatcher, F, types
@@ -23,29 +25,25 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 
 # --- НАСТРОЙКИ ---
+# ВАЖНО: Токен берется из переменных окружения для безопасности
 TOKEN = os.getenv("BOT_TOKEN") 
 if not TOKEN:
     logging.critical("❌ BOT_TOKEN is not set!")
+    # Не прерываем выполнение сразу, чтобы логи успели записаться
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") # Important: Use Service Role Key for Admin actions
-
-if not SUPABASE_URL or not SUPABASE_KEY:
-    logging.critical("❌ SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set!")
-
-ADMIN_CHAT_ID = -1003472248648
+ADMIN_CHAT_ID = -1003356844624
 WEB_APP_URL = "https://magickazakh.github.io/coffeemoll/"
 
-TOPIC_ID_ORDERS = 20
-TOPIC_ID_REVIEWS = 3
-TOPIC_ID_SUPPORT = 96
+TOPIC_ID_ORDERS = 68
+TOPIC_ID_REVIEWS = 69
+TOPIC_ID_SUPPORT = 250
 
 KASPI_NUMBER = "+7 747 240 20 02" 
 
 BARISTAS = {
     "1": {"name": "Анара", "phone": "+7 747 240 20 02 (только Kaspi)"},
-    "2": {"name": "Карина", "phone": "+7 776 962 28 14 (Kaspi/Halyk)"}, 
-    "3": {"name": "Павел", "phone": "+7 771 904 44 55 (Kaspi/Halyk/Forte/Freedom)"}
+    "2": {"name": "Карина", "phone": "+7 776 962 28 14 (Kaspi/Halyk)"}, # Исправлен слеш
+    "3": {"name": "Павел", "phone": "+7 771 904 44 55 (Kaspi/Halyk/Forte/Freedom)"} # Исправлен слеш
 }
 
 logging.basicConfig(level=logging.INFO)
@@ -56,7 +54,7 @@ dp = Dispatcher(storage=MemoryStorage())
 class OrderState(StatesGroup):
     waiting_for_custom_time = State()
     waiting_for_broadcast = State()
-    waiting_for_rejection_reason = State()
+    waiting_for_rejection_reason = State() # <-- Новое состояние для причины отказа
 
 class ReviewState(StatesGroup):
     waiting_for_service_rate = State()
@@ -72,28 +70,38 @@ class SupportState(StatesGroup):
 PROMO_CACHE = {}
 NAMES_CACHE = {}
 
-# --- SUPABASE SETUP ---
-_supabase: Client = None
+# --- FIREBASE SETUP ---
+_db_client = None
 
-def init_supabase():
-    global _supabase
-    if _supabase:
-        return _supabase
-    
-    if SUPABASE_URL and SUPABASE_KEY:
-        try:
-            _supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-            logging.info("🔥 Supabase Connected!")
-        except Exception as e:
-            logging.error(f"❌ Supabase Init Error: {e}")
+def init_firebase():
+    global _db_client
+    if _db_client:
+        return _db_client
+
+    if not firebase_admin._apps:
+        possible_paths = ["firebase_creds.json", "/etc/secrets/firebase_creds.json"]
+        cred_path = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                cred_path = path
+                break
+            
+        if cred_path:
+            try:
+                cred = credentials.Certificate(cred_path)
+                firebase_admin.initialize_app(cred)
+                logging.info(f"🔥 Firebase Connected using {cred_path}!")
+                _db_client = firestore.client()
+            except Exception as e:
+                logging.error(f"❌ Firebase Init Error: {e}")
+                return None
+        else:
+            logging.warning("⚠️ Firebase credentials file not found! Database features will be disabled.")
             return None
-    else:
-        logging.warning("⚠️ Supabase credentials not found!")
-        return None
     
-    return _supabase
+    return _db_client
 
-db = init_supabase()
+db = init_firebase()
 
 def clean_id(raw_id):
     if not raw_id: return ""
@@ -105,16 +113,14 @@ async def cache_updater_task():
     while True:
         try:
             if db:
-                # Supabase Select
-                response = db.table('promocodes').select('*').execute()
-                data = response.data
-                
+                docs = db.collection('promocodes').stream()
                 new_cache = {}
-                for item in data:
-                    code = item.get('code', '').strip().upper()
+                for doc in docs:
+                    data = doc.to_dict()
+                    code = doc.id.strip().upper()
                     try:
-                        limit = int(item.get('limit', 0))
-                        discount = float(item.get('discount', 0.0))
+                        limit = int(data.get('limit', 0))
+                        discount = float(data.get('discount', 0.0))
                     except ValueError:
                         limit = 0
                         discount = 0.0
@@ -126,82 +132,129 @@ async def cache_updater_task():
         
         await asyncio.sleep(60)
 
-# --- ЛОГИКА ПРОМОКОДОВ (RPC) ---
+# --- ЛОГИКА ПРОМОКОДОВ ---
 
 def check_promo_firebase(code, user_id):
-    # This acts as a "Check" only, not incrementing
     if not db: return "ERROR", 0
     code = code.strip().upper()
     uid = clean_id(user_id)
     
-    logging.info(f"Checking promo (legacy name): {code} for user {uid}")
+    logging.info(f"Checking promo: {code} for user {uid}")
     
     try:
-        # 1. Fetch promo
-        p_res = db.table('promocodes').select('*').eq('code', code).execute()
-        if not p_res.data: return "NOT_FOUND", 0
+        # 1. Данные промокода
+        doc = db.collection('promocodes').document(code).get()
         
-        promo = p_res.data[0]
-        limit = promo.get('limit', 0)
-        discount = promo.get('discount', 0)
+        if not doc.exists: 
+            return "NOT_FOUND", 0
+            
+        promo_data = doc.to_dict()
+
+        try:
+            limit = int(promo_data.get('limit', 0))
+            discount = float(promo_data.get('discount', 0))
+        except:
+            return "ERROR", 0
         
         if limit <= 0: return "LIMIT", 0
 
-        # 2. Check history (simple select)
-        # Check by generated ID or composite lookup
-        # History ID structure in RPC was: uid_code
-        h_id = f"{uid}_{code}"
-        h_res = db.table('promo_history').select('*').eq('id', h_id).execute()
-        
-        if h_res.data: return "USED", 0
-        
-        # Second check: loose query
-        h_res2 = db.table('promo_history').select('*').eq('user_id', uid).eq('code', code).execute()
-        if h_res2.data: return "USED", 0
+        # 2. Проверяем историю использования (Тройная проверка)
+        if uid and uid != '0':
+            # А. Проверка по ID документа
+            history_ref = db.collection('promo_history').document(f"{uid}_{code}")
+            if history_ref.get().exists: return "USED", 0
 
+            # Б. Проверка поиском (Query) по строковому ID
+            query = db.collection('promo_history').where('user_id', '==', uid).where('code', '==', code).limit(1).stream()
+            for _ in query:
+                return "USED", 0
+                
+            # В. Проверка поиском (Query) по числовому ID
+            if uid.isdigit():
+                query_int = db.collection('promo_history').where('user_id', '==', int(uid)).where('code', '==', code).limit(1).stream()
+                for _ in query_int:
+                    return "USED", 0
+        
         return "OK", discount
             
     except Exception as e:
         logging.error(f"Check Error: {e}")
         return "ERROR", 0
 
+@firestore.transactional
+def use_promo_transaction(transaction, code, uid):
+    promo_ref = db.collection('promocodes').document(code)
+    history_ref = db.collection('promo_history').document(f"{uid}_{code}")
+    
+    snapshot = promo_ref.get(transaction=transaction)
+    if not snapshot.exists: return "NOT_FOUND"
+    
+    try:
+        current_limit = int(snapshot.get('limit'))
+    except:
+        return "ERROR"
+        
+    if current_limit <= 0: return "LIMIT"
+        
+    hist_snap = history_ref.get(transaction=transaction)
+    if hist_snap.exists: return "USED"
+
+    transaction.update(promo_ref, {'limit': current_limit - 1})
+    transaction.set(history_ref, {
+        'user_id': uid,
+        'code': code,
+        'timestamp': firestore.SERVER_TIMESTAMP
+    })
+    return "OK"
+
 def process_promo_firebase(code, user_id):
-    # This applies the promo using RPC 'use_promo'
     if not db: return "ERROR"
     code = code.strip().upper()
     uid = clean_id(user_id)
     try:
-        # Call Postgres Function
-        params = {'promo_code': code, 'user_id_param': uid}
-        response = db.rpc('use_promo', params).execute()
-        
-        # response.data is whatever the function returned (json)
-        result_json = response.data
-        if not result_json: return "ERROR"
-        
-        status = result_json.get('status', 'ERROR')
-        
-        if status == "OK" and code in PROMO_CACHE:
+        transaction = db.transaction()
+        result = use_promo_transaction(transaction, code, uid)
+        if result == "OK" and code in PROMO_CACHE:
              PROMO_CACHE[code]['limit'] -= 1
-        return status
+        return result
     except Exception as e:
-        logging.error(f"Transaction (RPC) Error: {e}")
+        logging.error(f"Transaction Error: {e}")
         return "ERROR"
 
+# --- ЛОГИКА ОТМЕНЫ ПРОМОКОДА (ROLLBACK) ---
+
+@firestore.transactional
+def revert_promo_transaction(transaction, promo_ref, history_ref):
+    snapshot = promo_ref.get(transaction=transaction)
+    hist_snap = history_ref.get(transaction=transaction)
+    
+    if not hist_snap.exists:
+        return "NOT_USED"
+    
+    if snapshot.exists:
+        try:
+            current_limit = int(snapshot.get('limit'))
+            transaction.update(promo_ref, {'limit': current_limit + 1})
+        except: pass
+    
+    transaction.delete(history_ref)
+    return "OK"
+
 def cancel_promo_firebase(code, user_id):
-    # This reverts the promo using RPC 'cancel_promo'
     if not db: return
     code = code.strip().upper()
     uid = clean_id(user_id)
     try:
-        params = {'promo_code': code, 'user_id_param': uid}
-        response = db.rpc('cancel_promo', params).execute()
+        promo_ref = db.collection('promocodes').document(code)
+        history_ref = db.collection('promo_history').document(f"{uid}_{code}")
         
-        result_json = response.data
-        if result_json and result_json.get('status') == 'OK' and code in PROMO_CACHE:
+        transaction = db.transaction()
+        res = revert_promo_transaction(transaction, promo_ref, history_ref)
+        
+        if res == "OK" and code in PROMO_CACHE:
              PROMO_CACHE[code]['limit'] += 1
              
-        logging.info(f"Reverted promo {code} for {uid}: {result_json}")
+        logging.info(f"Reverted promo {code} for {uid}: {res}")
     except Exception as e:
         logging.error(f"Revert Error: {e}")
 
@@ -211,37 +264,26 @@ async def save_order_background(user_id, order_data, total_price):
     if not db: return
     def _save():
         try:
-            # Upsert User
-            user_info = order_data.get('info', {})
-            user_payload = {
-                'id': str(user_id),
-                'name': user_info.get('name', 'Unknown'),
-                'phone': user_info.get('phone', ''),
-                'last_order': datetime.now(timezone.utc).isoformat()
-            }
-            db.table('users').upsert(user_payload).execute()
+            user_ref = db.collection('users').document(str(user_id))
+            if not user_ref.get().exists:
+                user_info = order_data.get('info', {})
+                user_ref.set({
+                    'id': str(user_id),
+                    'name': user_info.get('name', 'Unknown'),
+                    'phone': user_info.get('phone', ''),
+                    'last_order': firestore.SERVER_TIMESTAMP
+                })
+            else:
+                user_ref.update({'last_order': firestore.SERVER_TIMESTAMP})
 
-            # Insert Order
-            # For 'id' we let Supabase generate it (uuid) OR we generate one. 
-            # Original code let Firebase auto-generate ID.
-            # Supabase 'id' in schema is TEXT PRIMARY KEY. Better use UUID or generate one.
-            # We can use order_data checksum or timestamp combination, or just let DB handle if ID is defaulting to uuid_generate_v4().
-            # Assume schema.sql `id` is TEXT. Let's create a random ID here to be safe and consistent with previous app logic if it needed ID.
-            # Actually, standard is to let DB handle it if configured, but here we can just pass nothing if column is SERIAL or UUID DEFAULT.
-            # BUT schema said: id TEXT PRIMARY KEY. So we MUST provide it or set default in schema to uuid.
-            # Let's generate a TS-based ID like Firebase often does roughly.
-            import uuid
-            order_id = str(uuid.uuid4())
-            
-            db.table('orders').insert({
-                'id': order_id,
+            db.collection('orders').add({
                 'user_id': str(user_id),
-                'cart': order_data.get('cart', []),
-                'info': order_data.get('info', {}),
+                'order_data': order_data,
                 'total_price': total_price,
                 'status': 'new',
-                'created_at': datetime.now(timezone.utc).isoformat()
-            }).execute()
+                'timestamp': firestore.SERVER_TIMESTAMP,
+                'date_str': datetime.now().strftime("%Y-%m-%d")
+            })
         except Exception as e: logging.error(f"Save Order Error: {e}")
 
     loop = asyncio.get_running_loop()
@@ -251,18 +293,16 @@ async def save_review_background(user_id, name, service_rate, food_rate, tips, c
     if not db: return
     def _save():
         try:
-            import uuid
-            rev_id = str(uuid.uuid4())
-            db.table('reviews').insert({
-                'id': rev_id,
+            db.collection('reviews').add({
                 'user_id': str(user_id),
                 'name': name,
                 'service_rate': service_rate,
                 'food_rate': food_rate,
                 'tips': tips,
                 'comment': comment,
-                'created_at': datetime.now(timezone.utc).isoformat()
-            }).execute()
+                'timestamp': firestore.SERVER_TIMESTAMP,
+                'date_str': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
         except Exception as e: logging.error(f"Save Review Error: {e}")
 
     loop = asyncio.get_running_loop()
@@ -310,7 +350,7 @@ async def main():
     asyncio.create_task(cache_updater_task())
     await start_web_server()
     await bot.delete_webhook(drop_pending_updates=True)
-    print("🤖 Bot started ...")
+    print("🤖 Bot started...")
     await dp.start_polling(bot)
 
 # --- КЛАВИАТУРЫ ---
@@ -367,37 +407,17 @@ async def cmd_stats(m: types.Message):
     await m.answer("📊 Считаем статистику...")
     try:
         today_str = datetime.now().strftime("%Y-%m-%d")
-        # In Supabase we could do count but let's fetch for sum
-        # Ideally using aggregate query, but 'select' is easier to migrate 1-to-1
-        # Fetching all orders is bad for scale, but OK for small shops.
-        # Optimized: filter by created_at > today
-        
-        # Get all time count
-        count_res = db.table('orders').select('*', count='exact', head=True).execute()
-        total_count = count_res.count
-        
-        # Get all sum (expensive loop if not doing SQL SUM)
-        # Let's just limit to today for detail stats to save bandwidth if many orders
-        # Or fetch all for total sum?
-        # Let's do a simple full fetch as in original code (not great but guaranteed same logic)
-        
-        docs = db.table('orders').select('total_price, created_at').execute().data
-        
-        total_sum = 0
-        today_count = 0
-        today_sum = 0
-        
-        current_date_prefix = datetime.now().strftime("%Y-%m-%d")
-
-        for d in docs:
+        orders_ref = db.collection('orders')
+        docs = orders_ref.stream()
+        total_count, total_sum, today_count, today_sum = 0, 0, 0, 0
+        for doc in docs:
+            d = doc.to_dict()
             price = d.get('total_price', 0)
-            created_at = d.get('created_at', '')
+            total_count += 1
             total_sum += price
-            
-            if created_at.startswith(current_date_prefix):
+            if d.get('date_str') == today_str:
                 today_count += 1
                 today_sum += price
-                
         msg = f"📅 <b>Статистика на {today_str}</b>\n\n🔹 <b>За сегодня:</b>\nЗаказов: {today_count}\nВыручка: {today_sum} ₸\n\n🔸 <b>За все время:</b>\nЗаказов: {total_count}\nОборот: {total_sum} ₸"
         await m.answer(msg)
     except Exception as e:
@@ -416,13 +436,9 @@ async def process_broadcast(m: types.Message, state: FSMContext):
     await m.answer("⏳ Рассылка...")
     count = 0
     try:
-        # Fetch users
-        # Pagination might be needed if > 1000 users. Supabase defaults to 1000 limit.
-        response = db.table('users').select('id').execute()
-        users = response.data
-        
-        for u in users:
-            uid = u.get('id')
+        users_ref = db.collection('users').stream()
+        for doc in users_ref:
+            uid = doc.to_dict().get('id')
             if uid:
                 try:
                     await bot.send_message(uid, f"🔔 <b>НОВОСТИ COFFEEMOLL</b>\n\n{text}")
@@ -507,17 +523,23 @@ async def decision(c: CallbackQuery, state: FSMContext):
     if act == "accept": 
         await c.message.edit_reply_markup(reply_markup=get_time_kb(uid))
     elif act == "reject":
+        # Сохраняем данные заказа
         text = c.message.text or c.message.caption or ""
+        
+        # Отправляем сообщение с инлайн-кнопками причин (используем get_rejection_kb)
         prompt_msg = await c.message.answer(
             "✍️ <b>Выберите причину отказа:</b>", 
             reply_markup=get_rejection_kb(uid)
         )
+        
         await state.update_data(
             reject_uid=uid, 
             reject_msg_id=c.message.message_id,
             reject_text=text,
             prompt_msg_id=prompt_msg.message_id
         )
+        # Не ставим состояние ожидания текста сразу, ждем выбора кнопки
+        
     await c.answer()
 
 @dp.callback_query(F.data.startswith("reason_"))
@@ -527,11 +549,13 @@ async def rejection_reason_callback(c: CallbackQuery, state: FSMContext):
     uid = parts[2]
     
     if r_type == "custom":
+        # Если выбрана "Своя причина", просим ввести текст
         await c.message.edit_text("✍️ <b>Напишите причину отказа:</b>", reply_markup=None)
         await state.set_state(OrderState.waiting_for_rejection_reason)
         await c.answer()
         return
 
+    # Предустановленные причины
     reasons_map = {
         "hd": "Хот-догов временно нет в наличии",
         "cr": "Круассанов временно нет в наличии",
@@ -539,12 +563,14 @@ async def rejection_reason_callback(c: CallbackQuery, state: FSMContext):
     }
     reason = reasons_map.get(r_type, "Заказ отклонен")
     
+    # Выполняем отказ
     await execute_rejection(c.message, state, reason, is_preset=True)
     await c.answer()
 
 @dp.message(OrderState.waiting_for_rejection_reason)
 async def process_rejection_reason(m: types.Message, state: FSMContext):
     reason = m.text
+    # Выполняем отказ (тут передаем сообщение пользователя m, чтобы его удалить)
     await execute_rejection(m, state, reason, is_preset=False)
 
 async def execute_rejection(message_obj, state, reason, is_preset):
@@ -554,6 +580,7 @@ async def execute_rejection(message_obj, state, reason, is_preset):
     original_text = data.get('reject_text')
     prompt_msg_id = data.get('prompt_msg_id')
     
+    # Логика отмены промокода
     try:
         match = re.search(r"Промокод:\s*([A-Za-z0-9]+)", original_text)
         if match:
@@ -565,9 +592,10 @@ async def execute_rejection(message_obj, state, reason, is_preset):
 
     safe_original_text = html.escape(original_text)
 
+    # Обновляем сообщение в админке (Order Card)
     try:
         await bot.edit_message_text(
-            chat_id=ADMIN_CHAT_ID, 
+            chat_id=ADMIN_CHAT_ID, # Используем константу или message_obj.chat.id
             message_id=msg_id,
             text=f"{safe_original_text}\n\n❌ <b>ОТКЛОНЕН ({reason})</b>",
             parse_mode=ParseMode.HTML
@@ -575,24 +603,33 @@ async def execute_rejection(message_obj, state, reason, is_preset):
     except Exception as e:
         logging.error(f"Edit rejection message error: {e}")
 
+    # Уведомляем пользователя
     try: 
         await bot.send_message(uid, f"❌ <b>Ваш заказ был отклонен.</b>\n\nПричина: {reason}")
     except: pass
     
+    # Чистка сообщений
     chat_id = message_obj.chat.id
+    
+    # 1. Удаляем prompt message (сообщение с кнопками или просьбой ввода)
     if prompt_msg_id:
-        try: await bot.delete_message(chat_id=chat_id, message_id=prompt_msg_id)
+        try:
+            await bot.delete_message(chat_id=chat_id, message_id=prompt_msg_id)
         except: pass
 
+    # 2. Если это не пресет (т.е. текст введен вручную), удаляем сообщение пользователя
     if not is_preset:
-        try: await message_obj.delete()
+        try:
+            await message_obj.delete()
         except: pass
 
+    # 3. Временное подтверждение
     conf_msg = await bot.send_message(chat_id, "✅ Отказ отправлен.")
     await state.clear()
     
     await asyncio.sleep(3)
-    try: await conf_msg.delete()
+    try:
+        await conf_msg.delete()
     except: pass
 
 @dp.callback_query(F.data.startswith("time_"))
@@ -774,11 +811,16 @@ async def finalize_review(message, state, comment_text, user):
     await state.clear()
 
 # --- ЧАТ ПОДДЕРЖКИ ---
+
+# 1. Обработка сообщений от клиента (пересылка в админ-чат)
 @dp.message(F.chat.type == "private", F.text, ~F.text.startswith("/"), StateFilter(None))
 async def handle_user_support_message(m: types.Message):
+    # Пытаемся найти имя клиента в кеше или берем из профиля
     user_name = NAMES_CACHE.get(str(m.from_user.id), m.from_user.full_name)
     user_id = m.from_user.id
     username_link = f"@{m.from_user.username}" if m.from_user.username else "без юзернейма"
+
+    # Формируем сообщение для бариста
     text_to_admin = (
         f"📩 <b>СООБЩЕНИЕ ОТ ГОСТЯ</b>\n"
         f"👤 <b>От:</b> {user_name} ({username_link})\n"
@@ -786,6 +828,7 @@ async def handle_user_support_message(m: types.Message):
         f"➖➖➖➖➖➖➖➖➖➖\n"
         f"{m.text}"
     )
+
     try:
         await bot.send_message(
             chat_id=ADMIN_CHAT_ID,
@@ -793,22 +836,32 @@ async def handle_user_support_message(m: types.Message):
             message_thread_id=TOPIC_ID_SUPPORT,
             reply_markup=get_reply_kb(user_id)
         )
+        # УДАЛЕНО: await m.react(...) — это вызывало ошибку
     except Exception as e:
         logging.error(f"Support msg error: {e}")
 
+# 2. Нажатие кнопки "Ответить" бариста
 @dp.callback_query(F.data.startswith("reply_"))
 async def admin_reply_start(c: CallbackQuery, state: FSMContext):
     user_id = c.data.split("_")[1]
+    
+    # Сохраняем ID пользователя, которому отвечаем
     await state.update_data(reply_user_id=user_id)
     await state.set_state(SupportState.waiting_for_admin_reply)
-    await c.message.answer(f"✍️ Введите ответ для пользователя (ID: {user_id}):\nИли напишите /cancel для отмены.")
+    
+    await c.message.answer(
+        f"✍️ Введите ответ для пользователя (ID: {user_id}):\n"
+        f"Или напишите /cancel для отмены."
+    )
     await c.answer()
 
+# 3. Отмена ответа (если бариста передумал)
 @dp.message(SupportState.waiting_for_admin_reply, Command("cancel"))
 async def admin_reply_cancel(m: types.Message, state: FSMContext):
     await state.clear()
     await m.answer("❌ Ответ отменен.")
 
+# 4. Отправка ответа пользователю
 @dp.message(SupportState.waiting_for_admin_reply)
 async def admin_reply_send(m: types.Message, state: FSMContext):
     data = await state.get_data()
@@ -820,13 +873,15 @@ async def admin_reply_send(m: types.Message, state: FSMContext):
         return
 
     try:
+        # Отправляем сообщение пользователю
         await bot.send_message(
             chat_id=target_user_id,
             text=f"👨‍🍳 <b>Ответ от CoffeeMoll:</b>\n\n{m.text}"
         )
+        # УДАЛЕНО: await m.react(...) — это вызывало ошибку
         await m.answer("✅ Ответ отправлен.")
     except Exception as e:
-        await m.answer(f"❌ Не удалось отправить сообщение\nОшибка: {e}")
+        await m.answer(f"❌ Не удалось отправить сообщение (пользователь заблокировал бота?)\nОшибка: {e}")
     
     await state.clear()
     
