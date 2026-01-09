@@ -7,7 +7,7 @@
     <title>CoffeeMoll Control</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- SUPABASE JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -412,7 +412,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- BOOTSTRAP JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -425,7 +425,7 @@
             alert("⚠️ Пожалуйста, откройте admin.html и вставьте SUPABASE_URL и SUPABASE_ANON_KEY!");
         }
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let menuData = [];
 
         const MOD_CONFIG = [
@@ -449,15 +449,15 @@
         window.login = async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            const { data, error } = await sb.auth.signInWithPassword({ email, password });
             if (error) alert("Ошибка: " + error.message);
         }
 
         window.logout = async () => {
-            await supabase.auth.signOut();
+            await sb.auth.signOut();
         }
 
-        supabase.auth.onAuthStateChange((event, session) => {
+        sb.auth.onAuthStateChange((event, session) => {
             const user = session?.user;
             document.getElementById('login-screen').style.display = user ? 'none' : 'block';
             document.getElementById('dashboard').style.display = user ? 'block' : 'none';
@@ -470,36 +470,36 @@
         // === 1. МЕНЮ ===
         function initData() {
             // Realtime subscription for Menu
-            supabase
+            sb
                 .channel('menu_changes')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => {
-                   fetchMenu();
+                    fetchMenu();
                 })
                 .subscribe();
-            
+
             fetchMenu();
         }
 
         async function fetchMenu() {
-            const { data, error } = await supabase.from('menu_items').select('*');
-            if(data) {
+            const { data, error } = await sb.from('menu_items').select('*');
+            if (data) {
                 menuData = data;
                 renderList();
             }
         }
 
         function initSettings() {
-             supabase.from('settings').select('*').eq('id', 'main').single().then(({data}) => {
-                if(!data) return;
+            sb.from('settings').select('*').eq('id', 'main').single().then(({ data }) => {
+                if (!data) return;
                 document.getElementById('open-time').value = data.open_time || "09:00";
                 document.getElementById('close-time').value = data.close_time || "23:00";
                 document.getElementById('promo-switch').checked = (String(data.enable_promos) === "true");
-                
+
                 // Arrays to string
                 document.getElementById('set-syrups').value = Array.isArray(data.syrup_names) ? data.syrup_names.join(',') : (data.syrup_names || "");
                 document.getElementById('set-milks').value = Array.isArray(data.alt_milks) ? data.alt_milks.join(',') : (data.alt_milks || "");
                 document.getElementById('set-sauces').value = Array.isArray(data.sauce_names) ? data.sauce_names.join(',') : (data.sauce_names || "");
-             });
+            });
         }
 
         window.updateSettings = async () => {
@@ -507,11 +507,11 @@
                 open_time: document.getElementById('open-time').value,
                 close_time: document.getElementById('close-time').value,
                 enable_promos: document.getElementById('promo-switch').checked,
-                syrup_names: document.getElementById('set-syrups').value.split(',').map(s=>s.trim()).filter(s=>s),
-                alt_milks: document.getElementById('set-milks').value.split(',').map(s=>s.trim()).filter(s=>s),
-                sauce_names: document.getElementById('set-sauces').value.split(',').map(s=>s.trim()).filter(s=>s)
+                syrup_names: document.getElementById('set-syrups').value.split(',').map(s => s.trim()).filter(s => s),
+                alt_milks: document.getElementById('set-milks').value.split(',').map(s => s.trim()).filter(s => s),
+                sauce_names: document.getElementById('set-sauces').value.split(',').map(s => s.trim()).filter(s => s)
             };
-            await supabase.from('settings').update(updates).eq('id', 'main');
+            await sb.from('settings').update(updates).eq('id', 'main');
         }
 
         // Рендер списка
@@ -521,7 +521,7 @@
             const cats = {};
             const order = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "ПАСТЫ", "ЗАКУСКИ"];
 
-            menuData.forEach(i => { if ((i.name||"").toLowerCase().includes(q)) { if (!cats[i.category]) cats[i.category] = []; cats[i.category].push(i); } });
+            menuData.forEach(i => { if ((i.name || "").toLowerCase().includes(q)) { if (!cats[i.category]) cats[i.category] = []; cats[i.category].push(i); } });
             const sorted = Object.keys(cats).sort((a, b) => { let ia = order.indexOf(a.toUpperCase()), ib = order.indexOf(b.toUpperCase()); return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib); });
 
             sorted.forEach(c => {
@@ -637,7 +637,7 @@
             };
 
             try {
-                await supabase.from('menu_items').update(updateData).eq('id', id);
+                await sb.from('menu_items').update(updateData).eq('id', id);
                 modal.hide();
                 fetchMenu();
             } catch (e) {
@@ -652,29 +652,29 @@
             cont.innerHTML = '<div class="text-center p-3 text-muted">Загрузка заказов...</div>';
 
             // Initial Fetch
-            const { data: orders, error } = await supabase.from('orders').select('*').order('created_at', {ascending: false}).limit(50);
-            
+            const { data: orders, error } = await sb.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
+
             if (orders) renderOrders(orders);
-            
+
             // Subscribe
-            if(orderSub) supabase.removeChannel(orderSub);
-            orderSub = supabase.channel('order_updates')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
-                 // On any change, simple re-fetch for now to stay synced
-                 loadOrders(); // Warning: loop potential if logging
-            })
-            .subscribe();
+            if (orderSub) sb.removeChannel(orderSub);
+            orderSub = sb.channel('order_updates')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
+                    // On any change, simple re-fetch for now to stay synced
+                    loadOrders(); // Warning: loop potential if logging
+                })
+                .subscribe();
         }
-        
+
         function renderOrders(orders) {
             const cont = document.getElementById('orders-container');
             cont.innerHTML = '';
             if (orders.length === 0) {
-                 cont.innerHTML = '<div class="text-center text-muted p-4">История заказов пуста</div>';
-                 return;
+                cont.innerHTML = '<div class="text-center text-muted p-4">История заказов пуста</div>';
+                return;
             }
-            
-             const statusColors = {
+
+            const statusColors = {
                 'new': 'bg-primary',
                 'pending': 'bg-warning',
                 'accepted': 'bg-info',
@@ -722,8 +722,8 @@
         }
 
         window.updateOrderStatus = async (id, status) => {
-             await supabase.from('orders').update({status: status}).eq('id', id);
-             loadOrders();
+            await sb.from('orders').update({ status: status }).eq('id', id);
+            loadOrders();
         }
 
         window.toggleOrder = (id) => {
@@ -734,7 +734,7 @@
         // === 3. ПРОМОКОДЫ ===
         window.loadPromos = async () => {
             const cont = document.getElementById('promos-container');
-            const {data: promos} = await supabase.from('promocodes').select('*');
+            const { data: promos } = await sb.from('promocodes').select('*');
             cont.innerHTML = '';
             promos.forEach(d => {
                 const disc = Math.round((d.discount || 0) * 100);
@@ -751,20 +751,20 @@
           </div>`;
             });
         }
-        
+
         window.addPromo = async () => {
-             const code = document.getElementById('new-promo-code').value.toUpperCase().trim();
-             const limit = parseInt(document.getElementById('new-promo-limit').value);
-             const discount = parseInt(document.getElementById('new-promo-disc').value) / 100;
-             if(code && limit && discount) {
-                 await supabase.from('promocodes').insert({code, limit, discount});
-                 loadPromos();
-             }
+            const code = document.getElementById('new-promo-code').value.toUpperCase().trim();
+            const limit = parseInt(document.getElementById('new-promo-limit').value);
+            const discount = parseInt(document.getElementById('new-promo-disc').value) / 100;
+            if (code && limit && discount) {
+                await sb.from('promocodes').insert({ code, limit, discount });
+                loadPromos();
+            }
         }
-        
+
         window.delPromo = async (code) => {
-            if(confirm('Удалить?')) {
-                await supabase.from('promocodes').delete().eq('code', code);
+            if (confirm('Удалить?')) {
+                await sb.from('promocodes').delete().eq('code', code);
                 loadPromos();
             }
         }
@@ -775,11 +775,11 @@
             document.getElementById('hist-promo-code').innerText = code;
             const list = document.getElementById('promo-history-list'); list.innerHTML = 'Загрузка...';
             historyModal.show();
-            
-            const {data: history} = await supabase.from('promo_history').select('*').eq('code', code);
+
+            const { data: history } = await sb.from('promo_history').select('*').eq('code', code);
             list.innerHTML = '';
-            if (!history || history.length===0) list.innerHTML = '<div class="text-muted small">Пусто</div>';
-            
+            if (!history || history.length === 0) list.innerHTML = '<div class="text-muted small">Пусто</div>';
+
             history.forEach(h => {
                 let date = new Date(h.created_at).toLocaleString();
                 list.innerHTML += `<div class="d-flex justify-content-between border-bottom py-2 small"><div><b>${h.user_id}</b><br><span class="text-muted">${date}</span></div></div>`;
@@ -790,11 +790,11 @@
         window.loadReviews = async () => {
             const cont = document.getElementById('reviews-container');
             cont.innerHTML = 'Загрузка...';
-            const { data: reviews } = await supabase.from('reviews').select('*').order('created_at', {ascending: false});
+            const { data: reviews } = await sb.from('reviews').select('*').order('created_at', { ascending: false });
             cont.innerHTML = '';
             reviews.forEach(r => {
-                 let date = new Date(r.created_at).toLocaleString();
-                 cont.innerHTML += `
+                let date = new Date(r.created_at).toLocaleString();
+                cont.innerHTML += `
                  <div class="card card-shadow p-3 mb-2">
                     <div class="d-flex justify-content-between small text-muted"><span>${date}</span> <span>ID: ${r.user_id}</span></div>
                     <div class="fw-bold mt-1">${r.name || 'Аноним'}</div>
