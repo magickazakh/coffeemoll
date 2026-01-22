@@ -1276,130 +1276,6 @@
       color: var(--text-secondary);
       margin-bottom: 15px;
     }
-
-    .garland {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 30px;
-      z-index: 45;
-      display: flex;
-      justify-content: space-around;
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-    .light {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #ccc;
-      margin-top: -5px;
-      animation: flash 2s infinite alternate;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    }
-
-    .light:nth-child(2n) {
-      animation-duration: 1.5s;
-      animation-delay: 0.5s;
-    }
-
-    .light:nth-child(3n) {
-      animation-duration: 2.5s;
-      animation-delay: 1s;
-    }
-
-    .light:nth-child(4n) {
-      animation-duration: 1.8s;
-      animation-delay: 0.2s;
-    }
-
-    .light.red {
-      background: #ff4444;
-      box-shadow: 0 0 5px #ff4444;
-    }
-
-    .light.gold {
-      background: #ffd700;
-      box-shadow: 0 0 5px #ffd700;
-    }
-
-    .light.green {
-      background: #88d100;
-      box-shadow: 0 0 5px #88d100;
-    }
-
-    .light.blue {
-      background: #4488ff;
-      box-shadow: 0 0 5px #4488ff;
-    }
-
-    @keyframes flash {
-      0% {
-        opacity: 0.5;
-        transform: scale(0.8);
-      }
-
-      100% {
-        opacity: 1;
-        transform: scale(1.1);
-        box-shadow: 0 0 10px currentColor;
-      }
-    }
-
-    .logo-moll {
-      position: relative;
-      display: inline-block;
-    }
-
-    .logo-moll::after {
-      content: '🎄';
-      position: absolute;
-      top: 3px;
-      left: 100%;
-      margin-left: 5px;
-      font-size: 24px;
-      transform-origin: bottom center;
-      animation: tree-sway 2s ease-in-out infinite;
-      pointer-events: none;
-    }
-
-    .snowflake {
-      position: fixed;
-      top: -10px;
-      color: #b0dfff;
-      font-size: 1em;
-      font-family: Arial, sans-serif;
-      text-shadow: 0 0 1px #000;
-      user-select: none;
-      z-index: 9999;
-      pointer-events: none;
-      animation-name: fall;
-      animation-timing-function: linear;
-      animation-iteration-count: infinite;
-      opacity: 0.8;
-    }
-
-    @keyframes fall {
-      to {
-        transform: translateY(100vh) rotate(360deg);
-      }
-    }
-
-    @keyframes tree-sway {
-      0% {
-        transform: rotate(-10deg);
-      }
-
-      50% {
-        transform: rotate(10deg);
-      }
-
-      100% {
-        transform: rotate(-10deg);
-      }
-    }
   </style>
 </head>
 
@@ -1675,7 +1551,7 @@
     let currentUpsellItem = null;
 
     // Loading Animation
-    const loadingTexts = ["Настраиваем гирлянду...", "Варим новогодний какао...", "Пакуем подарки...", "Ждем Деда Мороза...", "Греем круассаны..."];
+    const loadingTexts = ["Настраиваем помол...", "Варим эспрессо...", "Взбиваем молоко...", "Протираем столики...", "Греем круассаны..."];
     let textIdx = 0;
     const mottoEl = document.querySelector('.loading-motto');
     const loadingInterval = setInterval(() => {
@@ -1713,48 +1589,6 @@
       }, 3000);
     }
 
-    // --- VISUAL EFFECTS ---
-    function createSnow() {
-      const snowContainer = document.createElement('div');
-      snowContainer.id = 'snow-container';
-      snowContainer.style.position = 'fixed';
-      snowContainer.style.top = '0';
-      snowContainer.style.left = '0';
-      snowContainer.style.width = '100%';
-      snowContainer.style.height = '100%';
-      snowContainer.style.pointerEvents = 'none';
-      snowContainer.style.zIndex = '9999';
-      document.body.appendChild(snowContainer);
-      const flakes = ['❄', '❅', '❆', '•'];
-      const flakeCount = window.innerWidth < 600 ? 15 : 30;
-      for (let i = 0; i < flakeCount; i++) {
-        const flake = document.createElement('div');
-        flake.className = 'snowflake';
-        flake.innerText = flakes[Math.floor(Math.random() * flakes.length)];
-        flake.style.left = Math.random() * 100 + 'vw';
-        flake.style.animationDuration = (Math.random() * 3 + 4) + 's';
-        flake.style.fontSize = (Math.random() * 10 + 10) + 'px';
-        flake.style.opacity = Math.random() * 0.7 + 0.3;
-        flake.style.animationDelay = Math.random() * 5 + 's';
-        snowContainer.appendChild(flake);
-      }
-    }
-
-    function createGarland() {
-      const header = document.querySelector('.header-container');
-      if (!header) return;
-      const garland = document.createElement('div');
-      garland.className = 'garland';
-      const colors = ['red', 'gold', 'green', 'blue'];
-      const width = window.innerWidth;
-      const count = Math.floor(width / 30);
-      for (let i = 0; i < count; i++) {
-        const light = document.createElement('div');
-        light.className = `light ${colors[i % colors.length]}`;
-        garland.appendChild(light);
-      }
-      header.prepend(garland);
-    }
 
     // --- SCROLL LOGIC ---
     function updateHeaderHeight() {
@@ -1838,8 +1672,6 @@
 
     // --- DATA FETCHING (FIREBASE REPLACEMENT) ---
     async function initMenu() {
-      createSnow();
-      createGarland();
       updateHeaderHeight();
       let checks = 0;
       while (!window.firebaseReady && checks < 50) {
@@ -2811,3 +2643,4 @@
 </body>
 
 </html>
+
