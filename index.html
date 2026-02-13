@@ -54,58 +54,20 @@
   <style>
     /* --- CSS ПЕРЕМЕННЫЕ --- */
     :root {
-      /* 💖 ВАЛЕНТИНОВ СТИЛЬ 💖 */
-      --primary-color: #ff3366; /* Яркий розово-красный */
+      --primary-color: #88d100;
       --primary-text: #000000;
-      --bg-color: #fff0f5;      /* Нежно-розовый фон (LavenderBlush) */
+      --bg-color: #F7F8F5;
       --card-bg: #ffffff;
-      --text-main: #2d0a12;     /* Темно-бордовый для текста (мягче черного) */
-      --text-secondary: #8a4a5a;
-      --input-bg: #fff;
-      --border-color: #fce4ec;
+      --text-main: #111111;
+      --text-secondary: #6b7280;
+      --input-bg: #ffffff;
+      --border-color: #eee;
       --font-logo: 'Bebas Neue', cursive;
       --font-title: 'Oswald', sans-serif;
       --font-body: 'Montserrat', sans-serif;
       --header-height: 75px;
     }
 
-    .hearts-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-    }
-    
-    .heart {
-      position: absolute;
-      top: -10%;
-      color: rgba(255, 51, 102, 0.15); /* Прозрачные розовые сердца */
-      animation: fall linear infinite;
-      font-size: 20px;
-    }
-
-    @keyframes fall {
-      0% { transform: translateY(-10%) rotate(0deg); opacity: 0; }
-      20% { opacity: 1; }
-      100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
-    }
-    
-    /* Делаем карточки чуть более "воздушными" */
-    .card {
-      border: 1px solid #ffcdd2; /* Розовая обводка */
-      box-shadow: 0 4px 15px rgba(255, 51, 102, 0.08);
-    }
-    
-    /* Логотип */
-    .logo-moll {
-      color: var(--primary-color);
-      text-shadow: 2px 2px 0px rgba(255, 200, 210, 0.5);
-    }
-    
     .yandex-widget-container {
       padding: 0 15px 10px 15px;
     }
@@ -1337,15 +1299,15 @@
 
   <div class="header-container" id="header-container">
     <header id="main-header">
-  <div class="header-left">
-    <h1><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span> 💘</h1>
-    <div class="separator-line"></div>
-    <div class="motto">С любовью в каждой чашке</div> 
-  </div>
-  <div style="display:flex; align-items:center;">
-    <div id="work-status" class="status-badge" style="background:#ffebee; color:#c62828;">Checking...</div>
-  </div>
-</header>
+      <div class="header-left">
+        <h1><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></h1>
+        <div class="separator-line"></div>
+        <div class="motto">Кофейня с неприлично вкусным кофе</div>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <div id="work-status" class="status-badge">Checking...</div>
+      </div>
+    </header>
 
     <div id="collapsible-header">
       <div class="collapsible-inner">
@@ -2678,40 +2640,6 @@
       console.error(e);
     }
   </script>
-<div class="hearts-bg" id="hearts-container"></div>
-
-<script>
-  // Скрипт для создания фона из сердечек
-  function createHearts() {
-    const container = document.getElementById('hearts-container');
-    const heartCount = 15; // Количество сердечек
-    const symbols = ['❤', '💖', '💕', '💗']; // Разные эмодзи
-
-    for (let i = 0; i < heartCount; i++) {
-      const heart = document.createElement('div');
-      heart.classList.add('heart');
-      heart.innerText = symbols[Math.floor(Math.random() * symbols.length)];
-      
-      // Случайная позиция и размер
-      heart.style.left = Math.random() * 100 + '%';
-      heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
-      
-      // Случайная длительность падения (от 5 до 12 секунд)
-      const duration = Math.random() * 7 + 5;
-      heart.style.animationDuration = duration + 's';
-      
-      // Случайная задержка
-      heart.style.animationDelay = Math.random() * 5 + 's';
-      
-      container.appendChild(heart);
-    }
-  }
-  
-  // Запускаем создание после загрузки
-  createHearts();
-</script>
 </body>
 
 </html>
-
-
