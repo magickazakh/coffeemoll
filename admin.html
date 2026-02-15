@@ -185,32 +185,38 @@
             <!-- 1. МЕНЮ -->
             <div class="tab-pane fade show active" id="tab-menu">
                 <div class="card card-shadow p-4">
-                    <div class="row g-3 align-items-end mb-4">
-                        <div class="col-md-3">
-                            <label class="small text-muted fw-bold">Глобальные настройки</label>
-                            <div class="form-check form-switch mt-1">
-                                <input class="form-check-input" type="checkbox" id="promo-switch"
-                                    onchange="updateSettings()">
-                                <label class="form-check-label">Включить Промокоды</label>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="small text-muted fw-bold">Время работы</label>
-                            <div class="input-group input-group-sm mt-1">
-                                <span class="input-group-text">C</span>
-                                <input type="time" class="form-control" id="open-time" onchange="updateSettings()">
-                                <span class="input-group-text">До</span>
-                                <input type="time" class="form-control" id="close-time" onchange="updateSettings()">
-                            </div>
-                        </div>
-                        <div class="col-md-5 text-end">
-                            <button class="btn btn-light border me-2" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#settingsCollapse">⚙️ Настроить списки</button>
-                        </div>
+                    <!-- Верхняя панель с кнопкой добавления -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <button class="btn btn-success fw-bold px-4 py-2 shadow-sm" onclick="openAdd()">
+                            <i class="fas fa-plus-circle me-2"></i>Добавить блюдо
+                        </button>
+                        
+                        <button class="btn btn-light border" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#settingsCollapse">⚙️ Глобальные настройки</button>
                     </div>
 
                     <div class="collapse mb-4" id="settingsCollapse">
                         <div class="card card-body bg-light border-0">
+                            <div class="row g-3 align-items-end mb-3">
+                                <div class="col-md-3">
+                                    <label class="small text-muted fw-bold">Общие</label>
+                                    <div class="form-check form-switch mt-1">
+                                        <input class="form-check-input" type="checkbox" id="promo-switch"
+                                            onchange="updateSettings()">
+                                        <label class="form-check-label">Включить Промокоды</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="small text-muted fw-bold">Время работы</label>
+                                    <div class="input-group input-group-sm mt-1">
+                                        <span class="input-group-text">C</span>
+                                        <input type="time" class="form-control" id="open-time" onchange="updateSettings()">
+                                        <span class="input-group-text">До</span>
+                                        <input type="time" class="form-control" id="close-time" onchange="updateSettings()">
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label class="small fw-bold mb-1">Сиропы (через запятую)</label>
@@ -294,12 +300,12 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА РЕДАКТИРОВАНИЯ ТОВАРА -->
+    <!-- МОДАЛКА РЕДАКТИРОВАНИЯ/ДОБАВЛЕНИЯ ТОВАРА -->
     <div class="modal fade" id="editModal" tabindex="-1">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Редактирование товара</h5>
+                    <h5 class="modal-title fw-bold" id="modalTitle">Редактирование товара</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body bg-light">
@@ -322,25 +328,22 @@
 
                                 <div class="mb-3">
                                     <label class="form-label small">Категория</label>
-                                    <input type="text" id="edit-category" class="form-control fw-bold" list="cat-list">
+                                    <input type="text" id="edit-category" class="form-control fw-bold" list="cat-list" placeholder="Выберите или введите новую">
                                     <datalist id="cat-list">
-                                        <option value="КОФЕ">
-                                        <option value="ЧАЙ">
-                                        <option value="ДЕСЕРТЫ">
-                                        <option value="СЕЗОННОЕ">
-                                        <option value="ХОЛОДНЫЕ НАПИТКИ">
+                                        <!-- Список заполнится автоматически -->
                                     </datalist>
+                                    <div class="form-text small" style="font-size: 0.75rem;">Чтобы создать категорию, просто впишите её название.</div>
                                 </div>
 
                                 <div class="mb-3">
                                     <label class="form-label small">Название</label>
-                                    <input type="text" id="edit-name" class="form-control fw-bold">
+                                    <input type="text" id="edit-name" class="form-control fw-bold" placeholder="Название блюда">
                                 </div>
 
                                 <div class="row g-2 mb-3">
                                     <div class="col-6">
                                         <label class="form-label small">Цена</label>
-                                        <input type="number" id="edit-price" class="form-control">
+                                        <input type="number" id="edit-price" class="form-control" placeholder="0">
                                     </div>
                                     <div class="col-6">
                                         <label class="form-label small">Бейдж</label>
@@ -424,7 +427,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, updateDoc, onSnapshot, getDocs, setDoc, deleteDoc, query, orderBy, limit, where, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, updateDoc, addDoc, onSnapshot, getDocs, setDoc, deleteDoc, query, orderBy, limit, where, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // 🔴🔴🔴 ВСТАВЬТЕ СЮДА ВАШ КОНФИГ 🔴🔴🔴
@@ -515,8 +518,26 @@
             const cats = {};
             const order = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "ПАСТЫ", "ЗАКУСКИ"];
 
-            menuData.forEach(i => { if (i.name.toLowerCase().includes(q)) { if (!cats[i.category]) cats[i.category] = []; cats[i.category].push(i); } });
-            const sorted = Object.keys(cats).sort((a, b) => { let ia = order.indexOf(a.toUpperCase()), ib = order.indexOf(b.toUpperCase()); return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib); });
+            // 1. Собираем категории из данных
+            menuData.forEach(i => { 
+                if (i.name.toLowerCase().includes(q)) { 
+                    const catName = i.category ? i.category.trim().toUpperCase() : "ПРОЧЕЕ";
+                    if (!cats[catName]) cats[catName] = []; 
+                    cats[catName].push(i); 
+                } 
+            });
+
+            // 2. Сортируем категории (сначала известные по порядку, потом новые)
+            const sorted = Object.keys(cats).sort((a, b) => { 
+                let ia = order.indexOf(a), ib = order.indexOf(b); 
+                // Если обе категории известные - сортируем по индексу
+                if (ia !== -1 && ib !== -1) return ia - ib;
+                // Если одна известная, она выше
+                if (ia !== -1) return -1;
+                if (ib !== -1) return 1;
+                // Если обе новые - по алфавиту
+                return a.localeCompare(b);
+            });
 
             sorted.forEach(c => {
                 cont.innerHTML += `<div class="p-2 bg-light fw-bold small text-uppercase text-muted border-bottom">${c}</div>`;
@@ -543,11 +564,53 @@
             });
         }
 
-        // === РЕДАКТИРОВАНИЕ ===
+        // === РЕДАКТИРОВАНИЕ / ДОБАВЛЕНИЕ ===
         const modal = new bootstrap.Modal(document.getElementById('editModal'));
 
+        // Вспомогательная функция для заполнения списка категорий
+        function populateCategoryList() {
+            const list = document.getElementById('cat-list');
+            list.innerHTML = '';
+            // Собираем уникальные категории из существующих данных
+            const uniqueCats = [...new Set(menuData.map(i => i.category ? i.category.toUpperCase() : ""))].filter(c => c);
+            uniqueCats.sort().forEach(c => {
+                list.innerHTML += `<option value="${c}">`;
+            });
+        }
+
+        // ОТКРЫТИЕ ДЛЯ ДОБАВЛЕНИЯ (НОВОЕ)
+        window.openAdd = () => {
+            document.getElementById('modalTitle').innerText = "Добавление товара";
+            document.getElementById('edit-id').value = ""; // Пустой ID означает создание
+
+            // Очистка полей
+            document.getElementById('edit-name').value = "";
+            document.getElementById('edit-category').value = "";
+            document.getElementById('edit-price').value = "";
+            document.getElementById('edit-image').value = "";
+            document.getElementById('edit-img-preview').src = "";
+            document.getElementById('edit-desc').value = "";
+            document.getElementById('edit-full-desc').value = "";
+            document.getElementById('edit-badge').value = "";
+            
+            document.getElementById('edit-available').checked = true;
+            document.getElementById('edit-popular').checked = false;
+
+            // Сброс модификаторов
+            document.getElementById('modifiers-container').innerHTML = '';
+            renderModifiers({}); 
+
+            // Сброс объемов
+            document.getElementById('volumes-container').innerHTML = '';
+
+            populateCategoryList();
+            modal.show();
+        }
+
+        // ОТКРЫТИЕ ДЛЯ РЕДАКТИРОВАНИЯ
         window.openEdit = (id) => {
             const i = menuData.find(x => x._id === id);
+            document.getElementById('modalTitle').innerText = "Редактирование товара";
             document.getElementById('edit-id').value = id;
 
             // Заполнение полей
@@ -564,16 +627,25 @@
             document.getElementById('edit-popular').checked = i.popular === true;
 
             // Модификаторы
-            const mc = document.getElementById('modifiers-container'); mc.innerHTML = '';
-            const cm = i.modifiers || {};
+            document.getElementById('modifiers-container').innerHTML = '';
+            renderModifiers(i.modifiers || {});
+
+            // Объемы
+            document.getElementById('volumes-container').innerHTML = '';
+            (i.volumes || []).forEach(v => addVolumeRow(v.n, v.p));
+
+            populateCategoryList();
+            modal.show();
+        }
+
+        function renderModifiers(currentMods) {
+            const mc = document.getElementById('modifiers-container');
             MOD_CONFIG.forEach(c => {
-                const chk = c.key in cm;
+                const chk = c.key in currentMods;
                 let pr = c.def;
-                // Если модификатор включен, берем его значение
                 if (chk) {
-                    const val = cm[c.key];
+                    const val = currentMods[c.key];
                     if (Array.isArray(val)) {
-                        // Если массив [300, 400], превращаем в строку "300|400"
                         pr = val.join('|');
                     } else {
                         pr = val;
@@ -589,12 +661,6 @@
               <input type="text" class="form-control form-control-sm text-end mod-price-inp" style="width:100px" id="mp_${c.key}" value="${pr}" placeholder="Цена">
           </div>`;
             });
-
-            // Объемы
-            document.getElementById('volumes-container').innerHTML = '';
-            (i.volumes || []).forEach(v => addVolumeRow(v.n, v.p));
-
-            modal.show();
         }
 
         window.addVolumeRow = (n = '', p = '') => {
@@ -617,9 +683,7 @@
                 if (cb.checked) {
                     const rawVal = document.getElementById(`mp_${cb.dataset.key}`).value;
                     let val;
-                    // Проверяем, есть ли разделитель '|'
                     if (rawVal.includes('|')) {
-                        // Превращаем "300|400" в [300, 400]
                         val = rawVal.split('|').map(v => parseInt(v.trim()) || 0);
                     } else {
                         val = parseInt(rawVal) || 0;
@@ -635,10 +699,10 @@
                 if (inputs[0].value) vols.push({ n: inputs[0].value, p: parseInt(inputs[1].value) || 0 });
             });
 
-            // Объект обновления
-            const updateData = {
+            // Объект данных
+            const itemData = {
                 name: document.getElementById('edit-name').value,
-                category: document.getElementById('edit-category').value,
+                category: document.getElementById('edit-category').value.toUpperCase().trim(), // Приводим к верхнему регистру
                 price: parseInt(document.getElementById('edit-price').value) || 0,
                 image: document.getElementById('edit-image').value,
                 description: document.getElementById('edit-desc').value,
@@ -650,11 +714,23 @@
                 volumes: vols
             };
 
+            if (!itemData.name) {
+                alert("Введите название блюда!");
+                return;
+            }
+
             try {
-                await updateDoc(doc(db, "menu", id), updateData);
+                if (id) {
+                    // Обновление существующего
+                    await updateDoc(doc(db, "menu", id), itemData);
+                } else {
+                    // Создание нового
+                    await addDoc(collection(db, "menu"), itemData);
+                }
                 modal.hide();
             } catch (e) {
                 alert("Ошибка сохранения: " + e.message);
+                console.error(e);
             }
         }
 
@@ -849,6 +925,8 @@
         window.resetPromoUsage = window.resetPromoUsage;
         window.toggleOrder = window.toggleOrder;
         window.updateOrderStatus = window.updateOrderStatus;
+        window.openAdd = window.openAdd;
+        window.openEdit = window.openEdit;
 
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
