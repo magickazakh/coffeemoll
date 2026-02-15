@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>CoffeeMoll</title>
+  <title>CoffeeMoll - Масленица</title>
 
   <!-- FIREBASE SDK -->
   <script type="module">
@@ -52,16 +52,29 @@
   <script>window.onerror = function (msg, url, line) { return false; };</script>
 
   <style>
-    /* --- CSS ПЕРЕМЕННЫЕ --- */
+    /* --- CSS ПЕРЕМЕННЫЕ (МАСЛЕНИЦА EDITION 🥞) --- */
     :root {
-      --primary-color: #88d100;
-      --primary-text: #000000;
-      --bg-color: #F7F8F5;
-      --card-bg: #ffffff;
-      --text-main: #111111;
-      --text-secondary: #6b7280;
-      --input-bg: #ffffff;
-      --border-color: #eee;
+      /* Яркий оранжево-золотой (Блинное солнце) */
+      --primary-color: #FF9800; 
+      
+      /* Темно-коричневый для контраста (вместо черного) */
+      --primary-text: #3E2723; 
+      
+      /* Теплый кремовый фон (Тесто/Сметана) */
+      --bg-color: #FFF8E1; 
+      
+      /* Белые карточки с легким теплым оттенком */
+      --card-bg: #FFFFFF; 
+      
+      /* Основной текст - темно-серый с теплинкой */
+      --text-main: #2d2420; 
+      
+      /* Вторичный текст */
+      --text-secondary: #6d4c41; 
+      
+      --input-bg: #FFFFFF;
+      --border-color: #FFE0B2; /* Светло-оранжевые рамки */
+      
       --font-logo: 'Bebas Neue', cursive;
       --font-title: 'Oswald', sans-serif;
       --font-body: 'Montserrat', sans-serif;
@@ -161,16 +174,16 @@
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg-color: #1a1a1a;
-        --card-bg: #2d2d2d;
-        --text-main: #ffffff;
-        --text-secondary: #a0a0a0;
-        --input-bg: #333333;
-        --border-color: #444444;
+        --bg-color: #2D2420; /* Темный шоколад */
+        --card-bg: #3E2723;  /* Кофейный */
+        --text-main: #FFECB3; /* Светло-кремовый текст */
+        --text-secondary: #D7CCC8;
+        --input-bg: #4E342E;
+        --border-color: #5D4037;
       }
 
       .header-container {
-        background: #2d2d2d !important;
+        background: #3E2723 !important;
       }
 
       .logo-coffee {
@@ -178,21 +191,26 @@
       }
 
       .status-badge {
-        background: #064e3b;
-        color: #a7f3d0;
+        background: #FF6F00;
+        color: #fff;
       }
 
       .radio-label,
       .checkout-radio-label {
-        background: #333 !important;
-        border-color: #444 !important;
+        background: #4E342E !important;
+        border-color: #5D4037 !important;
         color: #fff !important;
       }
 
       .radio-input:checked+.radio-label,
       .checkout-radio-input:checked+.checkout-radio-label {
-        background: #064e3b !important;
+        background: #FF6F00 !important;
         border-color: var(--primary-color) !important;
+      }
+      
+      .radio-input:checked+.radio-label::before,
+      .checkout-radio-input:checked+.checkout-radio-label::before {
+        background-color: #FFECB3;
       }
 
       .category-separator {
@@ -200,28 +218,28 @@
       }
 
       .accordion-header {
-        background: #333 !important;
+        background: #4E342E !important;
         color: #fff !important;
       }
 
       .repeat-card {
-        background: #333 !important;
-        border-color: #444 !important;
+        background: #4E342E !important;
+        border-color: #5D4037 !important;
       }
 
       .upsell-no {
-        background: #444 !important;
+        background: #5D4037 !important;
         color: #ccc !important;
       }
 
       .cart-qty-btn {
-        background: #444 !important;
-        color: #fff !important;
+        background: #5D4037 !important;
+        color: #FFECB3 !important;
       }
 
       .qty-control-btn {
-        background: #444 !important;
-        color: #fff !important;
+        background: #5D4037 !important;
+        color: #FFECB3 !important;
       }
 
       .yandex-light {
@@ -237,7 +255,11 @@
       font-family: var(--font-body);
       margin: 0;
       padding: 0;
+      /* Паттерн "Горошек" */
       background-color: var(--bg-color);
+      background-image: radial-gradient(var(--border-color) 2px, transparent 2px);
+      background-size: 24px 24px;
+      
       color: var(--text-main);
       padding-bottom: 100px;
       -webkit-tap-highlight-color: transparent;
@@ -304,14 +326,16 @@
       transition: opacity 0.3s ease;
     }
 
+    /* Обновляем цвета бейджиков (Открыто/Закрыто) */
     .status-badge {
       font-family: var(--font-body);
       font-size: 11px;
       padding: 4px 8px;
       border-radius: 12px;
       font-weight: bold;
-      background: #e6fffa;
-      color: #047857;
+      /* Теплый фон и темный текст */
+      background: #FFE0B2; 
+      color: #E65100;
       margin-left: 10px;
     }
 
@@ -336,7 +360,7 @@
 
     #search-input:focus {
       border-color: var(--primary-color);
-      box-shadow: 0 0 0 2px rgba(136, 209, 0, 0.2);
+      box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
     }
 
     #repeat-order-container {
@@ -354,7 +378,7 @@
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
-      box-shadow: 0 2px 5px rgba(136, 209, 0, 0.1);
+      box-shadow: 0 2px 5px rgba(255, 152, 0, 0.1);
     }
 
     .repeat-card:active {
@@ -413,9 +437,9 @@
     }
 
     .nav-btn.active {
-      background: #000000;
-      color: var(--primary-color);
-      border-color: #000000;
+      background: #3E2723;
+      color: #FFB74D;
+      border-color: #3E2723;
       transform: scale(1.05);
     }
 
@@ -424,6 +448,7 @@
       scroll-margin-top: 140px;
     }
 
+    /* Разделитель категорий (Линия слева) */
     .category-separator {
       padding: 0 15px;
       margin-bottom: 10px;
@@ -433,7 +458,8 @@
       font-family: var(--font-title);
       text-transform: uppercase;
       padding-left: 25px;
-      border-left: 4px solid var(--primary-color);
+      /* Оранжевая линия */
+      border-left: 4px solid var(--primary-color); 
       margin-left: 10px;
     }
 
@@ -522,12 +548,13 @@
       color: #ef4444;
     }
 
+    /* Бейджик "ХИТ" на карточках */
     .card-badge {
       position: absolute;
       top: 8px;
       right: 8px;
-      background: var(--primary-color);
-      color: #000;
+      background: #FF6F00; /* Более красный оттенок для акцента */
+      color: #fff;
       font-size: 10px;
       font-weight: 700;
       padding: 4px 8px;
@@ -790,12 +817,13 @@
       display: none;
     }
 
+    /* Чекбоксы и радио-кнопки в стиле Масленицы */
     .radio-input:checked+.radio-label,
     .checkout-radio-input:checked+.checkout-radio-label {
-      background-color: #f0fdf4;
+      background-color: #FFF3E0; /* Очень светлый оранжевый */
       border-color: var(--primary-color);
-      color: #000;
-      box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15);
+      color: #E65100;
+      box-shadow: 0 2px 4px rgba(255, 152, 0, 0.25);
       font-weight: 600;
     }
 
@@ -813,24 +841,28 @@
       width: 100% !important;
     }
 
+    /* Кнопка корзины (Главная) */
     .main-btn {
       position: fixed;
       bottom: 20px;
       left: 15px;
       right: 15px;
-      background: #000000;
-      color: var(--primary-color);
+      /* Темно-коричневый фон кнопки */
+      background: #3E2723; 
+      /* Оранжевый текст */
+      color: #FFB74D; 
       padding: 18px;
       border-radius: 16px;
       text-align: center;
       font-size: 16px;
       font-weight: 700;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 10px 25px rgba(62, 39, 35, 0.3);
       display: none;
       z-index: 900;
       font-family: var(--font-title);
       letter-spacing: 1px;
       transition: transform 0.1s;
+      animation: btn-breathe 2s infinite ease-in-out;
     }
 
     .main-btn:active {
@@ -946,14 +978,27 @@
       text-align: center;
     }
 
+    /* Солнечный спиннер */
     .spinner {
-      border: 4px solid #eee;
-      border-top: 4px solid var(--primary-color);
+      width: 60px;
+      height: 60px;
+      background: #FF9800; /* Оранжевый центр */
       border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 20px;
+      position: relative;
+      box-shadow: 0 0 20px #FF9800; /* Свечение */
+      animation: sun-pulse 1s infinite alternate ease-in-out;
+      border: 2px solid #FFF8E1;
+      margin-bottom: 25px;
+    }
+
+    /* Лучики через псевдо-элемент */
+    .spinner::after {
+      content: '';
+      position: absolute;
+      top: -10px; left: -10px; right: -10px; bottom: -10px;
+      border: 4px dashed #FFB74D; /* Лучики */
+      border-radius: 50%;
+      animation: spin 4s linear infinite;
     }
 
     .loading-motto {
@@ -1003,14 +1048,20 @@
       cursor: pointer;
     }
 
+    @keyframes sun-pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 10px #FF9800; }
+      100% { transform: scale(1.1); box-shadow: 0 0 30px #FF5722; }
+    }
+    
     @keyframes spin {
-      0% {
-        transform: rotate(0deg)
-      }
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
 
-      100% {
-        transform: rotate(360deg)
-      }
+    @keyframes btn-breathe {
+      0% { transform: scale(1); box-shadow: 0 10px 25px rgba(62, 39, 35, 0.3); }
+      50% { transform: scale(1.03); box-shadow: 0 15px 30px rgba(255, 152, 0, 0.4); } /* Оранжевая тень */
+      100% { transform: scale(1); box-shadow: 0 10px 25px rgba(62, 39, 35, 0.3); }
     }
 
     @keyframes shimmer {
@@ -1097,7 +1148,7 @@
     select {
       appearance: none;
       -webkit-appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2388d100' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FF9800' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
       background-repeat: no-repeat;
       background-position: right 15px center;
       background-size: 16px;
@@ -1233,7 +1284,7 @@
     }
 
     .upsell-yes {
-      background: #88d100;
+      background: var(--primary-color);
       color: #3e2723;
       padding: 10px 20px;
       border-radius: 10px;
@@ -1302,7 +1353,8 @@
       <div class="header-left">
         <h1><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></h1>
         <div class="separator-line"></div>
-        <div class="motto">Кофейня с неприлично вкусным кофе</div>
+        <!-- Праздничный заголовок -->
+        <div class="motto">☀️ Широкая Масленица!<br>Блины, кофе и тепло 🥞</div>
       </div>
       <div style="display:flex; align-items:center;">
         <div id="work-status" class="status-badge">Checking...</div>
@@ -2437,7 +2489,7 @@
         if (data.status === "OK") {
           appliedDiscount = data.discount;
           appliedPromoCode = code;
-          codeInput.style.borderColor = "#88d100";
+          codeInput.style.borderColor = "#FF9800";
           showToast(`Промокод: -${Math.round(appliedDiscount * 100)}%`);
           calculateTotal();
         } else {
