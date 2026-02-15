@@ -1542,7 +1542,9 @@
     tg.ready();
     tg.expand();
     const BACKEND_URL = "https://coffeemoll.onrender.com";
-    const CATEGORY_ORDER = ["ИЗБРАННОЕ", "Популярное", "Сезонное", "Кофе", "Чай", "Десерты", "Холодные напитки", "Молочные коктейли", "Завтраки", "Круассаны", "Хот-доги", "Салаты", "Пицца", "Пасты", "Закуски"];
+    
+    // Изначальный порядок (будет перезаписан из Firebase)
+    let CATEGORY_ORDER = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "ПАСТЫ", "ЗАКУСКИ"];
 
     // --- CONSTANTS ---
     // These will be loaded/updated from Firebase, but defaults are good to have
@@ -1741,6 +1743,14 @@
           if (s.alt_milks) ALT_MILKS = Array.isArray(s.alt_milks) ? s.alt_milks : s.alt_milks.split(',');
           if (s.syrup_names) SYRUPS = Array.isArray(s.syrup_names) ? s.syrup_names : s.syrup_names.split(',');
           if (s.sauce_names) SAUCES = Array.isArray(s.sauce_names) ? s.sauce_names : s.sauce_names.split(',');
+          
+          // НОВАЯ ЛОГИКА: Обновляем порядок категорий из настроек
+          if (s.category_order) {
+             const customOrder = s.category_order.split(',').map(c => c.trim().toUpperCase());
+             if (customOrder.length > 0) {
+                 CATEGORY_ORDER = customOrder;
+             }
+          }
         }
 
         if (SYRUPS[0] !== "Нет") SYRUPS.unshift("Нет");
