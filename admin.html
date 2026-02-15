@@ -233,6 +233,11 @@
                                     <textarea id="set-sauces" class="form-control form-control-sm" rows="4"
                                         onchange="updateSettings()"></textarea>
                                 </div>
+                                <div class="col-12 mt-3">
+                                    <label class="small fw-bold mb-1">Порядок категорий</label>
+                                    <textarea id="set-categories" class="form-control form-control-sm" rows="2" placeholder="ИЗБРАННОЕ, КОФЕ, ЧАЙ..." onchange="updateSettings(); renderList()"></textarea>
+                                    <div class="form-text small">Категории, не указанные здесь, будут показаны в конце по алфавиту.</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -498,6 +503,8 @@
                 document.getElementById('set-syrups').value = data.syrup_names || "";
                 document.getElementById('set-milks').value = data.alt_milks || "";
                 document.getElementById('set-sauces').value = data.sauce_names || "";
+                document.getElementById('set-categories').value = data.category_order || "";
+                renderList(); // Перерисовать список с новым порядком
             });
         }
         window.updateSettings = async () => {
@@ -507,7 +514,8 @@
                 enable_promos: String(document.getElementById('promo-switch').checked),
                 syrup_names: document.getElementById('set-syrups').value,
                 alt_milks: document.getElementById('set-milks').value,
-                sauce_names: document.getElementById('set-sauces').value
+                sauce_names: document.getElementById('set-sauces').value,
+                category_order: document.getElementById('set-categories').value
             });
         }
 
@@ -516,7 +524,15 @@
             const q = document.getElementById('search').value.toLowerCase();
             const cont = document.getElementById('menu-list'); cont.innerHTML = '';
             const cats = {};
-            const order = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "ПАСТЫ", "ЗАКУСКИ"];
+            
+            // Получаем порядок из поля настроек или используем дефолтный
+            const orderStr = document.getElementById('set-categories').value;
+            let order = [];
+            if (orderStr) {
+                order = orderStr.split(',').map(s => s.trim().toUpperCase());
+            } else {
+                order = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "ПАСТЫ", "ЗАКУСКИ"];
+            }
 
             // 1. Собираем категории из данных
             menuData.forEach(i => { 
@@ -527,15 +543,18 @@
                 } 
             });
 
-            // 2. Сортируем категории (сначала известные по порядку, потом новые)
+            // 2. Сортируем категории
             const sorted = Object.keys(cats).sort((a, b) => { 
                 let ia = order.indexOf(a), ib = order.indexOf(b); 
-                // Если обе категории известные - сортируем по индексу
+                
+                // Если обе категории есть в списке настройки
                 if (ia !== -1 && ib !== -1) return ia - ib;
-                // Если одна известная, она выше
+                
+                // Если одна в списке, она выше
                 if (ia !== -1) return -1;
                 if (ib !== -1) return 1;
-                // Если обе новые - по алфавиту
+                
+                // Если обеих нет в списке - по алфавиту
                 return a.localeCompare(b);
             });
 
