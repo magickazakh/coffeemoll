@@ -154,6 +154,7 @@
             <input type="email" id="email" class="form-control mb-3" placeholder="Email">
             <input type="password" id="password" class="form-control mb-3" placeholder="Пароль">
             <button onclick="login()" class="btn btn-dark w-100 py-2 fw-bold">Войти</button>
+            <div id="login-error" class="text-danger mt-2 small" style="display:none;"></div>
         </div>
     </div>
 
@@ -325,7 +326,7 @@
                                 <!-- Изображение -->
                                 <div class="mb-3">
                                     <img id="edit-img-preview" src="" class="preview-img mb-2"
-                                        onerror="this.src='https://via.placeholder.com/300x200?text=Нет+фото'">
+                                        onerror="this.src='data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'200\' viewBox=\'0 0 300 200\'%3e%3crect width=\'300\' height=\'200\' fill=\'%23eee\'/%3e%3ctext x=\'50%25\' y=\'50%25\' font-family=\'Arial\' font-size=\'20\' fill=\'%23aaa\' dominant-baseline=\'middle\' text-anchor=\'middle\'%3e%D0%9D%D0%B5%D1%82+%D1%84%D0%BE%D1%82%D0%BE%3c/text%3e%3c/svg%3e'">
                                     <input type="text" id="edit-image" class="form-control form-control-sm"
                                         placeholder="Ссылка на картинку..."
                                         oninput="document.getElementById('edit-img-preview').src = this.value">
@@ -471,7 +472,14 @@
         window.login = () => {
             const e = document.getElementById('email').value;
             const p = document.getElementById('password').value;
-            signInWithEmailAndPassword(auth, e, p).catch(err => alert("Ошибка: " + err.message));
+            const errDiv = document.getElementById('login-error');
+            errDiv.style.display = 'none';
+            
+            signInWithEmailAndPassword(auth, e, p).catch(err => {
+                console.error("Login error:", err);
+                errDiv.innerText = "Ошибка: " + err.message;
+                errDiv.style.display = 'block';
+            });
         }
         window.logout = () => signOut(auth);
 
@@ -489,14 +497,18 @@
             onSnapshot(collection(db, "menu"), (s) => {
                 menuData = []; s.forEach(d => menuData.push({ _id: d.id, ...d.data() }));
                 renderList();
+            }, (error) => {
+                console.error("Menu fetch error:", error);
+                alert("Ошибка загрузки Меню: " + error.message);
             });
         }
 
         // Функции настроек (без изменений)
         function initSettings() {
             onSnapshot(doc(db, "settings", "main"), (d) => {
-                if (!d.exists()) return;
-                const data = d.data();
+                // Если документа нет, создадим дефолт локально чтобы не ломать UI
+                const data = d.exists() ? d.data() : {};
+                
                 document.getElementById('open-time').value = data.open_time || "09:00";
                 document.getElementById('close-time').value = data.close_time || "23:00";
                 document.getElementById('promo-switch').checked = (String(data.enable_promos) === "true");
@@ -505,18 +517,24 @@
                 document.getElementById('set-sauces').value = data.sauce_names || "";
                 document.getElementById('set-categories').value = data.category_order || "";
                 renderList(); // Перерисовать список с новым порядком
+            }, (error) => {
+                console.error("Settings fetch error:", error);
             });
         }
         window.updateSettings = async () => {
-            await updateDoc(doc(db, "settings", "main"), {
-                open_time: document.getElementById('open-time').value,
-                close_time: document.getElementById('close-time').value,
-                enable_promos: String(document.getElementById('promo-switch').checked),
-                syrup_names: document.getElementById('set-syrups').value,
-                alt_milks: document.getElementById('set-milks').value,
-                sauce_names: document.getElementById('set-sauces').value,
-                category_order: document.getElementById('set-categories').value
-            });
+            try {
+                await setDoc(doc(db, "settings", "main"), { // Используем setDoc с merge вместо updateDoc, если документа нет
+                    open_time: document.getElementById('open-time').value,
+                    close_time: document.getElementById('close-time').value,
+                    enable_promos: String(document.getElementById('promo-switch').checked),
+                    syrup_names: document.getElementById('set-syrups').value,
+                    alt_milks: document.getElementById('set-milks').value,
+                    sauce_names: document.getElementById('set-sauces').value,
+                    category_order: document.getElementById('set-categories').value
+                }, { merge: true });
+            } catch(e) {
+                alert("Ошибка сохранения настроек: " + e.message);
+            }
         }
 
         // Рендер списка
@@ -566,10 +584,13 @@
                     const statusText = i.available ? 'В наличии' : 'Нет';
                     const popularBadge = i.popular ? '<span class="status-badge status-popular">🔥 ХИТ</span>' : '';
                     const imgUrl = i.image || '';
+                    
+                    // Безопасная загрузка картинки (заглушка data:uri)
+                    const fallbackImg = "data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3e%3crect width='50' height='50' fill='%23f0f0f0'/%3e%3c/svg%3e";
 
                     cont.innerHTML += `
               <div class="item-row">
-                  <img src="${imgUrl}" class="item-img" onerror="this.style.background='#f0f0f0'">
+                  <img src="${imgUrl}" class="item-img" onerror="this.src='${fallbackImg}'">
                   <div style="flex:1">
                       <div class="fw-bold text-dark d-flex align-items-center">${i.name} ${popularBadge}</div>
                       <div class="small text-muted">${pr}</div>
