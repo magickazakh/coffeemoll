@@ -65,6 +65,7 @@ class ReviewState(StatesGroup):
 
 class SupportState(StatesGroup):
     waiting_for_admin_reply = State()
+    waiting_for_forward_confirmation = State() # <-- Новое состояние для перехвата сообщений
 
 # --- ГЛОБАЛЬНЫЙ КЕШ ---
 PROMO_CACHE = {}
@@ -810,15 +811,50 @@ async def finalize_review(message, state, comment_text, user):
     else: await message.edit_text(resp)
     await state.clear()
 
+
 # --- ЧАТ ПОДДЕРЖКИ ---
 
-# 1. Обработка сообщений от клиента (пересылка в админ-чат)
+# 1. Перехват сообщений от клиента в чат
 @dp.message(F.chat.type == "private", F.text, ~F.text.startswith("/"), StateFilter(None))
-async def handle_user_support_message(m: types.Message):
-    # Пытаемся найти имя клиента в кеше или берем из профиля
-    user_name = NAMES_CACHE.get(str(m.from_user.id), m.from_user.full_name)
-    user_id = m.from_user.id
-    username_link = f"@{m.from_user.username}" if m.from_user.username else "без юзернейма"
+async def handle_user_support_message(m: types.Message, state: FSMContext):
+    # Сохраняем текст сообщения в память, чтобы потом его отправить бариста, если нужно
+    await state.update_data(user_msg_text=m.text)
+    await state.set_state(SupportState.waiting_for_forward_confirmation)
+    
+    unique_url = f"{WEB_APP_URL}?v={int(time.time())}&uid={m.from_user.id}"
+    
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="☕️ Сделать заказ (Меню)", web_app=WebAppInfo(url=unique_url))],
+        [InlineKeyboardButton(text="💬 Отправить сообщение бариста", callback_data="forward_to_admin")],
+        [InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_forwarding")]
+    ])
+    
+    await m.answer(
+        "Мы получили ваше сообщение! 🤖\n\n"
+        "Если вы хотели <b>сделать заказ</b>, пожалуйста, воспользуйтесь нашим удобным меню (кнопка ниже) 🥐☕\n\n"
+        "Если же у вас <b>вопрос к бариста или жалоба</b>, нажмите кнопку «Отправить сообщение бариста».",
+        reply_markup=kb
+    )
+
+# 1.1 Защита от спама, пока ждем выбор (если человек снова пишет текст)
+@dp.message(F.chat.type == "private", F.text, ~F.text.startswith("/"), SupportState.waiting_for_forward_confirmation)
+async def handle_subsequent_messages(m: types.Message):
+    await m.answer("Пожалуйста, нажмите на одну из кнопок выше, чтобы мы поняли, что делать с вашим сообщением 👆")
+
+# 1.2 Подтверждение: отправить бариста
+@dp.callback_query(F.data == "forward_to_admin", SupportState.waiting_for_forward_confirmation)
+async def confirm_forward_to_admin(c: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    text = data.get('user_msg_text', '')
+
+    if not text:
+        await state.clear()
+        await c.message.edit_text("❌ Произошла ошибка. Пожалуйста, напишите ваше сообщение снова.")
+        return
+
+    user_name = NAMES_CACHE.get(str(c.from_user.id), c.from_user.full_name)
+    user_id = c.from_user.id
+    username_link = f"@{c.from_user.username}" if c.from_user.username else "без юзернейма"
 
     # Формируем сообщение для бариста
     text_to_admin = (
@@ -826,7 +862,7 @@ async def handle_user_support_message(m: types.Message):
         f"👤 <b>От:</b> {user_name} ({username_link})\n"
         f"🆔 <code>{user_id}</code>\n"
         f"➖➖➖➖➖➖➖➖➖➖\n"
-        f"{m.text}"
+        f"{text}"
     )
 
     try:
@@ -836,9 +872,20 @@ async def handle_user_support_message(m: types.Message):
             message_thread_id=TOPIC_ID_SUPPORT,
             reply_markup=get_reply_kb(user_id)
         )
-        # УДАЛЕНО: await m.react(...) — это вызывало ошибку
+        await c.message.edit_text("✅ Ваше сообщение успешно отправлено бариста! Ожидайте ответа.")
     except Exception as e:
         logging.error(f"Support msg error: {e}")
+        await c.message.edit_text("❌ Не удалось отправить сообщение. Возможно, произошла ошибка на сервере.")
+
+    await state.clear()
+    await c.answer()
+
+# 1.3 Отмена отправки
+@dp.callback_query(F.data == "cancel_forwarding", SupportState.waiting_for_forward_confirmation)
+async def cancel_forwarding(c: CallbackQuery, state: FSMContext):
+    await c.message.edit_text("Действие отменено.")
+    await state.clear()
+    await c.answer()
 
 # 2. Нажатие кнопки "Ответить" бариста
 @dp.callback_query(F.data.startswith("reply_"))
