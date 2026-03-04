@@ -11,7 +11,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // 🔴🔴🔴 ВСТАВЬТЕ СЮДА ВАШ КОНФИГ 🔴🔴🔴
     const firebaseConfig = {
       apiKey: "AIzaSyCjmU7YTy6aKzd-0GxnS7DSClLmIFCVrWU",
       authDomain: "coffeemolldb.firebaseapp.com",
@@ -52,20 +51,109 @@
   <script>window.onerror = function (msg, url, line) { return false; };</script>
 
   <style>
-    /* --- CSS ПЕРЕМЕННЫЕ --- */
+    /* --- CSS ПЕРЕМЕННЫЕ (Весенняя тема к 8 Марта 🌸) --- */
     :root {
-      --primary-color: #88d100;
+      --primary-color: #ff4d6d; /* Праздничный розовый цвет */
       --primary-text: #000000;
-      --bg-color: #F7F8F5;
+      --bg-color: #fff0f3; /* Нежно-розовый фон */
       --card-bg: #ffffff;
       --text-main: #111111;
       --text-secondary: #6b7280;
       --input-bg: #ffffff;
-      --border-color: #eee;
+      --border-color: #f7d2db; /* Мягкие розовые бордеры */
       --font-logo: 'Bebas Neue', cursive;
       --font-title: 'Oswald', sans-serif;
       --font-body: 'Montserrat', sans-serif;
       --header-height: 75px;
+    }
+
+    /* ТЕМНАЯ ТЕМА */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #1f1318; /* Темный фон с оттенком красного/розового */
+        --card-bg: #2d1f24;
+        --text-main: #ffffff;
+        --text-secondary: #a0a0a0;
+        --input-bg: #3b2830;
+        --border-color: #5c3b47;
+        --primary-color: #ff758f; /* Более светлый розовый для читаемости */
+      }
+
+      .header-container {
+        background: #2d1f24 !important;
+      }
+
+      .logo-coffee {
+        color: #ffffff !important;
+      }
+
+      .status-badge {
+        background: #5c1224;
+        color: #ffb3c6;
+      }
+
+      .radio-label,
+      .checkout-radio-label {
+        background: #3b2830 !important;
+        border-color: #5c3b47 !important;
+        color: #fff !important;
+      }
+
+      .radio-input:checked+.radio-label,
+      .checkout-radio-input:checked+.checkout-radio-label {
+        background: #5c1224 !important;
+        border-color: var(--primary-color) !important;
+      }
+
+      .category-separator {
+        color: var(--text-main);
+      }
+
+      .accordion-header {
+        background: #3b2830 !important;
+        color: #fff !important;
+      }
+
+      .repeat-card {
+        background: #3b2830 !important;
+        border-color: #5c3b47 !important;
+      }
+
+      .upsell-no {
+        background: #444 !important;
+        color: #ccc !important;
+      }
+
+      .cart-qty-btn {
+        background: #4a333d !important;
+        color: #fff !important;
+      }
+
+      .qty-control-btn {
+        background: transparent !important;
+        color: #fff !important;
+      }
+
+      .yandex-light {
+        display: none;
+      }
+
+      .yandex-dark {
+        display: block;
+      }
+    }
+
+    body {
+      font-family: var(--font-body);
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding-bottom: 100px;
+      -webkit-tap-highlight-color: transparent;
+      font-weight: 500;
+      transition: background-color 0.3s, color 0.3s;
+      overscroll-behavior-y: none;
     }
 
     .yandex-widget-container {
@@ -159,100 +247,13 @@
       display: none;
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg-color: #1a1a1a;
-        --card-bg: #2d2d2d;
-        --text-main: #ffffff;
-        --text-secondary: #a0a0a0;
-        --input-bg: #333333;
-        --border-color: #444444;
-      }
-
-      .header-container {
-        background: #2d2d2d !important;
-      }
-
-      .logo-coffee {
-        color: #ffffff !important;
-      }
-
-      .status-badge {
-        background: #064e3b;
-        color: #a7f3d0;
-      }
-
-      .radio-label,
-      .checkout-radio-label {
-        background: #333 !important;
-        border-color: #444 !important;
-        color: #fff !important;
-      }
-
-      .radio-input:checked+.radio-label,
-      .checkout-radio-input:checked+.checkout-radio-label {
-        background: #064e3b !important;
-        border-color: var(--primary-color) !important;
-      }
-
-      .category-separator {
-        color: var(--text-main);
-      }
-
-      .accordion-header {
-        background: #333 !important;
-        color: #fff !important;
-      }
-
-      .repeat-card {
-        background: #333 !important;
-        border-color: #444 !important;
-      }
-
-      .upsell-no {
-        background: #444 !important;
-        color: #ccc !important;
-      }
-
-      .cart-qty-btn {
-        background: #444 !important;
-        color: #fff !important;
-      }
-
-      .qty-control-btn {
-        background: #444 !important;
-        color: #fff !important;
-      }
-
-      .yandex-light {
-        display: none;
-      }
-
-      .yandex-dark {
-        display: block;
-      }
-    }
-
-    body {
-      font-family: var(--font-body);
-      margin: 0;
-      padding: 0;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      padding-bottom: 100px;
-      -webkit-tap-highlight-color: transparent;
-      font-weight: 500;
-      transition: background-color 0.3s, color 0.3s;
-      overscroll-behavior-y: none;
-    }
-
     .header-container {
       background: white;
       position: sticky;
       top: 0;
       z-index: 40;
       contain: layout paint;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 20px rgba(255, 77, 109, 0.1);
       padding-bottom: 5px;
       transition: background 0.3s;
       transform: translate3d(0, 0, 0);
@@ -310,8 +311,8 @@
       padding: 4px 8px;
       border-radius: 12px;
       font-weight: bold;
-      background: #e6fffa;
-      color: #047857;
+      background: #ffe1e8;
+      color: #c9184a;
       margin-left: 10px;
     }
 
@@ -336,7 +337,7 @@
 
     #search-input:focus {
       border-color: var(--primary-color);
-      box-shadow: 0 0 0 2px rgba(136, 209, 0, 0.2);
+      box-shadow: 0 0 0 2px rgba(255, 77, 109, 0.2);
     }
 
     #repeat-order-container {
@@ -354,7 +355,7 @@
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
-      box-shadow: 0 2px 5px rgba(136, 209, 0, 0.1);
+      box-shadow: 0 2px 5px rgba(255, 77, 109, 0.1);
     }
 
     .repeat-card:active {
@@ -448,7 +449,7 @@
       background: var(--card-bg);
       border-radius: 16px;
       padding: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+      box-shadow: 0 4px 10px rgba(255, 77, 109, 0.05);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -527,7 +528,7 @@
       top: 8px;
       right: 8px;
       background: var(--primary-color);
-      color: #000;
+      color: #fff;
       font-size: 10px;
       font-weight: 700;
       padding: 4px 8px;
@@ -591,7 +592,7 @@
 
     .add-btn {
       background-color: var(--primary-color);
-      color: #000;
+      color: #fff;
       border: none;
       border-radius: 8px;
       padding: 6px 10px;
@@ -792,10 +793,10 @@
 
     .radio-input:checked+.radio-label,
     .checkout-radio-input:checked+.checkout-radio-label {
-      background-color: #f0fdf4;
+      background-color: #fff0f3;
       border-color: var(--primary-color);
       color: #000;
-      box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15);
+      box-shadow: 0 2px 4px rgba(255, 77, 109, 0.15);
       font-weight: 600;
     }
 
@@ -839,7 +840,7 @@
 
     .modal-add-btn {
       background: var(--primary-color);
-      color: #000;
+      color: #fff;
       width: 100%;
       padding: 16px;
       border: none;
@@ -1097,7 +1098,7 @@
     select {
       appearance: none;
       -webkit-appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2388d100' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4d6d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
       background-repeat: no-repeat;
       background-position: right 15px center;
       background-size: 16px;
@@ -1233,8 +1234,8 @@
     }
 
     .upsell-yes {
-      background: #88d100;
-      color: #3e2723;
+      background: var(--primary-color);
+      color: #fff;
       padding: 10px 20px;
       border-radius: 10px;
       border: none;
@@ -1285,7 +1286,7 @@
     <div class="spinner"></div>
     <div class="loading-title"><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></div>
     <div class="separator-line"></div>
-    <div class="loading-motto">Загружаем меню...</div>
+    <div class="loading-motto">Собираем весенние букеты... 💐</div>
   </div>
 
   <div id="toast-container"></div>
@@ -1302,7 +1303,7 @@
       <div class="header-left">
         <h1><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></h1>
         <div class="separator-line"></div>
-        <div class="motto">Кофейня с неприлично вкусным кофе</div>
+        <div class="motto">С 8 Марта! 🌷</div>
       </div>
       <div style="display:flex; align-items:center;">
         <div id="work-status" class="status-badge">Checking...</div>
@@ -1332,7 +1333,7 @@
         </div>
 
         <div class="search-wrapper">
-          <input type="text" id="search-input" placeholder="🔍 Найти напиток или еду..." oninput="filterMenu()">
+          <input type="text" id="search-input" placeholder="🌸 Найти напиток или еду..." oninput="filterMenu()">
         </div>
 
         <div id="repeat-order-container">
@@ -1360,7 +1361,7 @@
   </div>
 
   <div class="main-btn" id="cart-btn" onclick="openCheckout()">
-    <span id="cart-text">К корзине</span>
+    <span id="cart-text">К корзине 🌷</span>
     <div class="cart-counter" id="cart-count"
       style="background: white; color: black; border-radius: 50%; width: 22px; height: 22px; position: absolute; top: -8px; right: -8px; display: flex; align-items: center; justify-content: center; font-size: 12px;">
       0</div>
@@ -1383,7 +1384,7 @@
       <div id="closing-soon-warning" class="warning-box"
         style="display:none; background:#fef3c7; color:#b45309; border-color:#fcd34d;">⚠️ <b>Скоро
           закрытие!</b><br>Успейте сделать заказ до конца рабочего дня (23:00).</div>
-      <div id="pizza-warning" class="info-box">🍕 <b>Пицца доступна с 11:00.</b><br>Начнем готовить её после 11:00.
+      <div id="pizza-warning" class="info-box">🍕🌷 <b>Пицца доступна с 11:00.</b><br>Начнем готовить её после 11:00.
       </div>
 
       <div id="cart-list-container"></div>
@@ -1474,7 +1475,7 @@
 
   <div class="upsell-overlay" id="upsell-modal">
     <div class="upsell-content">
-      <h3 class="upsell-title">ВКУСНОЕ ДОПОЛНЕНИЕ!</h3>
+      <h3 class="upsell-title">ВЕСЕННЕЕ ДОПОЛНЕНИЕ! 🌸</h3>
       <img src="" alt="Upsell" class="upsell-img">
       <div class="upsell-product">ТОВАР</div>
       <div class="upsell-desc" id="upsell-price">0 ₸</div>
@@ -1552,8 +1553,14 @@
     let upsellShown = false;
     let currentUpsellItem = null;
 
-    // Loading Animation
-    const loadingTexts = ["Настраиваем помол...", "Варим эспрессо...", "Взбиваем молоко...", "Протираем столики...", "Греем круассаны..."];
+    // Loading Animation 🌸
+    const loadingTexts = [
+        "Собираем весенние букеты... 💐", 
+        "Варим кофе с любовью... ☕❤️", 
+        "Взбиваем нежное молоко... 🌸", 
+        "Готовим праздничные десерты... 🍰", 
+        "Ждем прекрасных дам... 🎀"
+    ];
     let textIdx = 0;
     const mottoEl = document.querySelector('.loading-motto');
     const loadingInterval = setInterval(() => {
@@ -1692,7 +1699,6 @@
           if (s.syrup_names) SYRUPS = Array.isArray(s.syrup_names) ? s.syrup_names : s.syrup_names.split(',');
           if (s.sauce_names) SAUCES = Array.isArray(s.sauce_names) ? s.sauce_names : s.sauce_names.split(',');
           
-          // НОВАЯ ЛОГИКА: Обновляем порядок категорий из настроек
           if (s.category_order) {
              const customOrder = s.category_order.split(',').map(c => c.trim().toUpperCase());
              if (customOrder.length > 0) {
@@ -1858,7 +1864,6 @@
       const displayData = getDisplayData();
       const cats = [...new Set(displayData.map(p => p.cat))];
 
-      // Добавляем сортировку по CATEGORY_ORDER
       cats.sort((a, b) => {
         const idxA = CATEGORY_ORDER.findIndex(c => c.toUpperCase() === a.toUpperCase());
         const idxB = CATEGORY_ORDER.findIndex(c => c.toUpperCase() === b.toUpperCase());
@@ -1931,7 +1936,7 @@
         const total = cart.reduce((s, i) => s + (i.priceTotal || i.price), 0);
         const qty = cart.reduce((s, i) => s + (i.qty || 1), 0);
         btn.style.display = 'block';
-        txt.innerText = `Заказ: ${total} ₸`;
+        txt.innerText = `Заказ: ${total} ₸ 🌷`;
         count.innerText = qty;
         count.style.animation = 'none';
         count.offsetHeight;
@@ -2069,13 +2074,12 @@
     function recalcPrice() {
       let p = 0;
       const prod = currentModalProduct;
-      let volIndex = 0; // Индекс выбранного объема (по умолчанию 0)
+      let volIndex = 0; 
 
-      // 1. Считаем базовую цену + определяем индекс объема
       if (prod.hasVolumes && prod.volumes.length > 0) {
         const el = document.querySelector('input[name="vol"]:checked');
         if (el) {
-          volIndex = parseInt(el.value); // Запоминаем индекс!
+          volIndex = parseInt(el.value); 
           p += prod.volumes[volIndex].p;
         } else {
           p += prod.volumes[0].p;
@@ -2084,25 +2088,19 @@
         p += (prod.basePrice || prod.price || 0);
       }
 
-      // 2. Считаем модификаторы
-      // А) Молоко
       if (prod.hasMilk) {
         const el = document.querySelector('input[name="milk"]:checked');
-        let milkPrice = PRICES.alt_milk; // Дефолтная цена из констант
+        let milkPrice = PRICES.alt_milk; 
 
-        // Если у товара есть свои настройки цен на молоко
         if (prod.mods && prod.mods.alt_milk !== undefined) {
           const modVal = prod.mods.alt_milk;
           if (Array.isArray(modVal)) {
-            // Если это массив [300, 400], берем цену по индексу объема
-            // Если объемов меньше чем цен, берем последнюю доступную
             milkPrice = modVal[volIndex] !== undefined ? modVal[volIndex] : modVal[modVal.length - 1];
           } else {
             milkPrice = modVal;
           }
         }
 
-        // Обновляем отображение цены в UI (+300)
         const labelSpan = document.getElementById('alt-milk-price-display');
         if (labelSpan) labelSpan.innerText = milkPrice > 0 ? `+${milkPrice}` : '';
 
@@ -2111,13 +2109,11 @@
         }
       }
 
-      // Б) Остальные чекбоксы
       const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
       checkboxes.forEach(key => {
         const el = document.getElementById(`mod-${key}`);
         if (el && el.checked) {
           let itemPrice = prod.mods[key];
-          // Если цена зависит от объема (массив)
           if (Array.isArray(itemPrice)) {
             itemPrice = itemPrice[volIndex] !== undefined ? itemPrice[volIndex] : itemPrice[itemPrice.length - 1];
           }
@@ -2125,7 +2121,6 @@
         }
       });
 
-      // В) Соусы и Сиропы
       if (document.getElementById('sauce-select')) {
         const val = document.getElementById('sauce-select').value;
         if (val && val !== "Нет") p += prod.mods['sauce'];
@@ -2145,11 +2140,9 @@
         }
       }
 
-      // Г) Облепиха (Процеживание)
       const strainBlock = document.getElementById('strain-block');
       if (strainBlock && prod.name.toUpperCase().includes('ОБЛЕПИХОВЫЙ')) {
         const volEl = document.querySelector('input[name="vol"]:checked');
-        // Если выбран объем 0.4 (обычно это индекс 1 или в названии есть 0.4)
         if (volEl && prod.volumes[volEl.value].n.includes('0.4')) {
           strainBlock.style.display = 'block';
         } else {
@@ -2157,7 +2150,6 @@
         }
       }
 
-      // 3. Обновляем кнопку
       const btn = document.getElementById('modal-btn');
       if (btn) {
         const total = p * modalQty;
@@ -2303,8 +2295,8 @@
       const b = document.getElementById('work-status');
       if (b) {
         b.innerText = isOpen ? `Открыто (${OPEN_HOUR}:00 - ${CLOSE_HOUR}:00)` : `Закрыто (работаем с ${OPEN_HOUR}:00)`;
-        b.style.background = isOpen ? '#e6fffa' : '#fee2e2';
-        b.style.color = isOpen ? '#047857' : '#991b1b';
+        b.style.background = isOpen ? '#ffe1e8' : '#fee2e2';
+        b.style.color = isOpen ? '#c9184a' : '#991b1b';
       }
       if (isOpen && h === (CLOSE_HOUR - 1)) {
         document.getElementById('closing-soon-warning').style.display = 'block';
@@ -2375,7 +2367,7 @@
       const potential = menuData.filter(p => p.available && targetCats.some(tc => p.cat.toUpperCase().includes(tc)) && p.id !== triggerProduct.id);
       if (potential.length === 0) return;
       currentUpsellItem = potential[Math.floor(Math.random() * potential.length)];
-      document.querySelector('.upsell-title').innerText = "К ЭТОМУ ОТЛИЧНО ПОДОЙДЕТ!";
+      document.querySelector('.upsell-title').innerText = "ВЕСЕННЕЕ ДОПОЛНЕНИЕ! 🌸";
       document.querySelector('.upsell-img').src = currentUpsellItem.img || getImageByCategory(currentUpsellItem.cat);
       document.querySelector('.upsell-product').innerText = currentUpsellItem.name;
       let price = currentUpsellItem.price || currentUpsellItem.basePrice;
@@ -2447,7 +2439,7 @@
         if (data.status === "OK") {
           appliedDiscount = data.discount;
           appliedPromoCode = code;
-          codeInput.style.borderColor = "#88d100";
+          codeInput.style.borderColor = "var(--primary-color)";
           showToast(`Промокод: -${Math.round(appliedDiscount * 100)}%`);
           calculateTotal();
         } else {
