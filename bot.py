@@ -42,8 +42,8 @@ KASPI_NUMBER = "+7 747 240 20 02"
 
 BARISTAS = {
     "1": {"name": "Анара", "phone": "+7 747 240 20 02 (только Kaspi)"},
-    "2": {"name": "Карина", "phone": "+7 776 962 28 14 (Kaspi/Halyk)"}, # Исправлен слеш
-    "3": {"name": "Павел", "phone": "+7 771 904 44 55 (Kaspi/Halyk/Forte/Freedom)"} # Исправлен слеш
+    "2": {"name": "Карина", "phone": "+7 776 962 28 14 (Kaspi/Halyk)"},
+    "3": {"name": "Павел", "phone": "+7 771 904 44 55 (Kaspi/Halyk/Forte/Freedom)"}
 }
 
 logging.basicConfig(level=logging.INFO)
@@ -390,10 +390,11 @@ async def cmd_start(m: types.Message):
     if m.chat.id == ADMIN_CHAT_ID:
         await m.answer(f"Привет, Админ! 👋\nКоманды:\n/stats - Статистика\n/broadcast - Рассылка")
 
+    # 🌸 Праздничное приветствие к 8 Марта 🌸
     await m.answer(
-        "Добро пожаловать в CoffeeMoll! 🥐", 
+        "🌷 С праздником 8 Марта!\nДобро пожаловать в CoffeeMoll! ☕️", 
         reply_markup=ReplyKeyboardMarkup(
-            keyboard=[[KeyboardButton(text="☕️ Сделать заказ", web_app=WebAppInfo(url=unique_url))]], 
+            keyboard=[[KeyboardButton(text="🌸 Сделать заказ", web_app=WebAppInfo(url=unique_url))]], 
             resize_keyboard=True
         )
     )
@@ -785,7 +786,7 @@ async def barista_choice(c: CallbackQuery, state: FSMContext):
 
 @dp.callback_query(F.data == "skip_comment", ReviewState.waiting_for_comment)
 async def skip_comment(c: CallbackQuery, state: FSMContext):
-    await finalize_review(c.message, state, "Без текста", c.from_user)
+    await finalize_review(c.message, state, "Без текста", c.fromuser)
     await c.answer()
 
 @dp.message(ReviewState.waiting_for_comment)
@@ -836,7 +837,6 @@ async def handle_user_support_message(m: types.Message):
             message_thread_id=TOPIC_ID_SUPPORT,
             reply_markup=get_reply_kb(user_id)
         )
-        # УДАЛЕНО: await m.react(...) — это вызывало ошибку
     except Exception as e:
         logging.error(f"Support msg error: {e}")
 
@@ -878,7 +878,6 @@ async def admin_reply_send(m: types.Message, state: FSMContext):
             chat_id=target_user_id,
             text=f"👨‍🍳 <b>Ответ от CoffeeMoll:</b>\n\n{m.text}"
         )
-        # УДАЛЕНО: await m.react(...) — это вызывало ошибку
         await m.answer("✅ Ответ отправлен.")
     except Exception as e:
         await m.answer(f"❌ Не удалось отправить сообщение (пользователь заблокировал бота?)\nОшибка: {e}")
