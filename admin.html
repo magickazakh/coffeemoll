@@ -216,6 +216,15 @@
                                         <input type="time" class="form-control" id="close-time" onchange="updateSettings()">
                                     </div>
                                 </div>
+                                <!-- ИЗМЕНЕНИЕ: Добавлено поле версии -->
+                                <div class="col-md-5">
+                                    <label class="small text-muted fw-bold mb-1">Версия приложения (сброс кэша)</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">v.</span>
+                                        <input type="number" class="form-control" id="app-version" onchange="updateSettings()" min="1">
+                                        <button class="btn btn-outline-success fw-bold" type="button" onclick="bumpVersion()">+1 Сбросить кэш</button>
+                                    </div>
+                                </div>
                             </div>
                             <hr>
                             <div class="row g-3">
@@ -503,7 +512,7 @@
             });
         }
 
-        // Функции настроек (без изменений)
+        // Функции настроек (изменены для поддержки actual_version)
         function initSettings() {
             onSnapshot(doc(db, "settings", "main"), (d) => {
                 // Если документа нет, создадим дефолт локально чтобы не ломать UI
@@ -516,25 +525,47 @@
                 document.getElementById('set-milks').value = data.alt_milks || "";
                 document.getElementById('set-sauces').value = data.sauce_names || "";
                 document.getElementById('set-categories').value = data.category_order || "";
+                
+                // ИЗМЕНЕНИЕ: Подтягиваем актуальную версию
+                document.getElementById('app-version').value = data.actual_version || 1;
+                
                 renderList(); // Перерисовать список с новым порядком
             }, (error) => {
                 console.error("Settings fetch error:", error);
             });
         }
+        
         window.updateSettings = async () => {
             try {
-                await setDoc(doc(db, "settings", "main"), { // Используем setDoc с merge вместо updateDoc, если документа нет
+                await setDoc(doc(db, "settings", "main"), { // Используем setDoc с merge
                     open_time: document.getElementById('open-time').value,
                     close_time: document.getElementById('close-time').value,
                     enable_promos: String(document.getElementById('promo-switch').checked),
                     syrup_names: document.getElementById('set-syrups').value,
                     alt_milks: document.getElementById('set-milks').value,
                     sauce_names: document.getElementById('set-sauces').value,
-                    category_order: document.getElementById('set-categories').value
+                    category_order: document.getElementById('set-categories').value,
+                    actual_version: parseInt(document.getElementById('app-version').value) || 1 // ИЗМЕНЕНИЕ
                 }, { merge: true });
             } catch(e) {
                 alert("Ошибка сохранения настроек: " + e.message);
             }
+        }
+
+        // ИЗМЕНЕНИЕ: Вспомогательная функция для быстрого бампа версии
+        window.bumpVersion = () => {
+            const input = document.getElementById('app-version');
+            input.value = (parseInt(input.value) || 1) + 1;
+            updateSettings();
+            // Покажем уведомление
+            const btn = document.querySelector('button[onclick="bumpVersion()"]');
+            const originalText = btn.innerText;
+            btn.innerText = "✅ Кэш будет сброшен";
+            btn.classList.replace('btn-outline-success', 'btn-success');
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.replace('btn-success', 'btn-outline-success');
+            }, 2000);
         }
 
         // Рендер списка
@@ -967,6 +998,7 @@
         window.updateOrderStatus = window.updateOrderStatus;
         window.openAdd = window.openAdd;
         window.openEdit = window.openEdit;
+        window.bumpVersion = window.bumpVersion;
 
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
