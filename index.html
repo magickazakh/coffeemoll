@@ -1497,6 +1497,9 @@
     tg.expand();
     const BACKEND_URL = "https://coffeemoll.onrender.com";
     
+    // ИЗМЕНЕНИЕ: Текущая версия приложения в коде
+    const APP_VERSION = 1;
+
     // Изначальный порядок (будет перезаписан из Firebase)
     let CATEGORY_ORDER = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "ПАСТЫ", "ЗАКУСКИ"];
 
@@ -1691,6 +1694,18 @@
         const settingsSnap = await window.getDoc(window.doc(window.db, "settings", "main"));
         if (settingsSnap.exists()) {
           const s = settingsSnap.data();
+
+          // ИЗМЕНЕНИЕ: Проверка версии для принудительного сброса кэша
+          const dbVersion = parseInt(s.actual_version) || 1;
+          if (dbVersion > APP_VERSION) {
+              console.log(`Update required. Local: ${APP_VERSION}, Remote: ${dbVersion}`);
+              // Добавляем или обновляем query parameter app_v для обхода кеша
+              const url = new URL(window.location.href);
+              url.searchParams.set('app_v', dbVersion);
+              window.location.replace(url.toString()); // И перезагружаем страницу
+              return; // Останавливаем дальнейшую инициализацию старой версии
+          }
+
           if (s.open_time) OPEN_HOUR = parseInt(s.open_time.split(':')[0]);
           if (s.close_time) CLOSE_HOUR = parseInt(s.close_time.split(':')[0]);
           if (s.enable_promos !== undefined) PROMOS_ENABLED = (String(s.enable_promos) === 'true');
@@ -1698,7 +1713,6 @@
           if (s.syrup_names) SYRUPS = Array.isArray(s.syrup_names) ? s.syrup_names : s.syrup_names.split(',');
           if (s.sauce_names) SAUCES = Array.isArray(s.sauce_names) ? s.sauce_names : s.sauce_names.split(',');
           
-          // НОВАЯ ЛОГИКА: Обновляем порядок категорий из настроек
           if (s.category_order) {
              const customOrder = s.category_order.split(',').map(c => c.trim().toUpperCase());
              if (customOrder.length > 0) {
