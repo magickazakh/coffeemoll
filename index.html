@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>CoffeeMoll - Наурыз!</title>
+  <title>CoffeeMoll</title>
 
   <!-- FIREBASE SDK -->
   <script type="module">
@@ -291,7 +291,6 @@
       width: 141px;
       height: 3px;
       background-color: var(--primary-color);
-      background: linear-gradient(90deg, #88d100, #ffca28); /* Nauryz gradient */
       margin: 3px 0;
       border-radius: 2px;
     }
@@ -1284,7 +1283,7 @@
 
   <div class="loading-overlay" id="loading-screen">
     <div class="spinner"></div>
-    <div class="loading-title"><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL 🌷</span></div>
+    <div class="loading-title"><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></div>
     <div class="separator-line"></div>
     <div class="loading-motto">Загружаем меню...</div>
   </div>
@@ -1301,9 +1300,9 @@
   <div class="header-container" id="header-container">
     <header id="main-header">
       <div class="header-left">
-        <h1><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL 🌸</span></h1>
+        <h1><span class="logo-coffee">COFFEE</span><span class="logo-moll">MOLL</span></h1>
         <div class="separator-line"></div>
-        <div class="motto">С праздником Наурыз! 🌷 Кофейня с неприлично вкусным кофе</div>
+        <div class="motto">Кофейня с неприлично вкусным кофе</div>
       </div>
       <div style="display:flex; align-items:center;">
         <div id="work-status" class="status-badge">Checking...</div>
@@ -1312,11 +1311,6 @@
 
     <div id="collapsible-header">
       <div class="collapsible-inner">
-
-        <!-- Праздничный баннер Наурыз -->
-        <div style="background: linear-gradient(135deg, #88d100, #f59e0b); color: white; padding: 12px 15px; border-radius: 12px; margin: 0 15px 15px 15px; font-weight: bold; font-size: 14px; text-align: center; box-shadow: 0 4px 10px rgba(136, 209, 0, 0.2); display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <span style="font-size: 18px;">🌸</span> Наурыз мейрамы құтты болсын! <span style="font-size: 18px;">🌿</span>
-        </div>
 
         <div class="yandex-widget-container">
           <div class="yandex-widget-header" onclick="toggleYandexWidget(this)">
@@ -1474,7 +1468,7 @@
         <textarea id="order-comment" placeholder="Комментарий к заказу..."></textarea>
       </div>
 
-      <button class="modal-add-btn" id="submit-btn" onclick="submitOrder()">ОТПРАВИТЬ ЗАКАЗ 🌸</button>
+      <button class="modal-add-btn" id="submit-btn" onclick="submitOrder()">ОТПРАВИТЬ ЗАКАЗ</button>
     </div>
   </div>
 
@@ -1496,10 +1490,10 @@
     tg.ready();
     tg.expand();
     const BACKEND_URL = "https://coffeemoll.onrender.com";
-    
-    // ИЗМЕНЕНИЕ: Текущая версия приложения в коде
-    const APP_VERSION = 1;
 
+    // ИЗМЕНЕНИЕ: Текущая версия приложения в коде
+    const APP_VERSION = 2;
+    
     // Изначальный порядок (будет перезаписан из Firebase)
     let CATEGORY_ORDER = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "ПАСТЫ", "ЗАКУСКИ"];
 
@@ -1561,8 +1555,8 @@
     let upsellShown = false;
     let currentUpsellItem = null;
 
-    // Loading Animation with Nauryz Theme
-    const loadingTexts = ["Жарим баурсаки...", "Настраиваем помол...", "Варим эспрессо...", "Взбиваем молоко..."];
+    // Loading Animation
+    const loadingTexts = ["Настраиваем помол...", "Варим эспрессо...", "Взбиваем молоко...", "Протираем столики...", "Греем круассаны..."];
     let textIdx = 0;
     const mottoEl = document.querySelector('.loading-motto');
     const loadingInterval = setInterval(() => {
@@ -1713,6 +1707,7 @@
           if (s.syrup_names) SYRUPS = Array.isArray(s.syrup_names) ? s.syrup_names : s.syrup_names.split(',');
           if (s.sauce_names) SAUCES = Array.isArray(s.sauce_names) ? s.sauce_names : s.sauce_names.split(',');
           
+          // НОВАЯ ЛОГИКА: Обновляем порядок категорий из настроек
           if (s.category_order) {
              const customOrder = s.category_order.split(',').map(c => c.trim().toUpperCase());
              if (customOrder.length > 0) {
