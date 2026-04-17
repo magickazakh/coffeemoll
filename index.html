@@ -1385,6 +1385,8 @@
           закрытие!</b><br>Успейте сделать заказ до конца рабочего дня (23:00).</div>
       <div id="pizza-warning" class="info-box">🍕 <b>Пицца доступна с 11:00.</b><br>Начнем готовить её после 11:00.
       </div>
+      <div id="sushi-warning" class="info-box" style="display:none;">🍣 <b>Суши доступны с 11:00.</b><br>Начнем готовить их после 11:00.
+</div>
 
       <div id="cart-list-container"></div>
 
@@ -1492,7 +1494,7 @@
     const BACKEND_URL = "https://coffeemoll.onrender.com";
 
     // ИЗМЕНЕНИЕ: Текущая версия приложения в коде
-    const APP_VERSION = 2;
+    const APP_VERSION = 3;
     
     // Изначальный порядок (будет перезаписан из Firebase)
     let CATEGORY_ORDER = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "ПАСТЫ", "ЗАКУСКИ"];
@@ -2260,6 +2262,13 @@
       } else {
         pizzaWarning.style.display = 'none';
       }
+      const hasSushi = cart.some(i => i.cat === 'СУШИ');
+      const sushiWarning = document.getElementById('sushi-warning');
+      if (hasSushi && h < 11) {
+        sushiWarning.style.display = 'block';
+      } else {
+        sushiWarning.style.display = 'none';
+      }
       const u = tg.initDataUnsafe?.user;
       if (u && !document.getElementById('client-name').value) {
         document.getElementById('client-name').value = u.first_name;
@@ -2493,13 +2502,21 @@
       const now = new Date();
       const currentHour = now.getHours();
       const hasPizza = cart.some(i => i.cat === 'ПИЦЦА');
-      if (hasPizza) {
+      const hasSushi = cart.some(i => i.cat === 'СУШИ');
+      
+      if (hasPizza || hasSushi) {
+        const itemNames = [];
+        if (hasPizza) itemNames.push('пиццу');
+        if (hasSushi) itemNames.push('суши');
+        const itemsStr = itemNames.join(' и ');
+
         const delTypeEl = document.querySelector('input[name="deliveryType"]:checked');
         const timeTypeEl = document.querySelector('input[name="orderTimeType"]:checked');
         const isAsap = timeTypeEl && timeTypeEl.value === 'asap';
         const isTime = timeTypeEl && timeTypeEl.value === 'time';
+        
         if (isAsap && currentHour < 11) {
-          showToast(`🚫 Мы готовим пиццу с 11:00. Пожалуйста, выберите время получения после 11:00.`, 'error');
+          showToast(`🚫 Мы готовим ${itemsStr} с 11:00. Пожалуйста, выберите время получения после 11:00.`, 'error');
           return;
         }
         if (isTime) {
@@ -2507,7 +2524,7 @@
           if (specTime) {
             const selectedHour = parseInt(specTime.split(':')[0], 10);
             if (selectedHour < 11) {
-              showToast(`🚫 Мы готовим пиццу с 11:00. Вы выбрали ${specTime}, пожалуйста, сдвиньте время на 11:00 или позже.`, 'error');
+              showToast(`🚫 Мы готовим ${itemsStr} с 11:00. Вы выбрали ${specTime}, пожалуйста, сдвиньте время на 11:00 или позже.`, 'error');
               return;
             }
           } else {
