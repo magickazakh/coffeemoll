@@ -1383,10 +1383,8 @@
       <div id="closing-soon-warning" class="warning-box"
         style="display:none; background:#fef3c7; color:#b45309; border-color:#fcd34d;">⚠️ <b>Скоро
           закрытие!</b><br>Успейте сделать заказ до конца рабочего дня (23:00).</div>
-      <div id="pizza-warning" class="info-box">🍕 <b>Пицца доступна с 11:00.</b><br>Начнем готовить её после 11:00.
-      </div>
-      <div id="sushi-warning" class="info-box" style="display:none;">🍣 <b>Суши доступны с 11:00.</b><br>Начнем готовить их после 11:00.
-</div>
+      <div id="pizza-warning" class="info-box">🍕 <b>Пицца доступна с 11:00.</b><br>Начнем готовить её после 11:00.</div>
+      <div id="sushi-warning" class="info-box">🍣 <b>Суши доступны с 11:00.</b><br>Начнем готовить их после 11:00.</div>
 
       <div id="cart-list-container"></div>
 
@@ -1494,10 +1492,10 @@
     const BACKEND_URL = "https://coffeemoll.onrender.com";
 
     // ИЗМЕНЕНИЕ: Текущая версия приложения в коде
-    const APP_VERSION = 4;
+    const APP_VERSION = 5;
     
     // Изначальный порядок (будет перезаписан из Firebase)
-    let CATEGORY_ORDER = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "ПАСТЫ", "ЗАКУСКИ"];
+    let CATEGORY_ORDER = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "СУШИ", "ПАСТЫ", "ЗАКУСКИ"];
 
     // --- CONSTANTS ---
     // These will be loaded/updated from Firebase, but defaults are good to have
@@ -1542,6 +1540,7 @@
       "СЕЗОННОЕ": ["КРУАССАНЫ", "ДЕСЕРТЫ"],
       "КРУАССАНЫ": ["СЕЗОННОЕ"],
       "ПИЦЦА": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"],
+      "СУШИ": ["ХОЛОДНЫЕ НАПИТКИ"],
       "ПАСТЫ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"],
       "ХОТ-ДОГИ": ["ХОЛОДНЫЕ НАПИТКИ", "СЕЗОННОЕ"],
       "ЗАВТРАКИ": ["КОФЕ", "СЕЗОННОЕ"]
@@ -1864,7 +1863,8 @@
         "Сезонное": "https://cdn-icons-png.flaticon.com/512/4421/4421089.png",
         "Смузи": "https://cdn-icons-png.flaticon.com/512/1147/1147588.png",
         "Холодные напитки": "https://cdn-icons-png.flaticon.com/512/956/956850.png",
-        "Пасты": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png"
+        "Пасты": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png",
+        "Суши": "https://cdn-icons-png.flaticon.com/512/2254/2254464.png"
       };
       return map[cat] || "https://cdn-icons-png.flaticon.com/512/751/751621.png";
     }
@@ -2269,7 +2269,7 @@
       // Проверка для Суши
       const hasSushi = cart.some(i => i.cat === 'СУШИ');
       const sushiWarning = document.getElementById('sushi-warning');
-      if (sushiWarning) { // проверка на случай, если вы еще не добавили html-блок
+      if (sushiWarning) {
         if (hasSushi && h < 11) {
           sushiWarning.style.display = 'block';
         } else {
@@ -2520,6 +2520,7 @@
         if (hasSushi) itemNames.push('суши');
         const itemsStr = itemNames.join(' и ');
 
+        const delTypeEl = document.querySelector('input[name="deliveryType"]:checked'); // Возвращено на место
         const timeTypeEl = document.querySelector('input[name="orderTimeType"]:checked');
         const isAsap = timeTypeEl && timeTypeEl.value === 'asap';
         const isTime = timeTypeEl && timeTypeEl.value === 'time';
