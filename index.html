@@ -1382,7 +1382,7 @@
         заказ в рабочее время (с 09:00).</div>
       <div id="closing-soon-warning" class="warning-box"
         style="display:none; background:#fef3c7; color:#b45309; border-color:#fcd34d;">⚠️ <b>Скоро
-          закрытие!</b><br>Успейте сделать заказ до конца рабочего дня (23:00).</div>
+          закрытие!</b><br>Успейте сделать заказ до конца рабочего дня (00:00).</div>
       <div id="pizza-warning" class="info-box">🍕 <b>Пицца доступна с 11:00.</b><br>Начнем готовить её после 11:00.</div>
       <div id="sushi-warning" class="info-box">🍣 <b>Суши доступны с 11:00.</b><br>Начнем готовить их после 11:00.</div>
 
@@ -1492,7 +1492,7 @@
     const BACKEND_URL = "https://coffeemoll.onrender.com";
 
     // ИЗМЕНЕНИЕ: Текущая версия приложения в коде
-    const APP_VERSION = 6;
+    const APP_VERSION = 7;
     
     // Изначальный порядок (будет перезаписан из Firebase)
     let CATEGORY_ORDER = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "СУШИ", "ПАСТЫ", "ЗАКУСКИ"];
@@ -2334,7 +2334,7 @@
       const isOpen = h >= OPEN_HOUR && h < CLOSE_HOUR;
       const b = document.getElementById('work-status');
       if (b) {
-        b.innerText = isOpen ? `Открыто (${OPEN_HOUR}:00 - ${CLOSE_HOUR}:00)` : `Закрыто (работаем с ${OPEN_HOUR}:00)`;
+        b.innerText = isOpen ? `Открыто (${OPEN_HOUR}:00 - ${CLOSE_HOUR}:59)` : `Закрыто (работаем с ${OPEN_HOUR}:00)`;
         b.style.background = isOpen ? '#e6fffa' : '#fee2e2';
         b.style.color = isOpen ? '#047857' : '#991b1b';
       }
