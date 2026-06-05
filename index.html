@@ -1807,7 +1807,7 @@
     tg.expand();
     const BACKEND_URL = "https://coffeemoll.onrender.com";
 
-    const APP_VERSION = 10;
+    const APP_VERSION = 11;
     let CATEGORY_ORDER = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "СУШИ", "ПАСТЫ", "ЗАКУСКИ"];
 
     let PRICES = {
@@ -1905,55 +1905,31 @@
     }
 
     function updateHeaderHeight() {
-      let lastScrollTop = 0;
       const collapsible = document.getElementById('collapsible-header');
-      let isLocked = false;
       let ticking = false;
-      const tolerance = 5;
-      const lockAnimation = () => {
-        isLocked = true;
-        setTimeout(() => {
-          isLocked = false;
-          lastScrollTop = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
-        }, 300);
-      };
+
       window.addEventListener('scroll', () => {
         if (!ticking) {
           window.requestAnimationFrame(() => {
             const st = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
-            if (isLocked) {
-              ticking = false;
-              return;
-            }
-            if (st < 10) {
-              if (collapsible.classList.contains('collapsed')) collapsible.classList.remove('collapsed');
-              lastScrollTop = st;
-              ticking = false;
-              return;
-            }
-            const diff = st - lastScrollTop;
-            if (Math.abs(diff) > tolerance) {
-              if (diff > 0) {
-                if (!collapsible.classList.contains('collapsed')) {
-                  collapsible.classList.add('collapsed');
-                  lockAnimation();
-                }
-              } else {
-                if (collapsible.classList.contains('collapsed')) {
-                  collapsible.classList.remove('collapsed');
-                  lockAnimation();
-                }
+
+            // Скрываем шапку при скролле вниз, показываем только в самом верху (st <= 20)
+            if (st > 20) {
+              if (!collapsible.classList.contains('collapsed')) {
+                collapsible.classList.add('collapsed');
               }
-              lastScrollTop = st;
+            } else {
+              if (collapsible.classList.contains('collapsed')) {
+                collapsible.classList.remove('collapsed');
+              }
             }
+
             updateScrollSpy();
             ticking = false;
           });
           ticking = true;
         }
-      }, {
-        passive: true
-      });
+      }, { passive: true });
     }
 
     function updateScrollSpy() {
