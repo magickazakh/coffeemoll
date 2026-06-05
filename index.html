@@ -42,12 +42,12 @@
 
   <link rel="preload" href="https://telegram.org/js/telegram-web-app.js" as="script">
   <link rel="preload"
-    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;500;600;700;800;900&display=swap"
     as="style" crossorigin>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link
-    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Montserrat:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet">
   <script>window.onerror = function (msg, url, line) { return false; };</script>
 
@@ -63,9 +63,14 @@
       --input-bg: #ffffff;
       --border-color: #eee;
       --font-logo: 'Bebas Neue', cursive;
-      --font-title: 'Oswald', sans-serif;
-      --font-body: 'Montserrat', sans-serif;
+      --font-title: 'Nunito', sans-serif;
+      --font-body: 'Nunito', sans-serif;
       --header-height: 75px;
+    }
+
+    /* Принудительное применение шрифта ко всем интерактивным и базовым элементам */
+    body, button, input, select, textarea, optgroup {
+      font-family: var(--font-body);
     }
 
     .yandex-widget-container {
@@ -162,7 +167,7 @@
     @media (prefers-color-scheme: dark) {
       :root {
         --bg-color: #1a1a1a;
-        --card-bg: #2d2d2d;
+        --card-bg: #262626;
         --text-main: #ffffff;
         --text-secondary: #a0a0a0;
         --input-bg: #333333;
@@ -170,7 +175,7 @@
       }
 
       .header-container {
-        background: #2d2d2d !important;
+        background: #1a1a1a !important;
       }
 
       .logo-coffee {
@@ -182,19 +187,6 @@
         color: #a7f3d0;
       }
 
-      .radio-label,
-      .checkout-radio-label {
-        background: #333 !important;
-        border-color: #444 !important;
-        color: #fff !important;
-      }
-
-      .radio-input:checked+.radio-label,
-      .checkout-radio-input:checked+.checkout-radio-label {
-        background: #064e3b !important;
-        border-color: var(--primary-color) !important;
-      }
-
       .category-separator {
         color: var(--text-main);
       }
@@ -204,32 +196,139 @@
         color: #fff !important;
       }
 
-      .repeat-card {
-        background: #333 !important;
-        border-color: #444 !important;
-      }
-
-      .upsell-no {
-        background: #444 !important;
-        color: #ccc !important;
-      }
-
-      .cart-qty-btn {
-        background: #444 !important;
-        color: #fff !important;
-      }
-
-      .qty-control-btn {
-        background: #444 !important;
-        color: #fff !important;
-      }
-
       .yandex-light {
         display: none;
       }
 
       .yandex-dark {
         display: block;
+      }
+      
+      /* Адаптация объемных кнопок и теней для темной темы */
+      .card { box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); }
+      .modal-content { box-shadow: 0 -5px 25px rgba(0,0,0,0.6); }
+
+      .nav-btn, .qty-control-modal, input, textarea, select {
+        background: #333 !important;
+        box-shadow: 
+            inset 0 3px 4px rgba(255, 255, 255, 0.05), 
+            inset 0 -3px 4px rgba(0, 0, 0, 0.5),      
+            2px 3px 5px rgba(0, 0, 0, 0.4) !important;
+      }
+      .nav-btn:active {
+        box-shadow: 
+            inset 0 1px 2px rgba(255, 255, 255, 0.05), 
+            inset 0 -1px 2px rgba(0, 0, 0, 0.5),      
+            1px 1px 2px rgba(0, 0, 0, 0.4) !important;
+      }
+      
+      .radio-label, .checkout-radio-label, .repeat-card {
+        background: #333 !important;
+        color: #fff !important;
+        box-shadow: 
+            inset 0 2px 3px rgba(255, 255, 255, 0.05), 
+            inset 0 -2px 3px rgba(0, 0, 0, 0.5),      
+            1px 2px 4px rgba(0, 0, 0, 0.4) !important;
+      }
+      .radio-label:active, .checkout-radio-label:active, .repeat-card:active {
+        box-shadow: 
+            inset 0 1px 2px rgba(255, 255, 255, 0.05), 
+            inset 0 -1px 2px rgba(0, 0, 0, 0.5),      
+            1px 1px 2px rgba(0, 0, 0, 0.4) !important;
+      }
+      
+      .radio-input:checked+.radio-label,
+      .checkout-radio-input:checked+.checkout-radio-label,
+      .nav-btn.active {
+        background: #000 !important;
+        color: var(--primary-color) !important;
+        box-shadow: 
+            inset 0 2px 4px rgba(255, 255, 255, 0.1), 
+            inset 0 -2px 4px rgba(0, 0, 0, 0.8),      
+            1px 3px 6px rgba(0, 0, 0, 0.5) !important;
+      }
+
+      .cart-qty-btn, .qty-control-btn {
+        background: #444 !important;
+        color: #fff !important;
+        box-shadow: 
+            inset 0 2px 3px rgba(255, 255, 255, 0.1), 
+            inset 0 -2px 3px rgba(0, 0, 0, 0.6),      
+            1px 2px 4px rgba(0, 0, 0, 0.4) !important;
+      }
+      .cart-qty-btn:active, .qty-control-btn:active {
+        box-shadow: 
+            inset 0 1px 2px rgba(255, 255, 255, 0.1), 
+            inset 0 -1px 2px rgba(0, 0, 0, 0.6),      
+            1px 1px 2px rgba(0, 0, 0, 0.4) !important;
+      }
+
+      .fav-btn {
+        background: rgba(40, 40, 40, 0.9);
+        color: #888;
+        box-shadow: 
+            inset 0 2px 3px rgba(255, 255, 255, 0.1), 
+            inset 0 -2px 3px rgba(0, 0, 0, 0.6),      
+            2px 3px 5px rgba(0, 0, 0, 0.4);
+      }
+      .fav-btn:active {
+        box-shadow: 
+            inset 0 1px 2px rgba(255, 255, 255, 0.1), 
+            inset 0 -1px 2px rgba(0, 0, 0, 0.6),      
+            1px 1px 2px rgba(0, 0, 0, 0.4);
+      }
+
+      .add-btn, .modal-add-btn, .upsell-yes {
+        box-shadow: 
+            inset 0 4px 5px rgba(255, 255, 255, 0.2), 
+            inset 0 -4px 5px rgba(0, 0, 0, 0.4),      
+            2px 4px 6px rgba(0, 0, 0, 0.4);
+      }
+      .add-btn:active, .modal-add-btn:not(:disabled):active, .upsell-yes:active {
+        box-shadow: 
+            inset 0 2px 3px rgba(255, 255, 255, 0.15), 
+            inset 0 -2px 3px rgba(0, 0, 0, 0.4),      
+            1px 2px 3px rgba(0, 0, 0, 0.4);
+      }
+
+      .main-btn, .promo-btn {
+        box-shadow: 
+            inset 0 6px 8px rgba(255, 255, 255, 0.1), 
+            inset 0 -6px 8px rgba(0, 0, 0, 0.9),      
+            0 8px 15px rgba(0, 0, 0, 0.6);
+      }
+      .main-btn:active, .promo-btn:active {
+        box-shadow: 
+            inset 0 2px 4px rgba(255, 255, 255, 0.05), 
+            inset 0 -2px 4px rgba(0, 0, 0, 0.9),      
+            0 4px 8px rgba(0, 0, 0, 0.6);
+      }
+      
+      .clear-cart-btn {
+        box-shadow: 
+            inset 0 4px 5px rgba(255, 255, 255, 0.15), 
+            inset 0 -4px 5px rgba(0, 0, 0, 0.4),      
+            2px 4px 6px rgba(0, 0, 0, 0.4);
+      }
+      .clear-cart-btn:active {
+        box-shadow: 
+            inset 0 2px 3px rgba(255, 255, 255, 0.1), 
+            inset 0 -2px 3px rgba(0, 0, 0, 0.5),      
+            1px 2px 3px rgba(0, 0, 0, 0.4);
+      }
+      
+      .upsell-no {
+        background: #444 !important;
+        box-shadow: 
+            inset 0 4px 5px rgba(255, 255, 255, 0.1), 
+            inset 0 -4px 5px rgba(0, 0, 0, 0.6),      
+            2px 4px 6px rgba(0, 0, 0, 0.4);
+      }
+      .upsell-no:active {
+        box-shadow: 
+            inset 0 2px 3px rgba(255, 255, 255, 0.1), 
+            inset 0 -2px 3px rgba(0, 0, 0, 0.6),      
+            1px 2px 3px rgba(0, 0, 0, 0.4);
       }
     }
 
@@ -241,7 +340,7 @@
       color: var(--text-main);
       padding-bottom: 100px;
       -webkit-tap-highlight-color: transparent;
-      font-weight: 500;
+      font-weight: 600;
       transition: background-color 0.3s, color 0.3s;
       overscroll-behavior-y: none;
     }
@@ -279,6 +378,11 @@
       text-transform: uppercase;
     }
 
+    /* Принудительно задаем шрифт логотипа для всех экранов (включая загрузку) */
+    .loading-title, h1 .logo-coffee, h1 .logo-moll {
+      font-family: var(--font-logo) !important;
+    }
+
     .logo-coffee {
       color: var(--text-main);
     }
@@ -309,7 +413,7 @@
       font-size: 11px;
       padding: 4px 8px;
       border-radius: 12px;
-      font-weight: bold;
+      font-weight: 800;
       background: #e6fffa;
       color: #047857;
       margin-left: 10px;
@@ -323,7 +427,7 @@
     #search-input {
       width: 100%;
       padding: 12px;
-      border-radius: 12px;
+      border-radius: 20px;
       border: 1px solid var(--border-color);
       background: var(--input-bg);
       color: var(--text-main);
@@ -347,18 +451,27 @@
 
     .repeat-card {
       background: var(--card-bg);
-      border: 1px solid var(--primary-color);
-      border-radius: 12px;
-      padding: 12px;
+      border-radius: 20px;
+      padding: 12px 15px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
-      box-shadow: 0 2px 5px rgba(136, 209, 0, 0.1);
+      border: none;
+      /* 3D эффект карточки повтора */
+      box-shadow: 
+          inset 0 3px 4px rgba(255, 255, 255, 0.6), 
+          inset 0 -3px 4px rgba(136, 209, 0, 0.2),      
+          2px 4px 8px rgba(136, 209, 0, 0.15);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
 
     .repeat-card:active {
-      transform: scale(0.98);
+      transform: translateY(2px);
+      box-shadow: 
+          inset 0 1px 2px rgba(255, 255, 255, 0.4), 
+          inset 0 -1px 2px rgba(136, 209, 0, 0.2),      
+          1px 2px 4px rgba(136, 209, 0, 0.1);
     }
 
     .repeat-info {
@@ -370,7 +483,7 @@
 
     .repeat-title {
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--primary-color);
       text-transform: uppercase;
       font-family: var(--font-title);
@@ -397,26 +510,51 @@
       display: none;
     }
 
+    /* === 3D КНОПКИ НАВИГАЦИИ === */
     .nav-btn {
       display: inline-block;
-      padding: 8px 16px;
+      padding: 8px 18px;
       margin-right: 8px;
       background: var(--input-bg);
-      border-radius: 20px;
+      border-radius: 30px;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-secondary);
       text-decoration: none;
-      border: 1px solid var(--border-color);
-      transition: all 0.3s;
+      border: none;
       font-family: var(--font-body);
+      
+      box-shadow: 
+          inset 0 3px 4px rgba(255, 255, 255, 0.8), 
+          inset 0 -3px 4px rgba(0, 0, 0, 0.05),      
+          2px 3px 5px rgba(0, 0, 0, 0.08);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, color 0.3s, background 0.3s;
+    }
+
+    .nav-btn:active {
+      transform: translateY(2px);
+      box-shadow: 
+          inset 0 1px 2px rgba(255, 255, 255, 0.8), 
+          inset 0 -1px 2px rgba(0, 0, 0, 0.05),      
+          1px 1px 2px rgba(0, 0, 0, 0.08);
     }
 
     .nav-btn.active {
       background: #000000;
       color: var(--primary-color);
-      border-color: #000000;
-      transform: scale(1.05);
+      box-shadow: 
+          inset 0 3px 4px rgba(255, 255, 255, 0.2), 
+          inset 0 -3px 4px rgba(0, 0, 0, 0.5),      
+          2px 4px 6px rgba(0, 0, 0, 0.2);
+      transform: scale(1.02);
+    }
+
+    .nav-btn.active:active {
+      transform: scale(1.02) translateY(2px);
+      box-shadow: 
+          inset 0 1px 2px rgba(255, 255, 255, 0.2), 
+          inset 0 -1px 2px rgba(0, 0, 0, 0.5),      
+          1px 2px 3px rgba(0, 0, 0, 0.2);
     }
 
     .category-section {
@@ -428,7 +566,7 @@
       padding: 0 15px;
       margin-bottom: 10px;
       font-size: 24px;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--text-main);
       font-family: var(--font-title);
       text-transform: uppercase;
@@ -446,7 +584,7 @@
 
     .card {
       background: var(--card-bg);
-      border-radius: 16px;
+      border-radius: 20px;
       padding: 10px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
       display: flex;
@@ -500,6 +638,7 @@
       pointer-events: none;
     }
 
+    /* === 3D КНОПКА ИЗБРАННОГО === */
     .fav-btn {
       position: absolute;
       top: 8px;
@@ -507,7 +646,6 @@
       z-index: 25;
       font-size: 18px;
       color: #ccc;
-      transition: 0.2s;
       background: rgba(255, 255, 255, 0.9);
       border-radius: 50%;
       width: 28px;
@@ -515,7 +653,20 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      
+      box-shadow: 
+          inset 0 2px 3px rgba(255, 255, 255, 0.8), 
+          inset 0 -2px 3px rgba(0, 0, 0, 0.1),      
+          2px 3px 5px rgba(0, 0, 0, 0.1);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, color 0.2s;
+    }
+
+    .fav-btn:active {
+      transform: translateY(2px);
+      box-shadow: 
+          inset 0 1px 2px rgba(255, 255, 255, 0.4), 
+          inset 0 -1px 2px rgba(0, 0, 0, 0.15),      
+          1px 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     .fav-btn.active {
@@ -531,7 +682,7 @@
       font-size: 10px;
       font-weight: 700;
       padding: 4px 8px;
-      border-radius: 6px;
+      border-radius: 8px;
       z-index: 20;
       font-family: var(--font-title);
     }
@@ -546,7 +697,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: bold;
+      font-weight: 800;
       color: #ef4444;
       font-size: 14px;
       text-transform: uppercase;
@@ -560,7 +711,7 @@
       margin: 0 0 5px 0;
       font-family: var(--font-title);
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 800;
       line-height: 1.2;
     }
 
@@ -583,23 +734,39 @@
     }
 
     .price {
-      font-weight: 700;
+      font-weight: 800;
       font-size: 15px;
       color: var(--text-main);
       font-family: var(--font-body);
     }
 
+    /* === 3D КНОПКА "ВЫБРАТЬ" НА КАРТОЧКЕ === */
     .add-btn {
       background-color: var(--primary-color);
       color: #000;
       border: none;
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-weight: 700;
+      border-radius: 25px;
+      padding: 8px 14px;
+      font-weight: 800;
       font-size: 11px;
       font-family: var(--font-title);
       text-transform: uppercase;
       min-width: 70px;
+      cursor: pointer;
+      
+      box-shadow: 
+          inset 0 4px 5px rgba(255, 255, 255, 0.4), 
+          inset 0 -4px 5px rgba(0, 0, 0, 0.2),      
+          2px 4px 6px rgba(0, 0, 0, 0.15);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .add-btn:active {
+      transform: translateY(2px);
+      box-shadow: 
+          inset 0 2px 3px rgba(255, 255, 255, 0.3), 
+          inset 0 -2px 3px rgba(0, 0, 0, 0.3),      
+          1px 2px 3px rgba(0, 0, 0, 0.15);
     }
 
     .modal-overlay {
@@ -620,7 +787,7 @@
       background: var(--card-bg);
       width: 100%;
       max-width: 500px;
-      border-radius: 24px 24px 0 0;
+      border-radius: 30px 30px 0 0;
       padding: 25px 20px;
       box-sizing: border-box;
       max-height: 90vh;
@@ -661,7 +828,7 @@
     .modal-title {
       font-family: var(--font-title);
       font-size: 22px;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: 0.5px;
       line-height: 1.2;
       color: var(--text-main);
@@ -678,7 +845,7 @@
     .modal-img-wrapper {
       width: 100%;
       height: 180px;
-      border-radius: 12px;
+      border-radius: 20px;
       overflow: hidden;
       margin-bottom: 15px;
       background: #f9fafb;
@@ -696,7 +863,7 @@
 
     .accordion {
       margin-bottom: 15px;
-      border-radius: 12px;
+      border-radius: 20px;
       overflow: hidden;
       border: 1px solid var(--border-color);
     }
@@ -704,7 +871,7 @@
     .accordion-header {
       background: #f9fafb;
       padding: 12px 15px;
-      font-weight: 700;
+      font-weight: 800;
       font-size: 14px;
       display: flex;
       justify-content: space-between;
@@ -738,7 +905,7 @@
     }
 
     .option-label {
-      font-weight: 700;
+      font-weight: 800;
       margin-bottom: 8px;
       display: block;
       font-size: 14px;
@@ -753,22 +920,28 @@
       width: 100%;
     }
 
+    /* === 3D РАДИОКНОПКИ === */
     .radio-label,
     .checkout-radio-label {
       display: flex;
       align-items: center;
       padding: 10px 15px;
       background: var(--input-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
+      border-radius: 20px;
+      border: none;
       cursor: pointer;
       font-size: 13px;
       color: var(--text-main);
-      transition: 0.2s;
       min-height: 48px;
       box-sizing: border-box;
       width: 100%;
       position: relative;
+      
+      box-shadow: 
+          inset 0 2px 3px rgba(255, 255, 255, 0.8), 
+          inset 0 -2px 3px rgba(0, 0, 0, 0.05),      
+          1px 2px 4px rgba(0, 0, 0, 0.05);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.2s, color 0.2s;
     }
 
     .radio-label::before,
@@ -793,10 +966,14 @@
     .radio-input:checked+.radio-label,
     .checkout-radio-input:checked+.checkout-radio-label {
       background-color: #f0fdf4;
-      border-color: var(--primary-color);
       color: #000;
-      box-shadow: 0 2px 4px rgba(136, 209, 0, 0.15);
-      font-weight: 600;
+      font-weight: 700;
+      
+      box-shadow: 
+          inset 0 2px 4px rgba(255, 255, 255, 0.8), 
+          inset 0 -2px 4px rgba(136, 209, 0, 0.3),      
+          1px 3px 6px rgba(136, 209, 0, 0.2);
+      transform: translateY(-1px);
     }
 
     .radio-input:checked+.radio-label::before,
@@ -813,6 +990,7 @@
       width: 100% !important;
     }
 
+    /* === 3D КНОПКА "К КОРЗИНЕ" === */
     .main-btn {
       position: fixed;
       bottom: 20px;
@@ -821,40 +999,66 @@
       background: #000000;
       color: var(--primary-color);
       padding: 18px;
-      border-radius: 16px;
+      border-radius: 35px;
       text-align: center;
       font-size: 16px;
-      font-weight: 700;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      font-weight: 800;
       display: none;
       z-index: 900;
       font-family: var(--font-title);
       letter-spacing: 1px;
-      transition: transform 0.1s;
+      border: none;
+      cursor: pointer;
+      
+      box-shadow: 
+          inset 0 6px 8px rgba(255, 255, 255, 0.15), 
+          inset 0 -6px 8px rgba(0, 0, 0, 0.8),      
+          0 8px 15px rgba(0, 0, 0, 0.25);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
 
     .main-btn:active {
-      transform: scale(0.98);
+      transform: translateY(4px);
+      box-shadow: 
+          inset 0 2px 4px rgba(255, 255, 255, 0.1), 
+          inset 0 -2px 4px rgba(0, 0, 0, 0.6),      
+          0 4px 8px rgba(0, 0, 0, 0.25);
     }
 
+    /* === 3D КНОПКИ В МОДАЛЬНЫХ ОКНАХ === */
     .modal-add-btn {
       background: var(--primary-color);
       color: #000;
       width: 100%;
       padding: 16px;
       border: none;
-      border-radius: 14px;
+      border-radius: 35px;
       font-size: 16px;
-      font-weight: 800;
+      font-weight: 900;
       cursor: pointer;
       font-family: var(--font-title);
       letter-spacing: 0.5px;
-      transition: opacity 0.3s;
+      
+      box-shadow: 
+          inset 0 6px 8px rgba(255, 255, 255, 0.4), 
+          inset 0 -6px 8px rgba(0, 0, 0, 0.25),      
+          0 8px 15px rgba(0, 0, 0, 0.15);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.3s;
+    }
+
+    .modal-add-btn:not(:disabled):active {
+      transform: translateY(4px);
+      box-shadow: 
+          inset 0 2px 4px rgba(255, 255, 255, 0.3), 
+          inset 0 -2px 4px rgba(0, 0, 0, 0.4),      
+          0 4px 8px rgba(0, 0, 0, 0.15);
     }
 
     .modal-add-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
 
     .modal-footer {
@@ -867,58 +1071,93 @@
     .qty-control-modal {
       display: flex;
       align-items: center;
+      justify-content: center;
       background: var(--input-bg);
       border: 1px solid var(--border-color);
-      border-radius: 12px;
+      border-radius: 30px;
       padding: 5px;
       height: 52px;
       box-sizing: border-box;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
     }
 
+    /* === 3D КНОПКИ + / - В МОДАЛКЕ === */
     .qty-control-btn {
-      width: 36px;
-      height: 100%;
+      width: 40px;
+      height: 40px;
+      margin: 0 5px;
       border: none;
-      background: transparent;
+      background: #f3f4f6;
+      border-radius: 20px;
       font-size: 18px;
-      font-weight: bold;
+      font-weight: 800;
       cursor: pointer;
       color: var(--text-main);
       display: flex;
       align-items: center;
       justify-content: center;
+      
+      box-shadow: 
+          inset 0 3px 4px rgba(255, 255, 255, 0.8), 
+          inset 0 -3px 4px rgba(0, 0, 0, 0.1),      
+          2px 3px 5px rgba(0, 0, 0, 0.1);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .qty-control-btn:active {
+      transform: translateY(2px);
+      box-shadow: 
+          inset 0 1px 2px rgba(255, 255, 255, 0.5), 
+          inset 0 -1px 2px rgba(0, 0, 0, 0.15),      
+          1px 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     .qty-control-val {
       width: 30px;
       text-align: center;
-      font-weight: bold;
+      font-weight: 800;
       font-size: 16px;
       color: var(--text-main);
     }
 
     .cart-item {
       background: var(--input-bg);
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 10px;
+      border-radius: 20px;
+      padding: 15px;
+      margin-bottom: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border: 1px solid var(--border-color);
     }
 
+    /* === 3D КНОПКИ + / - В КОРЗИНЕ === */
     .cart-qty-btn {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       background: #f3f4f6;
-      border-radius: 8px;
+      border-radius: 17px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-weight: bold;
+      font-weight: 800;
       color: #333;
+      border: none;
+      
+      box-shadow: 
+          inset 0 3px 4px rgba(255, 255, 255, 0.8), 
+          inset 0 -3px 4px rgba(0, 0, 0, 0.1),      
+          2px 3px 5px rgba(0, 0, 0, 0.1);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .cart-qty-btn:active {
+      transform: translateY(2px);
+      box-shadow: 
+          inset 0 1px 2px rgba(255, 255, 255, 0.5), 
+          inset 0 -1px 2px rgba(0, 0, 0, 0.15),      
+          1px 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     .cart-del-btn {
@@ -964,6 +1203,13 @@
       transition: opacity 0.3s ease;
     }
 
+    /* Настройки размера логотипа для загрузочного экрана */
+    .loading-title {
+      font-size: 34px;
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+
     #toast-container {
       position: fixed;
       bottom: 100px;
@@ -983,24 +1229,65 @@
       padding: 10px 20px;
       border-radius: 25px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       text-align: center;
       backdrop-filter: blur(5px);
       animation: fadeUp 0.3s forwards;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
 
+    /* === 3D КНОПКА ОЧИСТИТЬ КОРЗИНУ === */
     .clear-cart-btn {
-      background: transparent;
-      border: 1px solid #ef4444;
-      color: #ef4444;
-      padding: 8px 15px;
-      border-radius: 10px;
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 20px;
       font-size: 12px;
-      font-weight: bold;
+      font-weight: 800;
       margin-bottom: 15px;
       align-self: flex-end;
       cursor: pointer;
+      
+      box-shadow: 
+          inset 0 4px 5px rgba(255, 255, 255, 0.3), 
+          inset 0 -4px 5px rgba(0, 0, 0, 0.2),      
+          2px 4px 6px rgba(0, 0, 0, 0.15);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .clear-cart-btn:active {
+      transform: translateY(2px);
+      box-shadow: 
+          inset 0 2px 3px rgba(255, 255, 255, 0.2), 
+          inset 0 -2px 3px rgba(0, 0, 0, 0.3),      
+          1px 2px 3px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* === 3D КНОПКА ПРОМОКОДА === */
+    .promo-btn {
+      background: #000;
+      color: var(--primary-color);
+      border: none;
+      border-radius: 20px;
+      font-weight: 800;
+      padding: 0 20px;
+      cursor: pointer;
+      font-family: var(--font-title);
+      
+      box-shadow: 
+          inset 0 4px 5px rgba(255, 255, 255, 0.15), 
+          inset 0 -4px 5px rgba(0, 0, 0, 0.6),      
+          2px 4px 6px rgba(0, 0, 0, 0.2);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .promo-btn:active {
+      transform: translateY(2px);
+      box-shadow: 
+          inset 0 2px 3px rgba(255, 255, 255, 0.1), 
+          inset 0 -2px 3px rgba(0, 0, 0, 0.6),      
+          1px 2px 3px rgba(0, 0, 0, 0.2);
     }
 
     @keyframes spin {
@@ -1077,7 +1364,7 @@
       font-family: var(--font-body);
       width: 100%;
       padding: 12px;
-      border-radius: 12px;
+      border-radius: 20px;
       border: 1px solid var(--border-color);
       font-size: 14px;
       box-sizing: border-box;
@@ -1162,7 +1449,7 @@
       background: #fee2e2;
       color: #991b1b;
       padding: 12px;
-      border-radius: 10px;
+      border-radius: 15px;
       font-size: 13px;
       margin-bottom: 15px;
       display: none;
@@ -1175,7 +1462,7 @@
       background: #e0f2fe;
       color: #075985;
       padding: 12px;
-      border-radius: 10px;
+      border-radius: 15px;
       font-size: 13px;
       margin-bottom: 15px;
       display: none;
@@ -1189,7 +1476,7 @@
       color: #d97706;
       background: #fef3c7;
       padding: 8px;
-      border-radius: 8px;
+      border-radius: 10px;
       margin-top: 5px;
       display: none;
       font-family: var(--font-body);
@@ -1212,15 +1499,15 @@
       background: var(--card-bg);
       width: 85%;
       max-width: 350px;
-      border-radius: 16px;
-      padding: 20px;
+      border-radius: 30px;
+      padding: 25px 20px;
       text-align: center;
       animation: popIn 0.3s;
     }
 
     .upsell-img {
-      width: 80px;
-      height: 80px;
+      width: 100px;
+      height: 100px;
       object-fit: contain;
       margin-bottom: 10px;
     }
@@ -1232,25 +1519,55 @@
       justify-content: center;
     }
 
+    /* === 3D КНОПКИ UPSELL (ДОП. ПРОДАЖА) === */
     .upsell-yes {
-      background: #88d100;
+      background: var(--primary-color);
       color: #3e2723;
-      padding: 10px 20px;
-      border-radius: 10px;
+      padding: 12px 20px;
+      border-radius: 30px;
       border: none;
-      font-weight: bold;
+      font-weight: 800;
       cursor: pointer;
       flex: 1;
+      
+      box-shadow: 
+          inset 0 4px 5px rgba(255, 255, 255, 0.4), 
+          inset 0 -4px 5px rgba(0, 0, 0, 0.2),      
+          2px 4px 6px rgba(0, 0, 0, 0.15);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .upsell-yes:active {
+      transform: translateY(2px);
+      box-shadow: 
+          inset 0 2px 3px rgba(255, 255, 255, 0.3), 
+          inset 0 -2px 3px rgba(0, 0, 0, 0.3),      
+          1px 2px 3px rgba(0, 0, 0, 0.15);
     }
 
     .upsell-no {
       background: #444 !important;
-      color: #ccc !important;
-      padding: 10px 20px;
-      border-radius: 10px;
+      color: #fff !important;
+      padding: 12px 20px;
+      border-radius: 30px;
       border: none;
       cursor: pointer;
       flex: 1;
+      font-weight: 800;
+      
+      box-shadow: 
+          inset 0 4px 5px rgba(255, 255, 255, 0.15), 
+          inset 0 -4px 5px rgba(0, 0, 0, 0.5),      
+          2px 4px 6px rgba(0, 0, 0, 0.2);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .upsell-no:active {
+      transform: translateY(2px);
+      box-shadow: 
+          inset 0 2px 3px rgba(255, 255, 255, 0.1), 
+          inset 0 -2px 3px rgba(0, 0, 0, 0.5),      
+          1px 2px 3px rgba(0, 0, 0, 0.2);
     }
 
     .upsell-title {
@@ -1258,13 +1575,13 @@
       margin: 0 0 10px 0;
       letter-spacing: 0.5px;
       font-size: 20px;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--text-main);
     }
 
     .upsell-product {
       font-family: var(--font-title);
-      font-weight: 700;
+      font-weight: 800;
       margin-bottom: 5px;
       letter-spacing: 0.5px;
       font-size: 18px;
@@ -1336,7 +1653,7 @@
         </div>
 
         <div id="repeat-order-container">
-          <div class="repeat-card" onclick="loadLastOrder()">
+          <button class="repeat-card" onclick="loadLastOrder()">
             <div class="repeat-info">
               <div class="repeat-title">↻ Повторить прошлый заказ</div>
               <div class="repeat-desc" id="repeat-desc">...</div>
@@ -1344,7 +1661,7 @@
                 style="font-weight:bold; font-size:13px; color: var(--text-main); margin-top: 4px;"></div>
             </div>
             <div style="font-weight:bold; color:var(--primary-color); font-size: 20px;">➔</div>
-          </div>
+          </button>
         </div>
 
       </div>
@@ -1359,12 +1676,12 @@
     <h3>Ничего не найдено</h3>
   </div>
 
-  <div class="main-btn" id="cart-btn" onclick="openCheckout()">
+  <button class="main-btn" id="cart-btn" onclick="openCheckout()">
     <span id="cart-text">К корзине</span>
     <div class="cart-counter" id="cart-count"
       style="background: white; color: black; border-radius: 50%; width: 22px; height: 22px; position: absolute; top: -8px; right: -8px; display: flex; align-items: center; justify-content: center; font-size: 12px;">
       0</div>
-  </div>
+  </button>
 
   <div class="modal-overlay" id="product-modal" onclick="closeProductModal(event)">
     <div class="modal-content" id="product-modal-content"></div>
@@ -1390,8 +1707,7 @@
 
       <div class="promo-section" id="promo-container" style="display:flex; gap:10px; margin: 15px 0;">
         <input type="text" id="promo-code" placeholder="Промокод" style="margin-bottom: 0; flex:1;">
-        <button class="promo-btn" id="apply-promo-btn" onclick="applyPromo()"
-          style="background: #f0f0f0; border:none; border-radius:12px; font-weight:bold; padding:0 20px; cursor:pointer;">ОК</button>
+        <button class="promo-btn" id="apply-promo-btn" onclick="applyPromo()">ОК</button>
       </div>
 
       <div class="checkout-total" id="checkout-total-sum"
@@ -1491,14 +1807,9 @@
     tg.expand();
     const BACKEND_URL = "https://coffeemoll.onrender.com";
 
-    // ИЗМЕНЕНИЕ: Текущая версия приложения в коде
-    const APP_VERSION = 7;
-    
-    // Изначальный порядок (будет перезаписан из Firebase)
+    const APP_VERSION = 10;
     let CATEGORY_ORDER = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "СУШИ", "ПАСТЫ", "ЗАКУСКИ"];
 
-    // --- CONSTANTS ---
-    // These will be loaded/updated from Firebase, but defaults are good to have
     let PRICES = {
       alt_milk: 400,
       add_milk: 50,
@@ -1556,7 +1867,6 @@
     let upsellShown = false;
     let currentUpsellItem = null;
 
-    // Loading Animation
     const loadingTexts = ["Настраиваем помол...", "Варим эспрессо...", "Взбиваем молоко...", "Протираем столики...", "Греем круассаны..."];
     let textIdx = 0;
     const mottoEl = document.querySelector('.loading-motto');
@@ -1570,7 +1880,6 @@
       }, 150);
     }, 2000);
 
-    // --- UTILS ---
     function getUserId() {
       if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
         return tg.initDataUnsafe.user.id;
@@ -1595,8 +1904,6 @@
       }, 3000);
     }
 
-
-    // --- SCROLL LOGIC ---
     function updateHeaderHeight() {
       let lastScrollTop = 0;
       const collapsible = document.getElementById('collapsible-header');
@@ -1676,7 +1983,6 @@
       });
     }
 
-    // --- DATA FETCHING (FIREBASE REPLACEMENT) ---
     async function initMenu() {
       updateHeaderHeight();
       let checks = 0;
@@ -1690,15 +1996,13 @@
         if (settingsSnap.exists()) {
           const s = settingsSnap.data();
 
-          // ИЗМЕНЕНИЕ: Проверка версии для принудительного сброса кэша
           const dbVersion = parseInt(s.actual_version) || 1;
           if (dbVersion > APP_VERSION) {
               console.log(`Update required. Local: ${APP_VERSION}, Remote: ${dbVersion}`);
-              // Добавляем или обновляем query parameter app_v для обхода кеша
               const url = new URL(window.location.href);
               url.searchParams.set('app_v', dbVersion);
-              window.location.replace(url.toString()); // И перезагружаем страницу
-              return; // Останавливаем дальнейшую инициализацию старой версии
+              window.location.replace(url.toString());
+              return;
           }
 
           if (s.open_time) OPEN_HOUR = parseInt(s.open_time.split(':')[0]);
@@ -1708,7 +2012,6 @@
           if (s.syrup_names) SYRUPS = Array.isArray(s.syrup_names) ? s.syrup_names : s.syrup_names.split(',');
           if (s.sauce_names) SAUCES = Array.isArray(s.sauce_names) ? s.sauce_names : s.sauce_names.split(',');
           
-          // НОВАЯ ЛОГИКА: Обновляем порядок категорий из настроек
           if (s.category_order) {
              const customOrder = s.category_order.split(',').map(c => c.trim().toUpperCase());
              if (customOrder.length > 0) {
@@ -1832,7 +2135,7 @@
           let imgUrl = p.img || getImageByCategory(p.cat);
           let badgeHtml = !p.available ? `<div class="unavailable-badge">Будет позже</div>` : (p.badge ? `<div class="card-badge">${p.badge}</div>` : '');
           const isFav = favorites.includes(String(p.id));
-          const favHtml = `<div class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${p.id}')">${isFav ? '♥' : '♡'}</div>`;
+          const favHtml = `<button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${p.id}')">${isFav ? '♥' : '♡'}</button>`;
           card.innerHTML = `<div class="card-img-container card-skeleton"><img src="${imgUrl}" onload="this.classList.add('loaded'); this.parentElement.classList.remove('card-skeleton')" onerror="this.onerror=null;this.src='${getImageByCategory(p.cat)}';">${badgeHtml}${favHtml}</div><h3>${p.name}</h3><div class="desc">${p.desc || ''}</div><div class="price-row"><div class="price">${priceDisplay} ₸</div><button class="add-btn">Выбрать</button></div>`;
           card.onclick = () => handleItemClick(p.id);
           grid.appendChild(card);
@@ -1875,7 +2178,6 @@
       const displayData = getDisplayData();
       const cats = [...new Set(displayData.map(p => p.cat))];
 
-      // Добавляем сортировку по CATEGORY_ORDER
       cats.sort((a, b) => {
         const idxA = CATEGORY_ORDER.findIndex(c => c.toUpperCase() === a.toUpperCase());
         const idxB = CATEGORY_ORDER.findIndex(c => c.toUpperCase() === b.toUpperCase());
@@ -2012,7 +2314,7 @@
       if (product.hasVolumes && product.volumes.length > 0) {
         html += `<div class="option-group"><label class="option-label">Порция</label><div class="radio-group">`;
         product.volumes.forEach((v, i) => {
-          html += `<input type="radio" name="vol" id="v${i}" value="${i}" class="radio-input" ${i === 0 ? 'checked' : ''} onchange="recalcPrice()"><label for="v${i}" class="radio-label">${v.n}<br>${v.p}₸</label>`;
+          html += `<input type="radio" name="vol" id="v${i}" value="${i}" class="radio-input checkout-radio-input" ${i === 0 ? 'checked' : ''} onchange="recalcPrice()"><label for="v${i}" class="radio-label checkout-radio-label">${v.n}<br>${v.p}₸</label>`;
         });
         html += `</div></div>`;
       } else if (product.fixedVolume) {
@@ -2020,7 +2322,7 @@
       }
 
       if (product.name.toUpperCase().includes('ОБЛЕПИХОВЫЙ')) {
-        html += `<div class="option-group" id="strain-block" style="display:none;"><label class="option-label">Процеживать?</label><div class="radio-group"><input type="radio" name="strain" id="strain-yes" value="Процедить" class="radio-input" checked><label for="strain-yes" class="radio-label"><div>Процедить<br><span style="font-size:11px; color:var(--text-secondary); font-weight:400;">без ягод</span></div></label><input type="radio" name="strain" id="strain-no" value="Не процеживать" class="radio-input"><label for="strain-no" class="radio-label"><div>Не процеживать<br><span style="font-size:11px; color:var(--text-secondary); font-weight:400;">с ягодами</span></div></label></div></div>`;
+        html += `<div class="option-group" id="strain-block" style="display:none;"><label class="option-label">Процеживать?</label><div class="radio-group"><input type="radio" name="strain" id="strain-yes" value="Процедить" class="radio-input checkout-radio-input" checked><label for="strain-yes" class="radio-label checkout-radio-label"><div>Процедить<br><span style="font-size:11px; color:var(--text-secondary); font-weight:400;">без ягод</span></div></label><input type="radio" name="strain" id="strain-no" value="Не процеживать" class="radio-input checkout-radio-input"><label for="strain-no" class="radio-label checkout-radio-label"><div>Не процеживать<br><span style="font-size:11px; color:var(--text-secondary); font-weight:400;">с ягодами</span></div></label></div></div>`;
       }
       if (product.hasMilk) {
         let altMilkDisplayPrice = PRICES.alt_milk;
@@ -2032,7 +2334,7 @@
           }
         }
         const altMilkText = altMilkDisplayPrice > 0 ? `+${altMilkDisplayPrice}` : '';
-        html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group"><input type="radio" name="milk" id="m1" value="std" class="radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label">Обычное</label><input type="radio" name="milk" id="m2" value="lf" class="radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label"><div>Безлактозное<br>+${PRICES.milk_lf_price || 0}</div></label><input type="radio" name="milk" id="m3" value="alt" class="radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label"><div>Растительное<br><span id="alt-milk-price-display">${altMilkText}</span></div></label></div><div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
+        html += `<div class="option-group"><label class="option-label">Молоко</label><div class="radio-group"><input type="radio" name="milk" id="m1" value="std" class="radio-input checkout-radio-input" checked onchange="toggleAltMilk()"><label for="m1" class="radio-label checkout-radio-label">Обычное</label><input type="radio" name="milk" id="m2" value="lf" class="radio-input checkout-radio-input" onchange="toggleAltMilk()"><label for="m2" class="radio-label checkout-radio-label"><div>Безлактозное<br>+${PRICES.milk_lf_price || 0}</div></label><input type="radio" name="milk" id="m3" value="alt" class="radio-input checkout-radio-input" onchange="toggleAltMilk()"><label for="m3" class="radio-label checkout-radio-label"><div>Растительное<br><span id="alt-milk-price-display">${altMilkText}</span></div></label></div><div id="alt-milk-selector" style="display:none; margin-top:10px;"><select id="alt-milk-type" onchange="recalcPrice()">`;
         ALT_MILKS.forEach(m => html += `<option value="${m}">${m}</option>`);
         html += `</select></div></div>`;
       }
@@ -2086,13 +2388,12 @@
     function recalcPrice() {
       let p = 0;
       const prod = currentModalProduct;
-      let volIndex = 0; // Индекс выбранного объема (по умолчанию 0)
+      let volIndex = 0;
 
-      // 1. Считаем базовую цену + определяем индекс объема
       if (prod.hasVolumes && prod.volumes.length > 0) {
         const el = document.querySelector('input[name="vol"]:checked');
         if (el) {
-          volIndex = parseInt(el.value); // Запоминаем индекс!
+          volIndex = parseInt(el.value);
           p += prod.volumes[volIndex].p;
         } else {
           p += prod.volumes[0].p;
@@ -2101,25 +2402,19 @@
         p += (prod.basePrice || prod.price || 0);
       }
 
-      // 2. Считаем модификаторы
-      // А) Молоко
       if (prod.hasMilk) {
         const el = document.querySelector('input[name="milk"]:checked');
-        let milkPrice = PRICES.alt_milk; // Дефолтная цена из констант
+        let milkPrice = PRICES.alt_milk;
 
-        // Если у товара есть свои настройки цен на молоко
         if (prod.mods && prod.mods.alt_milk !== undefined) {
           const modVal = prod.mods.alt_milk;
           if (Array.isArray(modVal)) {
-            // Если это массив [300, 400], берем цену по индексу объема
-            // Если объемов меньше чем цен, берем последнюю доступную
             milkPrice = modVal[volIndex] !== undefined ? modVal[volIndex] : modVal[modVal.length - 1];
           } else {
             milkPrice = modVal;
           }
         }
 
-        // Обновляем отображение цены в UI (+300)
         const labelSpan = document.getElementById('alt-milk-price-display');
         if (labelSpan) labelSpan.innerText = milkPrice > 0 ? `+${milkPrice}` : '';
 
@@ -2128,13 +2423,11 @@
         }
       }
 
-      // Б) Остальные чекбоксы
       const checkboxes = ['milk', 'cream', 'honey', 'lemon', 'cinnamon', 'shot', 'egg', 'cheese', 'jalapeno', 'onion'];
       checkboxes.forEach(key => {
         const el = document.getElementById(`mod-${key}`);
         if (el && el.checked) {
           let itemPrice = prod.mods[key];
-          // Если цена зависит от объема (массив)
           if (Array.isArray(itemPrice)) {
             itemPrice = itemPrice[volIndex] !== undefined ? itemPrice[volIndex] : itemPrice[itemPrice.length - 1];
           }
@@ -2142,7 +2435,6 @@
         }
       });
 
-      // В) Соусы и Сиропы
       if (document.getElementById('sauce-select')) {
         const val = document.getElementById('sauce-select').value;
         if (val && val !== "Нет") p += prod.mods['sauce'];
@@ -2162,11 +2454,9 @@
         }
       }
 
-      // Г) Облепиха (Процеживание)
       const strainBlock = document.getElementById('strain-block');
       if (strainBlock && prod.name.toUpperCase().includes('ОБЛЕПИХОВЫЙ')) {
         const volEl = document.querySelector('input[name="vol"]:checked');
-        // Если выбран объем 0.4 (обычно это индекс 1 или в названии есть 0.4)
         if (volEl && prod.volumes[volEl.value].n.includes('0.4')) {
           strainBlock.style.display = 'block';
         } else {
@@ -2174,7 +2464,6 @@
         }
       }
 
-      // 3. Обновляем кнопку
       const btn = document.getElementById('modal-btn');
       if (btn) {
         const total = p * modalQty;
@@ -2257,7 +2546,6 @@
       
       const h = new Date().getHours();
       
-      // Проверка для Пиццы
       const hasPizza = cart.some(i => i.cat === 'ПИЦЦА');
       const pizzaWarning = document.getElementById('pizza-warning');
       if (hasPizza && h < 11) {
@@ -2266,7 +2554,6 @@
         pizzaWarning.style.display = 'none';
       }
 
-      // Проверка для Суши
       const hasSushi = cart.some(i => i.cat === 'СУШИ');
       const sushiWarning = document.getElementById('sushi-warning');
       if (sushiWarning) {
@@ -2288,7 +2575,7 @@
       const c = document.getElementById('cart-list-container');
       c.innerHTML = '';
       cart.forEach((item, i) => {
-        c.innerHTML += `<div class="cart-item"><div style="flex:1"><div style="font-weight:700; font-family: var(--font-title);">${item.name}</div><div style="font-size:11px; color:var(--text-secondary);">${item.options ? item.options.join(', ') : ''}</div><div style="font-weight:bold; color:var(--primary-color); margin-top:4px;">${item.priceTotal} ₸</div></div><div style="display:flex; align-items:center; gap:8px;"><div class="cart-qty-btn" onclick="modQty(${i}, -1)">-</div><div style="font-weight:bold; width:20px; text-align:center;">${item.qty}</div><div class="cart-qty-btn" onclick="modQty(${i}, 1)">+</div><div class="cart-del-btn" onclick="removeFromCart(${i})">🗑️</div></div></div>`;
+        c.innerHTML += `<div class="cart-item"><div style="flex:1"><div style="font-weight:700; font-family: var(--font-title);">${item.name}</div><div style="font-size:11px; color:var(--text-secondary);">${item.options ? item.options.join(', ') : ''}</div><div style="font-weight:bold; color:var(--primary-color); margin-top:4px;">${item.priceTotal} ₸</div></div><div style="display:flex; align-items:center; gap:8px;"><button class="cart-qty-btn" onclick="modQty(${i}, -1)">−</button><div style="font-weight:bold; width:20px; text-align:center;">${item.qty}</div><button class="cart-qty-btn" onclick="modQty(${i}, 1)">+</button><div class="cart-del-btn" onclick="removeFromCart(${i})">🗑️</div></div></div>`;
       });
     }
 
@@ -2513,14 +2800,13 @@
       const hasPizza = cart.some(i => i.cat === 'ПИЦЦА');
       const hasSushi = cart.some(i => i.cat === 'СУШИ');
       
-      // Общая проверка времени для Пиццы и Суши
       if (hasPizza || hasSushi) {
         const itemNames = [];
         if (hasPizza) itemNames.push('пиццу');
         if (hasSushi) itemNames.push('суши');
         const itemsStr = itemNames.join(' и ');
 
-        const delTypeEl = document.querySelector('input[name="deliveryType"]:checked'); // Возвращено на место
+        const delTypeEl = document.querySelector('input[name="deliveryType"]:checked');
         const timeTypeEl = document.querySelector('input[name="orderTimeType"]:checked');
         const isAsap = timeTypeEl && timeTypeEl.value === 'asap';
         const isTime = timeTypeEl && timeTypeEl.value === 'time';
