@@ -41,8 +41,8 @@ TOPIC_ID_SUPPORT = 250
 KASPI_NUMBER = "+7 747 240 20 02" 
 
 BARISTAS = {
-    "1": {"name": "Карина", "phone": "+7 776 962 28 14 (Kaspi/Halyk)"}, # Исправлен слеш
-    "2": {"name": "Павел", "phone": "+7 771 904 44 55 (Kaspi/Halyk/Forte/Freedom)"} # Исправлен слеш
+    "1": {"name": "Евгения", "phone": "+7 705 183 47 53 (Kaspi/Halyk)"}, # Исправлен слеш
+    "2": {"name": "Павел", "phone": "+7 771 904 44 55 (Kaspi/Halyk)"} # Исправлен слеш
 }
 
 logging.basicConfig(level=logging.INFO)
