@@ -458,6 +458,8 @@
     }
 
     .repeat-card {
+      width: 100%;
+      box-sizing: border-box;
       background: var(--card-bg);
       border-radius: 20px;
       padding: 12px 15px;
@@ -483,6 +485,8 @@
     }
 
     .repeat-info {
+      flex: 1;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 2px;
@@ -1831,7 +1835,7 @@
     tg.expand();
     const BACKEND_URL = "https://coffeemoll.onrender.com";
 
-    const APP_VERSION = 14;
+    const APP_VERSION = 15;
     let CATEGORY_ORDER = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "СУШИ", "ПАСТЫ", "ЗАКУСКИ"];
 
     let PRICES = {
