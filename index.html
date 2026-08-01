@@ -81,30 +81,21 @@
       display: grid;
       grid-template-rows: 1fr;
       opacity: 1;
-      transform: translateZ(0);
-      will-change: grid-template-rows, opacity, margin-bottom;
-      margin-bottom: 0;
-      transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translate3d(0, 0, 0);
+      transform-origin: top;
+      transition: grid-template-rows 0.24s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.16s ease-out, transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     #collapsible-header.collapsed {
       grid-template-rows: 0fr;
       opacity: 0;
+      transform: translate3d(0, -8px, 0);
       pointer-events: none;
-      margin-bottom: -1px;
-      transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .collapsible-inner {
       overflow: hidden;
       min-height: 0;
-      visibility: visible;
-      transition: visibility 0.3s;
-    }
-
-    #collapsible-header.collapsed .collapsible-inner {
-      visibility: hidden;
-      transition-delay: 0.2s;
     }
 
     .yandex-widget-header {
@@ -350,7 +341,6 @@
       position: sticky;
       top: 0;
       z-index: 40;
-      contain: layout paint;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
       padding-bottom: 5px;
       transition: background 0.3s;
@@ -1807,7 +1797,7 @@
     tg.expand();
     const BACKEND_URL = "https://coffeemoll.onrender.com";
 
-    const APP_VERSION = 12;
+    const APP_VERSION = 13;
     let CATEGORY_ORDER = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "СУШИ", "ПАСТЫ", "ЗАКУСКИ"];
 
     let PRICES = {
@@ -1866,6 +1856,7 @@
     let appliedPromoCode = "";
     let upsellShown = false;
     let currentUpsellItem = null;
+    let activeSectionId = '';
 
     const loadingTexts = ["Настраиваем помол...", "Варим эспрессо...", "Взбиваем молоко...", "Протираем столики...", "Греем круассаны..."];
     let textIdx = 0;
@@ -1913,15 +1904,11 @@
           window.requestAnimationFrame(() => {
             const st = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
 
-            // Скрываем шапку при скролле вниз, показываем только в самом верху (st <= 20)
-            if (st > 20) {
-              if (!collapsible.classList.contains('collapsed')) {
-                collapsible.classList.add('collapsed');
-              }
-            } else {
-              if (collapsible.classList.contains('collapsed')) {
-                collapsible.classList.remove('collapsed');
-              }
+            // Разные пороги скрытия и открытия предотвращают дрожание при изменении высоты шапки.
+            if (st > 80 && !collapsible.classList.contains('collapsed')) {
+              collapsible.classList.add('collapsed');
+            } else if (st <= 4 && collapsible.classList.contains('collapsed')) {
+              collapsible.classList.remove('collapsed');
             }
 
             updateScrollSpy();
@@ -1946,17 +1933,23 @@
           }
         });
       }
+
+      if (!current || current === activeSectionId) return;
+      activeSectionId = current;
+
+      let activeBtn = null;
       navBtns.forEach(btn => {
-        btn.classList.remove('active');
-        if (current && btn.getAttribute('href') === '#' + current) {
-          btn.classList.add('active');
-          btn.scrollIntoView({
-            behavior: 'smooth',
-            inline: 'center',
-            block: 'nearest'
-          });
-        }
+        const isActive = btn.getAttribute('href') === '#' + current;
+        btn.classList.toggle('active', isActive);
+        if (isActive) activeBtn = btn;
       });
+
+      // Двигаем только горизонтальную ленту категорий, не затрагивая страницу по вертикали.
+      const nav = document.getElementById('nav-container');
+      if (activeBtn && nav) {
+        const targetLeft = activeBtn.offsetLeft - (nav.clientWidth - activeBtn.offsetWidth) / 2;
+        nav.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+      }
     }
 
     async function initMenu() {
@@ -2151,6 +2144,7 @@
     function renderNav() {
       const c = document.getElementById('nav-container');
       c.innerHTML = '';
+      activeSectionId = '';
       const displayData = getDisplayData();
       const cats = [...new Set(displayData.map(p => p.cat))];
 
