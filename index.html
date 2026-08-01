@@ -1829,8 +1829,8 @@
     let SAUCES = ["Кетчуп"];
     let ALT_MILKS = ["Кокосовое"];
     let PROMOS_ENABLED = true;
-    let OPEN_HOUR = 9;
-    let CLOSE_HOUR = 23;
+    let OPEN_TIME = "09:00";
+    let CLOSE_TIME = "00:00";
     const MOD_LABELS = {
       milk: "Доп. молоко",
       cream: "Доп. сливки",
@@ -1981,8 +1981,8 @@
               return;
           }
 
-          if (s.open_time) OPEN_HOUR = parseInt(s.open_time.split(':')[0]);
-          if (s.close_time) CLOSE_HOUR = parseInt(s.close_time.split(':')[0]);
+          if (/^\d{2}:\d{2}$/.test(s.open_time || '')) OPEN_TIME = s.open_time;
+          if (/^\d{2}:\d{2}$/.test(s.close_time || '')) CLOSE_TIME = s.close_time;
           if (s.enable_promos !== undefined) PROMOS_ENABLED = (String(s.enable_promos) === 'true');
           if (s.alt_milks) ALT_MILKS = Array.isArray(s.alt_milks) ? s.alt_milks : s.alt_milks.split(',');
           if (s.syrup_names) SYRUPS = Array.isArray(s.syrup_names) ? s.syrup_names : s.syrup_names.split(',');
@@ -2593,15 +2593,31 @@
 
     function checkWorkingHours() {
       const now = new Date();
-      const h = now.getHours();
-      const isOpen = h >= OPEN_HOUR && h < CLOSE_HOUR;
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const toMinutes = (time) => {
+        const [hours, minutes] = time.split(':').map(Number);
+        return hours * 60 + minutes;
+      };
+      const openMinutes = toMinutes(OPEN_TIME);
+      const closeMinutes = toMinutes(CLOSE_TIME);
+
+      // Если время закрытия меньше времени открытия, смена заканчивается после полуночи.
+      const isOpen = openMinutes < closeMinutes
+        ? currentMinutes >= openMinutes && currentMinutes < closeMinutes
+        : openMinutes > closeMinutes
+          ? currentMinutes >= openMinutes || currentMinutes < closeMinutes
+          : true;
       const b = document.getElementById('work-status');
       if (b) {
-        b.innerText = isOpen ? `Открыто (${OPEN_HOUR}:00 - ${CLOSE_HOUR}:59)` : `Закрыто (работаем с ${OPEN_HOUR}:00)`;
+        const schedule = `${OPEN_TIME}–${CLOSE_TIME}`;
+        b.innerText = isOpen ? `Открыто (${schedule})` : `Закрыто (работаем ${schedule})`;
         b.style.background = isOpen ? '#e6fffa' : '#fee2e2';
         b.style.color = isOpen ? '#047857' : '#991b1b';
       }
-      if (isOpen && h === (CLOSE_HOUR - 1)) {
+      document.getElementById('closed-schedule').textContent = `${OPEN_TIME}–${CLOSE_TIME}`;
+      document.getElementById('closing-time').textContent = CLOSE_TIME;
+      const minutesUntilClose = (closeMinutes - currentMinutes + 24 * 60) % (24 * 60);
+      if (isOpen && minutesUntilClose > 0 && minutesUntilClose <= 60) {
         document.getElementById('closing-soon-warning').style.display = 'block';
       } else {
         document.getElementById('closing-soon-warning').style.display = 'none';
