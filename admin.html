@@ -519,7 +519,7 @@
                 const data = d.exists() ? d.data() : {};
                 
                 document.getElementById('open-time').value = data.open_time || "09:00";
-                document.getElementById('close-time').value = data.close_time || "23:00";
+                document.getElementById('close-time').value = data.close_time || "00:00";
                 document.getElementById('promo-switch').checked = (String(data.enable_promos) === "true");
                 document.getElementById('set-syrups').value = data.syrup_names || "";
                 document.getElementById('set-milks').value = data.alt_milks || "";
