@@ -1696,14 +1696,20 @@
             </div>
             <div class="iframe-wrapper">
               <div class="gis-light">
-                <iframe frameborder="0" width="150px" height="50px"
-                  src="https://widget.2gis.ru/api/widget?org_id=70000001113563201&amp;branch_id=70000001113563202&amp;size=medium&amp;theme=light"
-                  title="CoffeeMoll в 2ГИС" loading="lazy"></iframe>
+               <iframe class="gis-widget-frame" frameborder="0" width="150px" height="50px"
+                  data-widget-url="https://widget.2gis.ru/api/widget?org_id=70000001113563201&amp;branch_id=70000001113563202&amp;size=medium&amp;theme=light"
+                  data-fallback-image="https://widget.2gis.ru/api/content/?org_id=70000001113563201&amp;branch_id=70000001113563202&amp;rating=4.9&amp;reviews_count=35&amp;size=medium&amp;theme=light"
+                  data-fallback-link="https://widget.2gis.ru/api/reviews/?org_id=70000001113563201&amp;branch_id=70000001113563202&amp;rating=4.9&amp;reviews_count=35&amp;size=medium&amp;theme=light"
+                  title="CoffeeMoll в 2ГИС" loading="lazy"
+                  sandbox="allow-popups allow-popups-to-escape-sandbox"></iframe>
               </div>
               <div class="gis-dark">
-                <iframe frameborder="0" width="150px" height="50px"
-                  src="https://widget.2gis.ru/api/widget?org_id=70000001113563201&amp;branch_id=70000001113563202&amp;size=medium&amp;theme=dark"
-                  title="CoffeeMoll в 2ГИС" loading="lazy"></iframe>
+                <iframe class="gis-widget-frame" frameborder="0" width="150px" height="50px"
+                  data-widget-url="https://widget.2gis.ru/api/widget?org_id=70000001113563201&amp;branch_id=70000001113563202&amp;size=medium&amp;theme=dark"
+                  data-fallback-image="https://widget.2gis.ru/api/content/?org_id=70000001113563201&amp;branch_id=70000001113563202&amp;rating=4.9&amp;reviews_count=35&amp;size=medium&amp;theme=dark"
+                  data-fallback-link="https://widget.2gis.ru/api/reviews/?org_id=70000001113563201&amp;branch_id=70000001113563202&amp;rating=4.9&amp;reviews_count=35&amp;size=medium&amp;theme=dark"
+                  title="CoffeeMoll в 2ГИС" loading="lazy"
+                  sandbox="allow-popups allow-popups-to-escape-sandbox"></iframe>
               </div>
             </div>
           </div>
@@ -1869,7 +1875,7 @@
     tg.expand();
     const BACKEND_URL = "https://coffeemoll.onrender.com";
 
-    const APP_VERSION = 17;
+    const APP_VERSION = 18;
     let CATEGORY_ORDER = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "СУШИ", "ПАСТЫ", "ЗАКУСКИ"];
 
     let PRICES = {
@@ -3049,12 +3055,56 @@
         arrow.style.transform = 'rotate(0deg)';
       }
     }
+
+    function secure2gisUrl(value, baseUrl) {
+      const url = new URL(value, baseUrl);
+      if (url.hostname !== 'widget.2gis.ru') throw new Error('Unexpected 2GIS widget URL');
+      url.protocol = 'https:';
+      return url.toString();
+    }
+
+    function escapeHtmlAttribute(value) {
+      return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    }
+
+    function render2gisBadge(frame, linkUrl, imageUrl) {
+      frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><style>html,body{width:150px;height:50px;margin:0;overflow:hidden}a,img{display:block;width:150px;height:50px;border:0}</style></head><body><a href="${escapeHtmlAttribute(linkUrl)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHtmlAttribute(imageUrl)}" width="150" height="50" alt="CoffeeMoll в 2ГИС"></a></body></html>`;
+    }
+
+    async function load2gisWidget(frame) {
+      const widgetUrl = frame.dataset.widgetUrl;
+      let linkUrl = frame.dataset.fallbackLink;
+      let imageUrl = frame.dataset.fallbackImage;
+
+      try {
+        const response = await fetch(widgetUrl);
+        if (!response.ok) throw new Error(`2GIS widget returned ${response.status}`);
+
+        const widgetDocument = new DOMParser().parseFromString(await response.text(), 'text/html');
+        const link = widgetDocument.querySelector('a[href]');
+        const image = widgetDocument.querySelector('img[src]');
+        if (!link || !image) throw new Error('2GIS widget markup is incomplete');
+
+        linkUrl = secure2gisUrl(link.getAttribute('href'), widgetUrl);
+        imageUrl = secure2gisUrl(image.getAttribute('src'), widgetUrl);
+      } catch (error) {
+        console.warn('2GIS widget fallback is used:', error);
+      }
+
+      render2gisBadge(frame, linkUrl, imageUrl);
+    }
+
+    function load2gisWidgets() {
+      document.querySelectorAll('.gis-widget-frame').forEach(frame => load2gisWidget(frame));
+    }
+
     window.addEventListener('offline', () => {
       document.getElementById('error-screen').style.display = 'flex';
     });
     window.addEventListener('online', () => {
       location.reload();
     });
+    load2gisWidgets();
     try {
       initMenu();
       setInterval(renderMenu, 60000);
