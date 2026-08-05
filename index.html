@@ -135,14 +135,16 @@
       overflow: visible;
       display: none;
       justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
       padding-bottom: 5px;
     }
 
     .iframe-wrapper {
-      width: 230px;
-      height: 80px;
+      width: 150px;
+      height: 50px;
       position: relative;
-      margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -152,17 +154,16 @@
       width: 150px;
       height: 50px;
       border: 0;
-      transform: scale(1.5);
-      transform-origin: center center;
-      will-change: transform;
       backface-visibility: hidden;
     }
 
-    .yandex-light {
+    .yandex-light,
+    .gis-light {
       display: block;
     }
 
-    .yandex-dark {
+    .yandex-dark,
+    .gis-dark {
       display: none;
     }
 
@@ -200,11 +201,13 @@
         color: #fff !important;
       }
 
-      .yandex-light {
+      .yandex-light,
+      .gis-light {
         display: none;
       }
 
-      .yandex-dark {
+      .yandex-dark,
+      .gis-dark {
         display: block;
       }
       
@@ -1677,7 +1680,7 @@
 
         <div class="yandex-widget-container">
           <div class="yandex-widget-header" onclick="toggleYandexWidget(this)">
-            <span>📍 Мы есть на Яндекс.Картах</span>
+            <span>📍 Мы есть на Яндекс.картах и 2ГИС</span>
             <span class="yandex-widget-arrow">▼</span>
           </div>
           <div class="yandex-widget-content" id="yandex-content">
@@ -1689,6 +1692,18 @@
               <div class="yandex-dark">
                 <iframe src="https://yandex.kz/sprav/widget/rating-badge/125095434429?type=rating&theme=dark"
                   frameborder="0"></iframe>
+              </div>
+            </div>
+            <div class="iframe-wrapper">
+              <div class="gis-light">
+                <iframe frameborder="0" width="150px" height="50px"
+                  src="https://widget.2gis.ru/api/widget?org_id=70000001113563201&amp;branch_id=70000001113563202&amp;size=medium&amp;theme=light"
+                  title="CoffeeMoll в 2ГИС" loading="lazy"></iframe>
+              </div>
+              <div class="gis-dark">
+                <iframe frameborder="0" width="150px" height="50px"
+                  src="https://widget.2gis.ru/api/widget?org_id=70000001113563201&amp;branch_id=70000001113563202&amp;size=medium&amp;theme=dark"
+                  title="CoffeeMoll в 2ГИС" loading="lazy"></iframe>
               </div>
             </div>
           </div>
@@ -1854,7 +1869,7 @@
     tg.expand();
     const BACKEND_URL = "https://coffeemoll.onrender.com";
 
-    const APP_VERSION = 16;
+    const APP_VERSION = 17;
     let CATEGORY_ORDER = ["ИЗБРАННОЕ", "ПОПУЛЯРНОЕ", "СЕЗОННОЕ", "КОФЕ", "ЧАЙ", "ДЕСЕРТЫ", "ХОЛОДНЫЕ НАПИТКИ", "МОЛОЧНЫЕ КОКТЕЙЛИ", "ЗАВТРАКИ", "КРУАССАНЫ", "ХОТ-ДОГИ", "САЛАТЫ", "ПИЦЦА", "СУШИ", "ПАСТЫ", "ЗАКУСКИ"];
 
     let PRICES = {
@@ -3026,7 +3041,7 @@
     function toggleYandexWidget(headerEl) {
       const content = headerEl.nextElementSibling;
       const arrow = headerEl.querySelector('.yandex-widget-arrow');
-      if (content.style.display === 'none') {
+      if (getComputedStyle(content).display === 'none') {
         content.style.display = 'flex';
         arrow.style.transform = 'rotate(180deg)';
       } else {
