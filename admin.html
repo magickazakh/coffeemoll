@@ -7,6 +7,7 @@
     <title>CoffeeMoll Control</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>    
     <style>
         body {
             background: #f4f6f9;
@@ -187,10 +188,16 @@
             <div class="tab-pane fade show active" id="tab-menu">
                 <div class="card card-shadow p-4">
                     <!-- Верхняя панель с кнопкой добавления -->
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <button class="btn btn-success fw-bold px-4 py-2 shadow-sm" onclick="openAdd()">
-                            <i class="fas fa-plus-circle me-2"></i>Добавить блюдо
-                        </button>
+                    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-4">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn btn-success fw-bold px-4 py-2 shadow-sm" onclick="openAdd()">
+                                <i class="fas fa-plus-circle me-2"></i>Добавить блюдо
+                            </button>
+                            <button id="export-menu-btn" class="btn btn-outline-success fw-bold px-4 py-2 shadow-sm"
+                                onclick="exportMenuToExcel()" disabled>
+                                <i class="fas fa-file-excel me-2"></i>Выгрузить меню
+                            </button>
+                        </div>
                         
                         <button class="btn btn-light border" type="button" data-bs-toggle="collapse"
                             data-bs-target="#settingsCollapse">⚙️ Глобальные настройки</button>
@@ -505,12 +512,69 @@
         function initData() {
             onSnapshot(collection(db, "menu"), (s) => {
                 menuData = []; s.forEach(d => menuData.push({ _id: d.id, ...d.data() }));
+                document.getElementById('export-menu-btn').disabled = menuData.length === 0;                
                 renderList();
             }, (error) => {
                 console.error("Menu fetch error:", error);
                 alert("Ошибка загрузки Меню: " + error.message);
             });
         }
+
+                window.exportMenuToExcel = () => {
+            if (!menuData.length) {
+                alert("Меню пока пустое — выгружать нечего.");
+                return;
+            }
+
+            if (!window.XLSX) {
+                alert("Не удалось загрузить модуль Excel. Проверьте подключение к интернету и повторите попытку.");
+                return;
+            }
+
+            const rows = [...menuData]
+                .sort((a, b) => {
+                    const categoryCompare = String(a.category || '').localeCompare(String(b.category || ''), 'ru');
+                    return categoryCompare || String(a.name || '').localeCompare(String(b.name || ''), 'ru');
+                })
+                .map(item => {
+                    const price = Array.isArray(item.volumes) && item.volumes.length
+                        ? item.volumes.map(volume => `${volume.n || "Объём"} — ${Number(volume.p) || 0}`).join('; ')
+                        : Number(item.price) || 0;
+
+                    return {
+                        "Название": item.name || "",
+                        "Категория": item.category || "",
+                        "Краткое описание": item.description || "",
+                        "Полное описание": item.full_description || "",
+                        "Цена": price,
+                        "Ссылка на изображение": item.image || ""
+                    };
+                });
+
+            const worksheet = window.XLSX.utils.json_to_sheet(rows);
+            worksheet['!autofilter'] = { ref: worksheet['!ref'] };
+            worksheet['!cols'] = [
+                { wch: 28 },
+                { wch: 22 },
+                { wch: 45 },
+                { wch: 65 },
+                { wch: 12 },
+                { wch: 55 }
+            ];
+
+            rows.forEach((row, index) => {
+                if (!row["Ссылка на изображение"]) return;
+                const cell = worksheet[`F${index + 2}`];
+                if (cell) cell.l = { Target: row["Ссылка на изображение"], Tooltip: "Открыть изображение" };
+            });
+
+            const workbook = window.XLSX.utils.book_new();
+            window.XLSX.utils.book_append_sheet(workbook, worksheet, "Меню");
+
+            const date = new Date();
+            const fileDate = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+            window.XLSX.writeFile(workbook, `menu-${fileDate}.xlsx`);
+        };
 
         // Функции настроек (изменены для поддержки actual_version)
         function initSettings() {
